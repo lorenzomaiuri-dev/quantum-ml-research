@@ -1,0 +1,58 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Virtual environments ───────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── uv ────────────────────────────────────────────────────────────────────────
+# Keep uv.lock at root (authoritative). Stale per-experiment locks are removed.
+# .python-version files are kept (they declare the required Python version).
+
+# ── Training outputs (run directories) ────────────────────────────────────────
+# Each experiment writes results to experiments/0X_*/experiments/<run_name>/
+experiments/01_quantum_gpt/experiments/
+experiments/02_quantum_vit/experiments/
+experiments/03_quantum_vit/experiments/
+experiments/03_quantum_reg/experiments/
+experiments/04_quantum_kernel/experiments/
+experiments/01_quantum_gpt/experiments_failed/
+
+# Model weights
+*.pth
+*.pt
+*.ckpt
+
+# TensorBoard event files
+*.tfevents.*
+
+# ── Datasets (downloaded on first run) ────────────────────────────────────────
+# MedMNIST caches to ~/.medmnist by default; uncomment if redirected here.
+# data/
+
+# ── Editor and OS ──────────────────────────────────────────────────────────────
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+Thumbs.db
+
+# ── Jupyter ───────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── Misc ──────────────────────────────────────────────────────────────────────
+*.log
+.env

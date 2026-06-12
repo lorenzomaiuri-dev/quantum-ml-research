@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantum-framework"
+version = "0.1.0"
+description = "Shared infrastructure for quantum-classical ML experiments (thesis)"
+requires-python = ">=3.12"
+dependencies = [
+    # Core quantum + ML
+    "pennylane>=0.43.1",
+    "torch>=2.9.1",
+    "torchvision>=0.15",
+    "numpy>=1.24",
+    # MedMNIST experiments (02, 03, 04)
+    "medmnist>=3.0",
+    "scikit-learn>=1.3",
+    # Training infrastructure (01, 02, 03)
+    "tensorboard>=2.20.0",
+    "tqdm>=4.67.1",
+]
+
+[project.optional-dependencies]
+# Experiment 01 extras (text generation + architecture visualisation)
+gpt = [
+    "torchinfo>=1.8.0",
+    "torchviz>=0.0.3",
+    "datasets>=4.4.2",
+    "transformers>=4.57.3",
+]
+# GPU-accelerated PennyLane simulation (requires CUDA toolkit)
+gpu = [
+    "pennylane-lightning[gpu]>=0.43.0",
+]
+dev = [
+    "pre-commit>=4.5.1",
+]
+
+[tool.setuptools.packages.find]
+# Only install the shared library; experiments/ are not packages.
+include = ["quantum_framework*"]

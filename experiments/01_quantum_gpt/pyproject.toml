@@ -1,0 +1,9 @@
+[project]
+name = "quantum-gpt"
+version = "0.1.0"
+description = "Quantum GPT — VQC Q/K/V attention in a character-level language model"
+readme = "README.md"
+requires-python = ">=3.12"
+# All dependencies are managed from the repository root (quantum-ml-research/).
+# Install everything with:  uv sync --extra gpt
+dependencies = []
