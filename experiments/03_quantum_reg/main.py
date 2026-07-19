@@ -5,6 +5,8 @@ from collections import defaultdict
 
 import numpy as np
 
+from quantum_framework.evaluation import paired_comparison, summarize
+from quantum_framework.utils import save_json
 from src.config import AblationConfig
 from src.engine.trainer import Trainer
 
@@ -55,8 +57,18 @@ def run_compare(args):
 
     # Save comparison
     os.makedirs("experiments", exist_ok=True)
-    with open(f"experiments/comparison_{args.dataset}.json", "w") as f:
-        json.dump(results, f, indent=4)
+    payload = {
+        "schema_version": "1.0",
+        "experiment": "03_quantum_reg",
+        "dataset": args.dataset,
+        "seeds": [args.seed],
+        "runs": results,
+        "paired_statistics": build_paired_statistics(
+            {args.dataset: {model: [run] for model, run in results.items()}},
+            bootstrap_seed=args.seed,
+        )[args.dataset],
+    }
+    save_json(f"experiments/comparison_{args.dataset}.json", payload)
 
 
 def run_ablation(args):
@@ -68,6 +80,13 @@ def run_ablation(args):
     datasets = args.datasets or ["pathmnist", "bloodmnist", "dermamnist"]
 
     all_results = defaultdict(lambda: defaultdict(list))
+    if args.resume:
+        with open(args.resume, "r") as f:
+            resumed = json.load(f)
+        resumed_runs = resumed.get("runs", resumed)
+        for dataset, models in resumed_runs.items():
+            for model_type, runs in models.items():
+                all_results[dataset][model_type].extend(runs)
 
     total_runs = len(MODEL_TYPES) * len(seeds) * len(datasets)
     run_idx = 0
@@ -76,9 +95,17 @@ def run_ablation(args):
         for model_type in MODEL_TYPES:
             for seed in seeds:
                 run_idx += 1
-                print(f"\n{'#'*60}")
-                print(f"  RUN {run_idx}/{total_runs}: {model_type} | {dataset} | seed={seed}")
-                print(f"{'#'*60}")
+                completed_seeds = {
+                    run["seed"] for run in all_results[dataset][model_type]
+                }
+                if seed in completed_seeds:
+                    print(f"  SKIP {model_type} | {dataset} | seed={seed} (completed)")
+                    continue
+                print(f"\n{'#' * 60}")
+                print(
+                    f"  RUN {run_idx}/{total_runs}: {model_type} | {dataset} | seed={seed}"
+                )
+                print(f"{'#' * 60}")
 
                 config = _make_config(args)
                 config.dataset_name = dataset
@@ -90,9 +117,23 @@ def run_ablation(args):
                 )
                 _, result = trainer.train()
                 all_results[dataset][model_type].append(result)
+                save_json(
+                    "experiments/ablation_progress.json",
+                    {
+                        "schema_version": "1.0",
+                        "experiment": "03_quantum_reg",
+                        "seeds": seeds,
+                        "datasets": datasets,
+                        "runs": {
+                            ds: {mt: values for mt, values in models.items()}
+                            for ds, models in all_results.items()
+                        },
+                    },
+                )
 
     # Aggregate and print
     print_ablation_summary(all_results, seeds)
+    statistics = build_paired_statistics(all_results, bootstrap_seed=seeds[0])
 
     # Save full results
     os.makedirs("experiments", exist_ok=True)
@@ -101,27 +142,72 @@ def run_ablation(args):
         ds: {mt: runs for mt, runs in models.items()}
         for ds, models in all_results.items()
     }
-    with open("experiments/ablation_full_results.json", "w") as f:
-        json.dump(serializable, f, indent=4)
+    save_json(
+        "experiments/ablation_full_results.json",
+        {
+            "schema_version": "1.0",
+            "experiment": "03_quantum_reg",
+            "seeds": seeds,
+            "datasets": datasets,
+            "runs": serializable,
+            "paired_statistics": statistics,
+        },
+    )
+
+
+def build_paired_statistics(all_results, bootstrap_seed=42):
+    """Build thesis-ready summaries with seed-aligned paired comparisons."""
+    output = {}
+    metrics = (
+        "test_accuracy",
+        "test_auc",
+        "test_f1",
+        "generalization_gap",
+        "total_time",
+    )
+    for dataset, models in all_results.items():
+        output[dataset] = {"summaries": {}, "comparisons": {}}
+        for model_type, runs in models.items():
+            output[dataset]["summaries"][model_type] = {
+                metric: summarize([run[metric] for run in runs]) for metric in metrics
+            }
+
+        for baseline in ("bounded_mlp", "vanilla"):
+            comparison_name = f"quantum_reg_vs_{baseline}"
+            output[dataset]["comparisons"][comparison_name] = {}
+            q_by_seed = {run["seed"]: run for run in models["quantum_reg"]}
+            c_by_seed = {run["seed"]: run for run in models[baseline]}
+            common_seeds = sorted(q_by_seed.keys() & c_by_seed.keys())
+            for metric in metrics:
+                result = paired_comparison(
+                    [q_by_seed[seed][metric] for seed in common_seeds],
+                    [c_by_seed[seed][metric] for seed in common_seeds],
+                    seed=bootstrap_seed,
+                )
+                result["seeds"] = common_seeds
+                output[dataset]["comparisons"][comparison_name][metric] = result
+    return output
 
 
 def print_single_result(r):
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"  {MODEL_LABELS.get(r['model_type'], r['model_type'])}")
     print(f"  Test Acc:  {r['test_accuracy']:.4f}")
     print(f"  Test AUC:  {r['test_auc']:.4f}")
     print(f"  Gen Gap:   {r['generalization_gap']:+.4f}")
     print(f"  Params:    {r['params']['total']:,}")
     print(f"  Time:      {r['total_time']:.1f}s")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
 
 def print_comparison(results, dataset):
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"  COMPARISON: {dataset}")
-    print(f"{'='*70}")
-    print(f"{'Model':<22} {'Test Acc':>10} {'AUC':>8} {'Gen Gap':>10} {'Params':>10} {'Time':>8}")
-    print(f"{'-'*68}")
+    print(f"{'=' * 70}")
+    print(
+        f"{'Model':<22} {'Test Acc':>10} {'AUC':>8} {'Gen Gap':>10} {'Params':>10} {'Time':>8}"
+    )
+    print(f"{'-' * 68}")
     for mt in MODEL_TYPES:
         r = results[mt]
         label = MODEL_LABELS[mt]
@@ -133,19 +219,21 @@ def print_comparison(results, dataset):
             f"{r['params']['total']:>10,} "
             f"{r['total_time']:>7.1f}s"
         )
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
 
 def print_ablation_summary(all_results, seeds):
     """Print aggregated results across seeds with mean ± std."""
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print(f"  ABLATION STUDY SUMMARY ({len(seeds)} seeds per configuration)")
-    print(f"{'='*80}")
+    print(f"{'=' * 80}")
 
     for dataset, models in all_results.items():
         print(f"\n  --- {dataset} ---")
-        print(f"  {'Model':<22} {'Test Acc':>14} {'Gen Gap':>14} {'AUC':>14} {'Noise 0.1':>12}")
-        print(f"  {'-'*76}")
+        print(
+            f"  {'Model':<22} {'Test Acc':>14} {'Gen Gap':>14} {'AUC':>14} {'Noise 0.1':>12}"
+        )
+        print(f"  {'-' * 76}")
 
         for mt in MODEL_TYPES:
             runs = models[mt]
@@ -158,7 +246,10 @@ def print_ablation_summary(all_results, seeds):
             for r in runs:
                 nr = r.get("noise_robustness", {}).get("gaussian", {})
                 if "0.1" in nr:
-                    noise_accs.append(nr["0.1"])
+                    value = nr["0.1"]
+                    noise_accs.append(
+                        value["accuracy"] if isinstance(value, dict) else value
+                    )
 
             label = MODEL_LABELS[mt]
             acc_str = f"{np.mean(accs):.4f}±{np.std(accs):.4f}"
@@ -170,9 +261,11 @@ def print_ablation_summary(all_results, seeds):
                 else "N/A"
             )
 
-            print(f"  {label:<22} {acc_str:>14} {gap_str:>14} {auc_str:>14} {noise_str:>12}")
+            print(
+                f"  {label:<22} {acc_str:>14} {gap_str:>14} {auc_str:>14} {noise_str:>12}"
+            )
 
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
 
 
 def main():
@@ -193,8 +286,10 @@ def main():
     shared.add_argument("--dropout", type=float, default=0.1)
     shared.add_argument("--weight-decay", type=float, default=1e-4)
     shared.add_argument(
-        "--train-subset", type=int, default=0,
-        help="Stratified subset size (0=full). Use 2000-5000 for overfitting regime"
+        "--train-subset",
+        type=int,
+        default=0,
+        help="Stratified subset size (0=full). Use 2000-5000 for overfitting regime",
     )
 
     # Train
@@ -214,6 +309,11 @@ def main():
     abl_p = sub.add_parser("ablation", parents=[shared])
     abl_p.add_argument("--seeds", type=int, nargs="+", default=None)
     abl_p.add_argument("--datasets", type=str, nargs="+", default=None)
+    abl_p.add_argument(
+        "--resume",
+        default=None,
+        help="Resume from ablation_progress.json or ablation_full_results.json",
+    )
 
     args = parser.parse_args()
 

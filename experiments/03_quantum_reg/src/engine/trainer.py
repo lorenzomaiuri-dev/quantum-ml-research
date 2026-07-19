@@ -7,7 +7,7 @@ run directory creation, and hook wiring.
 """
 
 from quantum_framework.training import BaseTrainer
-from quantum_framework.utils import make_run_dir, set_seed
+from quantum_framework.utils import make_run_dir, save_json, set_seed
 
 from src.data.loaders import load_dataset
 from src.models.vit import AblationViT
@@ -30,9 +30,12 @@ class Trainer(BaseTrainer):
     def __init__(self, config, model_type: str, seed: int, run_tag: str = ""):
         self.model_type = model_type
         self.seed = seed
+        config.seed = seed
+        # Seed before dataset shuffling and model parameter initialisation.
+        set_seed(seed)
 
         # Data
-        train_loader, val_loader, test_loader = load_dataset(config)
+        train_loader, val_loader, test_loader = load_dataset(config, seed=seed)
 
         # Model
         model = AblationViT(config, model_type)
@@ -59,14 +62,20 @@ class Trainer(BaseTrainer):
             log_activations=config.log_activations,
             monitor_module_name="patch_embed.compression",
             grad_clip=1.0,
+            experiment_id="03_quantum_reg",
+            variant=model_type,
+            evaluate_noise=True,
         )
 
     def train(self):
-        print(f"\n{'='*60}")
-        print(f"  Training {self.model_type} | {self.config.dataset_name} | seed={self.seed}")
+        print(f"\n{'=' * 60}")
+        print(
+            f"  Training {self.model_type} | {self.config.dataset_name} | seed={self.seed}"
+        )
         run_dir, results = super().train()
         # Annotate results with experiment-03-specific fields.
         results["model_type"] = self.model_type
-        results["dataset"]    = self.config.dataset_name
-        results["seed"]       = self.seed
+        results["dataset"] = self.config.dataset_name
+        results["seed"] = self.seed
+        save_json(f"{run_dir}/results.json", results)
         return run_dir, results

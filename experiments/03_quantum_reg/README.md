@@ -63,12 +63,19 @@ python run.py 03 compare --dataset pathmnist --epochs 50
 # Full ablation: 3 models × 5 seeds × 3 datasets = 45 runs
 python run.py 03 ablation --epochs 50
 
+# Resume an interrupted campaign without repeating completed seed/model pairs
+python run.py 03 ablation --resume experiments/ablation_progress.json
+
 # Scarce-data regime (1000 training samples, stratified)
 python run.py 03 compare --dataset pathmnist --epochs 50 --train-subset 1000
 ```
 
 `--model` choices: `vanilla`, `bounded_mlp`, `quantum_reg`.
 `--dataset` choices: `pathmnist`, `bloodmnist`, `dermamnist`.
+
+`ablation_full_results.json` include valori grezzi, riepiloghi e confronti
+appaiati `quantum_reg`–`bounded_mlp` e `quantum_reg`–`vanilla`: intervallo di
+confidenza, bootstrap, paired t-test, Wilcoxon e Cohen's $d_z$.
 
 ## Training outputs
 

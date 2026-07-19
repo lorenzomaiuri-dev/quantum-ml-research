@@ -15,12 +15,15 @@ class HybridQCNNViT(nn.Module):
                 patch_dim=config.patch_dim,
                 embed_dim=config.embed_dim,
                 n_qlayers=config.n_qlayers,
+                q_device=config.q_device,
             )
         else:
             self.patch_embed = nn.Linear(config.patch_dim, config.embed_dim)
 
         self.cls_token = nn.Parameter(torch.randn(1, 1, config.embed_dim))
-        self.pos_embedding = nn.Parameter(torch.randn(1, config.seq_len, config.embed_dim))
+        self.pos_embedding = nn.Parameter(
+            torch.randn(1, config.seq_len, config.embed_dim)
+        )
         self.pos_drop = nn.Dropout(p=config.dropout)
 
         encoder_layer = nn.TransformerEncoderLayer(
@@ -32,7 +35,9 @@ class HybridQCNNViT(nn.Module):
             batch_first=True,
             norm_first=True,
         )
-        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=config.n_layer)
+        self.transformer = nn.TransformerEncoder(
+            encoder_layer, num_layers=config.n_layer
+        )
 
         self.norm = nn.LayerNorm(config.embed_dim)
         self.head = nn.Linear(config.embed_dim, config.n_classes)

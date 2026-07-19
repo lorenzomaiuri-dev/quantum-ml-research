@@ -18,8 +18,10 @@ class Head(nn.Module):
 
     def _get_layer(self, config, n_in, n_out):
         if config.use_quantum:
+            if n_out != config.n_qubits:
+                raise ValueError("quantum head output must equal n_qubits")
             return QuantumLayerAdapter(
-                n_in, n_out, config.n_qubits, config.n_qlayers, config.q_device
+                n_in, config.n_qubits, config.n_qlayers, config.q_device
             )
         return nn.Linear(n_in, n_out, bias=False)
 
@@ -88,7 +90,9 @@ class QuantumGPT(nn.Module):
     def forward(self, idx, targets=None):
         B, T = idx.shape
         tok_emb = self.token_embedding_table(idx)
-        pos_emb = self.position_embedding_table(torch.arange(T, device=self.config.device))
+        pos_emb = self.position_embedding_table(
+            torch.arange(T, device=self.config.device)
+        )
         x = self.blocks(tok_emb + pos_emb)
         logits = self.lm_head(self.ln_f(x))
 
@@ -101,7 +105,7 @@ class QuantumGPT(nn.Module):
 
     def generate(self, idx, max_new_tokens, print_in_place=False, decode_function=None):
         for _ in range(max_new_tokens):
-            logits, _ = self(idx[:, -self.config.block_size:])
+            logits, _ = self(idx[:, -self.config.block_size :])
             probs = F.softmax(logits[:, -1, :], dim=-1)
             idx_next = torch.multinomial(probs, num_samples=1)
             idx = torch.cat((idx, idx_next), dim=1)

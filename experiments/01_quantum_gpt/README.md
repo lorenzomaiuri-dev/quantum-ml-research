@@ -55,6 +55,9 @@ python run.py 01 --mode train
 # Train with a fast config (fewer layers/qubits, for quick testing)
 python run.py 01 --mode train --config fast
 
+# Paired variants over identical seeds and configuration
+python run.py 01 --mode compare --config fast --seeds 42,137,256,512,1024
+
 # Generate text from a trained run
 python run.py 01 --mode generate --run_dir experiments/01_quantum_gpt/experiments/<run_name>
 
@@ -77,9 +80,11 @@ Each run writes to `experiments/<run_name>/`:
 | File | Content |
 |------|---------|
 | `config.json` | Full config snapshot |
+| `run_manifest.json` | Commit, comando, seed, ambiente e versioni |
+| `params.json` | Parametri totali e addestrabili |
 | `best_model.pth` | Best checkpoint (lowest val loss) |
 | `final_model.pth` | Final epoch checkpoint |
-| `metrics.json` | Loss history and training time |
+| `metrics.json`, `results.json` | Loss, perplexity, parametri e tempi |
 | `dictionary.json` | Tokenizer vocabulary |
 | `events.out.tfevents.*` | TensorBoard logs |
 

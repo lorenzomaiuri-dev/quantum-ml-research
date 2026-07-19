@@ -10,7 +10,7 @@ for this low-dimensional embedding.
 ## Method
 
 1. Load BreastMNIST (binary: normal vs malignant, heavily imbalanced).
-2. Sample 80 class-0 and 20 class-1 images.
+2. Sample 80 class-0 and 20 class-1 images without replacement using a recorded seed.
 3. Compress each 28×28 image to 8 dimensions via PCA (fixed, non-trainable).
 4. Scale PCA features to [0, π] for angle embedding.
 5. Compute two similarity matrices:
@@ -33,10 +33,17 @@ No training, no gradients — pure linear algebra + quantum circuits.
 # From repository root (~5 minutes)
 python run.py 04
 
+# Repeated subsampling for paired uncertainty estimates
+python run.py 04 --repeats 5 --seed 42
+
 # Or directly
 cd experiments/04_quantum_kernel
 python main.py
 ```
+
+Ogni campagna salva `campaign_results.json`; ogni ripetizione salva
+`results.json`, `run_manifest.json` e `kernel_matrices.npz`. Le statistiche
+appaiate usano la differenza quantum-minus-classical sullo stesso sottocampione.
 
 Expected output:
 

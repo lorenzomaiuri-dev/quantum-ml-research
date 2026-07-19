@@ -12,7 +12,7 @@ for the scarce-data / overfitting regime.
 from quantum_framework.data import load_medmnist, make_noisy_loader  # noqa: F401
 
 
-def load_dataset(config):
+def load_dataset(config, seed=42):
     """
     Load MedMNIST and update config.n_channels / config.n_classes in place.
 
@@ -26,6 +26,7 @@ def load_dataset(config):
         dataset_name=config.dataset_name,
         batch_size=config.batch_size,
         train_subset=config.train_subset,
+        seed=seed,
     )
     config.n_channels = info.n_channels
     config.n_classes = info.n_classes

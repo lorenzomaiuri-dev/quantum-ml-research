@@ -1,3 +1,5 @@
+import argparse
+import os
 import time
 
 import medmnist
@@ -6,9 +8,11 @@ import pennylane as qml
 from medmnist import INFO
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from quantum_framework.evaluation import paired_comparison
+from quantum_framework.utils import collect_run_metadata, make_run_dir, save_json
 
 
-def load_samples(dataset_name, n_class0, n_class1, n_qubits):
+def load_samples(dataset_name, n_class0, n_class1, n_qubits, seed=42):
     """Load and PCA-compress samples from two classes."""
     info = INFO[dataset_name]
     DataClass = getattr(medmnist, info["python_class"])
@@ -16,18 +20,28 @@ def load_samples(dataset_name, n_class0, n_class1, n_qubits):
 
     # Separate by class
     images_0, images_1 = [], []
-    for img, label in ds:
+    indices_0, indices_1 = [], []
+    for index, (img, label) in enumerate(ds):
         img_flat = np.array(img).flatten() / 255.0
         lab = int(label.squeeze())
-        if lab == 0 and len(images_0) < n_class0:
+        if lab == 0:
             images_0.append(img_flat)
-        elif lab == 1 and len(images_1) < n_class1:
+            indices_0.append(index)
+        elif lab == 1:
             images_1.append(img_flat)
-        if len(images_0) >= n_class0 and len(images_1) >= n_class1:
-            break
+            indices_1.append(index)
 
-    images_0 = np.array(images_0)
-    images_1 = np.array(images_1)
+    if len(images_0) < n_class0 or len(images_1) < n_class1:
+        raise ValueError("requested samples exceed the available examples in a class")
+    rng = np.random.default_rng(seed)
+    selected_0 = rng.choice(len(images_0), size=n_class0, replace=False)
+    selected_1 = rng.choice(len(images_1), size=n_class1, replace=False)
+    images_0 = np.asarray(images_0)[selected_0]
+    images_1 = np.asarray(images_1)[selected_1]
+    sample_indices = {
+        "class_0": [indices_0[i] for i in selected_0],
+        "class_1": [indices_1[i] for i in selected_1],
+    }
 
     print(f"Loaded: {len(images_0)} class-0, {len(images_1)} class-1")
     print(f"Raw dim: {images_0.shape[1]}")
@@ -46,10 +60,17 @@ def load_samples(dataset_name, n_class0, n_class1, n_qubits):
     scaler2 = MinMaxScaler(feature_range=(0, np.pi))
     all_scaled = scaler2.fit_transform(all_compressed)
 
-    x0 = all_scaled[:len(images_0)]
-    x1 = all_scaled[len(images_0):]
+    x0 = all_scaled[: len(images_0)]
+    x1 = all_scaled[len(images_0) :]
 
-    return x0, x1
+    return (
+        x0,
+        x1,
+        {
+            "sample_indices": sample_indices,
+            "pca_explained_variance": float(explained),
+        },
+    )
 
 
 def classical_similarity(x0, x1):
@@ -63,7 +84,7 @@ def classical_similarity(x0, x1):
     return sim
 
 
-def quantum_kernel_matrix(x0, x1, n_qubits):
+def quantum_kernel_matrix(x0, x1, n_qubits, q_device="default.qubit"):
     """
     Compute quantum kernel matrix using IQP-style embedding.
 
@@ -74,7 +95,7 @@ def quantum_kernel_matrix(x0, x1, n_qubits):
     This is a standard kernel from the QML literature (Havlicek et al., Nature 2019).
     No trainable parameters — purely a function of the data.
     """
-    dev = qml.device("default.qubit", wires=n_qubits)
+    dev = qml.device(q_device, wires=n_qubits)
 
     @qml.qnode(dev)
     def kernel_circuit(x, y):
@@ -120,11 +141,13 @@ def quantum_kernel_matrix(x0, x1, n_qubits):
             if computed % 500 == 0:
                 elapsed = time.time() - start
                 eta = elapsed / computed * (total_pairs - computed)
-                print(f"  {computed}/{total_pairs} pairs ({elapsed:.1f}s elapsed, ~{eta:.0f}s remaining)")
+                print(
+                    f"  {computed}/{total_pairs} pairs ({elapsed:.1f}s elapsed, ~{eta:.0f}s remaining)"
+                )
 
     elapsed = time.time() - start
     print(f"  Done in {elapsed:.1f}s")
-    return K
+    return K, elapsed
 
 
 def analyze_separation(sim_matrix, n0, n1, label=""):
@@ -143,8 +166,8 @@ def analyze_separation(sim_matrix, n0, n1, label=""):
     """
     # Extract intra- and inter-class blocks
     block_00 = sim_matrix[:n0, :n0]
-    block_11 = sim_matrix[n0:n0 + n1, n0:n0 + n1]
-    block_01 = sim_matrix[:n0, n0:n0 + n1]
+    block_11 = sim_matrix[n0 : n0 + n1, n0 : n0 + n1]
+    block_01 = sim_matrix[:n0, n0 : n0 + n1]
 
     # Remove diagonal from intra-class
     intra_0_vals = block_00[np.triu_indices_from(block_00, k=1)]
@@ -156,7 +179,7 @@ def analyze_separation(sim_matrix, n0, n1, label=""):
     inter = np.mean(inter_vals)
 
     intra_mean = (intra_0 + intra_1) / 2
-    ratio = intra_mean / inter if inter > 1e-10 else float('inf')
+    ratio = intra_mean / inter if inter > 1e-10 else float("inf")
 
     # Fisher's discriminant
     intra_all = np.concatenate([intra_0_vals, intra_1_vals])
@@ -173,18 +196,17 @@ def analyze_separation(sim_matrix, n0, n1, label=""):
     print(f"  Fisher discriminant:      {fisher:.4f}  (higher = better)")
 
     return {
-        "intra_0": round(float(intra_0), 4),
-        "intra_1": round(float(intra_1), 4),
-        "inter": round(float(inter), 4),
-        "ratio": round(float(ratio), 4),
-        "fisher": round(float(fisher), 4),
+        "intra_0": float(intra_0),
+        "intra_1": float(intra_1),
+        "inter": float(inter),
+        "ratio": float(ratio),
+        "fisher": float(fisher),
     }
 
 
-def main():
-    N_QUBITS = 8
-    N_CLASS0 = 80
-    N_CLASS1 = 20
+def run_once(args, seed, run_dir):
+    """Execute and persist one paired classical/quantum kernel comparison."""
+    run_start = time.time()
 
     print("=" * 50)
     print("  QUANTUM KERNEL PoC")
@@ -194,7 +216,9 @@ def main():
 
     # Load data
     print("\n--- Loading data ---")
-    x0, x1 = load_samples("breastmnist", N_CLASS0, N_CLASS1, N_QUBITS)
+    x0, x1, preprocessing = load_samples(
+        args.dataset, args.n_class0, args.n_class1, args.n_qubits, seed
+    )
 
     # Classical similarity
     print("\n--- Classical Kernel (cosine similarity) ---")
@@ -203,12 +227,14 @@ def main():
 
     # Quantum kernel
     print("\n--- Quantum Kernel (IQP embedding) ---")
-    quantum_sim = quantum_kernel_matrix(x0, x1, N_QUBITS)
+    quantum_sim, quantum_time = quantum_kernel_matrix(
+        x0, x1, args.n_qubits, args.q_device
+    )
     quantum_metrics = analyze_separation(quantum_sim, len(x0), len(x1), "QUANTUM")
 
     # Verdict
     print(f"\n{'=' * 50}")
-    print(f"  VERDICT")
+    print("  VERDICT")
     print(f"{'=' * 50}")
 
     q_fisher = quantum_metrics["fisher"]
@@ -220,16 +246,90 @@ def main():
     print(f"  Separation ratio:   Classical={c_ratio:.4f} | Quantum={q_ratio:.4f}")
 
     if q_fisher > c_fisher * 1.1:
-        print(f"\n  ✓ QUANTUM WINS (Fisher +{(q_fisher/c_fisher - 1)*100:.1f}%)")
-        print(f"  → Proceed to full Quantum Kernel Attention ViT")
+        verdict = "quantum_higher"
     elif c_fisher > q_fisher * 1.1:
-        print(f"\n  ✗ CLASSICAL WINS (Fisher +{(c_fisher/q_fisher - 1)*100:.1f}%)")
-        print(f"  → Quantum kernel does not add value on this task")
+        verdict = "classical_higher"
     else:
-        print(f"\n  ≈ NO SIGNIFICANT DIFFERENCE")
-        print(f"  → Try different embedding or dataset")
+        verdict = "within_10_percent"
+    print(f"  Descriptive verdict: {verdict}")
 
-    print(f"{'=' * 50}")
+    result = {
+        "schema_version": "1.0",
+        "experiment": "04_quantum_kernel",
+        "variant": "iqp_fidelity_vs_cosine",
+        "dataset": args.dataset,
+        "seed": seed,
+        "n_qubits": args.n_qubits,
+        "n_class0": args.n_class0,
+        "n_class1": args.n_class1,
+        "q_device": args.q_device,
+        "preprocessing": preprocessing,
+        "classical": classical_metrics,
+        "quantum": quantum_metrics,
+        "differences": {
+            "fisher": q_fisher - c_fisher,
+            "ratio": q_ratio - c_ratio,
+        },
+        "descriptive_verdict": verdict,
+        "quantum_kernel_time_seconds": quantum_time,
+        "total_wall_time_seconds": time.time() - run_start,
+    }
+    save_json(os.path.join(run_dir, "results.json"), result)
+    save_json(
+        os.path.join(run_dir, "run_manifest.json"),
+        collect_run_metadata("04_quantum_kernel", seed, "iqp_fidelity_vs_cosine"),
+    )
+    np.savez_compressed(
+        os.path.join(run_dir, "kernel_matrices.npz"),
+        classical=classical_sim,
+        quantum=quantum_sim,
+        x0=x0,
+        x1=x1,
+    )
+    return result
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Quantum kernel versus cosine similarity"
+    )
+    parser.add_argument("--dataset", default="breastmnist")
+    parser.add_argument("--n-qubits", type=int, default=8)
+    parser.add_argument("--n-class0", type=int, default=80)
+    parser.add_argument("--n-class1", type=int, default=20)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--repeats", type=int, default=1)
+    parser.add_argument("--q-device", default="default.qubit")
+    args = parser.parse_args()
+    if min(args.n_qubits, args.n_class0, args.n_class1, args.repeats) <= 0:
+        parser.error("sample counts, qubits and repeats must be positive")
+
+    campaign_dir = make_run_dir("experiments", f"kernel_{args.dataset}")
+    runs = []
+    for repeat in range(args.repeats):
+        seed = args.seed + repeat
+        repeat_dir = os.path.join(campaign_dir, f"repeat_{repeat:02d}_s{seed}")
+        os.makedirs(repeat_dir, exist_ok=False)
+        runs.append(run_once(args, seed, repeat_dir))
+
+    analysis = {
+        metric: paired_comparison(
+            [run["quantum"][metric] for run in runs],
+            [run["classical"][metric] for run in runs],
+            seed=args.seed,
+        )
+        for metric in ("fisher", "ratio")
+    }
+    save_json(
+        os.path.join(campaign_dir, "campaign_results.json"),
+        {
+            "schema_version": "1.0",
+            "experiment": "04_quantum_kernel",
+            "seeds": [run["seed"] for run in runs],
+            "runs": runs,
+            "paired_statistics": analysis,
+        },
+    )
 
 
 if __name__ == "__main__":

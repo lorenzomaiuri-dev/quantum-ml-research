@@ -1,44 +1,43 @@
 # Experiment 02 — Quantum Vision Transformer
 
-A Vision Transformer for medical image classification where the Q/K/V
-projections in self-attention are replaced by Variational Quantum Circuits.
+A Vision Transformer for medical image classification where the linear patch
+embedding is replaced by a Variational Quantum Circuit.
 
 **Result: falsified.** Equivalent accuracy to the classical ViT on MedMNIST,
 with significantly higher training time. No measurable benefit from replacing
-linear projections with VQC attention.
+the linear patch embedding with a VQC embedding.
 
 ## Scientific concept
 
-Classical ViT attention computes Q, K, V via linear projections of token embeddings.
-Here each projection is a VQC with no classical bottleneck (embed_dim == n_qubits):
+Each flattened patch is first compressed from `patch_dim` to `embed_dim`; the
+compressed features are then angle-encoded in a VQC (`embed_dim == n_qubits`):
 
 ```
-x (n_qubits,) → tanh·π → AngleEmbedding → StronglyEntanglingLayers → ⟨Z⟩ → y (n_qubits,)
+x (patch_dim,) → Linear → tanh·π → AngleEmbedding → StronglyEntanglingLayers → ⟨Z⟩
 ```
 
-The no-bottleneck constraint (learned from experiment 01) ensures the VQC operates
-on the full embedding without lossy compression. Despite this, the Pauli-Z
-expectation values produce outputs bounded in [-1, 1] that are functionally
-similar to a tanh-activated linear layer.
+The classical baseline uses `Linear(patch_dim, embed_dim)` at the same location.
+The Transformer encoder that follows is classical in both variants.
 
 ## Architecture
 
 ```
 28×28 image
     ↓
-Patch Embedding  (Conv2d stride=patch_size → 16 patches × embed_dim)
+Patch extraction → Linear compression → optional VQC
     ↓
 [CLS] + positional embedding  →  (17, embed_dim)
     ↓
 ┌──────────────────────────────────────────────┐  ×n_layer
-│  LayerNorm → Quantum Attention → Residual    │
+│  LayerNorm → Classical Attention → Residual  │
 │  LayerNorm → FeedForward → Residual          │
 └──────────────────────────────────────────────┘
     ↓
 CLS token → LayerNorm → Linear(embed_dim, n_classes)
 ```
 
-Per-head VQC triplet: Q-circuit, K-circuit, V-circuit (each `QuantumLinear`).
+`src/model.py` contains an earlier quantum-attention prototype, but the official
+CLI in `main.py` uses `src/engine/trainer.py` and `HybridQCNNViT`.
 
 ## Structure
 
@@ -79,14 +78,14 @@ python run.py 02 train --epochs 50
 python run.py 02 train --classical --epochs 50
 
 # Train both and compare side by side
-python run.py 02 compare --epochs 50
+python run.py 02 compare --epochs 50 --seeds 42 137 256 512 1024
 
 # Different dataset
 python run.py 02 train --dataset bloodmnist --epochs 50
 ```
 
 Options: `--dataset` (pathmnist|bloodmnist|dermamnist|fashionmnist|cifar10),
-`--epochs`, `--embed-dim`, `--n-head`.
+`--epochs`, `--embed-dim`, `--n-head`, `--seed`, `--seeds`.
 
 ## Training outputs
 
@@ -95,10 +94,15 @@ Each run writes to `experiments/<run_name>/`:
 | File | Content |
 |------|---------|
 | `config.json` | Full config snapshot |
+| `run_manifest.json` | Commit, comando, ambiente e versioni |
+| `params.json` | Parametri totali e addestrabili |
 | `best_model.pth` | Best checkpoint (highest val accuracy) |
 | `final_model.pth` | Final epoch checkpoint |
 | `results.json` | Test metrics and training history |
 | `events.out.tfevents.*` | TensorBoard logs |
+
+Il comando `compare` salva inoltre `comparison_<dataset>.json`, con run grezze
+e statistiche appaiate per accuracy, AUC, F1, gap di generalizzazione e tempo.
 
 ## Installation
 

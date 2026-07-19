@@ -29,7 +29,7 @@ Design notes:
 """
 
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Tuple
 
 import numpy as np
 import torch
@@ -46,9 +46,11 @@ from sklearn.model_selection import train_test_split
 # Dataset info
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class DatasetInfo:
     """Metadata about a MedMNIST dataset, populated after loading."""
+
     name: str
     n_classes: int
     n_channels: int
@@ -60,6 +62,7 @@ class DatasetInfo:
 # ---------------------------------------------------------------------------
 # Dataset wrappers
 # ---------------------------------------------------------------------------
+
 
 class MedMNISTWrapper(Dataset):
     """
@@ -98,7 +101,9 @@ class NoisyDataset(Dataset):
         intensity:    Float in [0, 1] controlling noise severity.
     """
 
-    def __init__(self, base_dataset, noise_type: str = "gaussian", intensity: float = 0.1):
+    def __init__(
+        self, base_dataset, noise_type: str = "gaussian", intensity: float = 0.1
+    ):
         self.base = base_dataset
         self.noise_type = noise_type
         self.intensity = intensity
@@ -116,7 +121,7 @@ class NoisyDataset(Dataset):
         elif self.noise_type == "salt_pepper":
             mask = torch.rand_like(image)
             image = image.clone()
-            image[mask < self.intensity / 2] = -1.0   # salt (normalised min)
+            image[mask < self.intensity / 2] = -1.0  # salt (normalised min)
             image[mask > 1 - self.intensity / 2] = 1.0  # pepper (normalised max)
 
         elif self.noise_type == "blur":
@@ -125,7 +130,9 @@ class NoisyDataset(Dataset):
             if k % 2 == 0:
                 k += 1
             padding = k // 2
-            image = F.avg_pool2d(image.unsqueeze(0), k, stride=1, padding=padding).squeeze(0)
+            image = F.avg_pool2d(
+                image.unsqueeze(0), k, stride=1, padding=padding
+            ).squeeze(0)
 
         return image, label
 
@@ -133,6 +140,7 @@ class NoisyDataset(Dataset):
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
 
 def load_medmnist(
     dataset_name: str,
@@ -167,14 +175,22 @@ def load_medmnist(
 
     DataClass = getattr(medmnist, meta["python_class"])
 
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5] * n_channels, std=[0.5] * n_channels),
-    ])
+    transform = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.5] * n_channels, std=[0.5] * n_channels),
+        ]
+    )
 
-    train_ds = MedMNISTWrapper(DataClass(split="train", transform=transform, download=True, size=28))
-    val_ds   = MedMNISTWrapper(DataClass(split="val",   transform=transform, download=True, size=28))
-    test_ds  = MedMNISTWrapper(DataClass(split="test",  transform=transform, download=True, size=28))
+    train_ds = MedMNISTWrapper(
+        DataClass(split="train", transform=transform, download=True, size=28)
+    )
+    val_ds = MedMNISTWrapper(
+        DataClass(split="val", transform=transform, download=True, size=28)
+    )
+    test_ds = MedMNISTWrapper(
+        DataClass(split="test", transform=transform, download=True, size=28)
+    )
 
     full_train_size = len(train_ds)
 
@@ -207,9 +223,20 @@ def load_medmnist(
     print(f"  Classes: {n_classes} | Channels: {n_channels}")
     print(f"  Train: {info.n_train} | Val: {info.n_val} | Test: {info.n_test}")
 
-    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,  num_workers=num_workers)
-    val_loader   = DataLoader(val_ds,   batch_size=batch_size, shuffle=False, num_workers=num_workers)
-    test_loader  = DataLoader(test_ds,  batch_size=batch_size, shuffle=False, num_workers=num_workers)
+    train_generator = torch.Generator().manual_seed(seed)
+    train_loader = DataLoader(
+        train_ds,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=num_workers,
+        generator=train_generator,
+    )
+    val_loader = DataLoader(
+        val_ds, batch_size=batch_size, shuffle=False, num_workers=num_workers
+    )
+    test_loader = DataLoader(
+        test_ds, batch_size=batch_size, shuffle=False, num_workers=num_workers
+    )
 
     return train_loader, val_loader, test_loader, info
 
@@ -232,5 +259,7 @@ def make_noisy_loader(
     Returns:
         A new DataLoader yielding noise-corrupted (image, label) pairs.
     """
-    noisy_ds = NoisyDataset(test_loader.dataset, noise_type=noise_type, intensity=intensity)
+    noisy_ds = NoisyDataset(
+        test_loader.dataset, noise_type=noise_type, intensity=intensity
+    )
     return DataLoader(noisy_ds, batch_size=batch_size, shuffle=False, num_workers=0)

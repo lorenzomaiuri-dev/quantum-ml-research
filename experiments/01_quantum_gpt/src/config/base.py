@@ -20,6 +20,12 @@ class GPTConfig:
     n_qlayers: int = 2
     q_device: str = "default.qubit"
 
+    def __post_init__(self) -> None:
+        if self.n_embd % self.n_head != 0:
+            raise ValueError("n_embd must be divisible by n_head")
+        if min(self.n_embd, self.n_head, self.n_layer, self.n_qlayers) <= 0:
+            raise ValueError("model dimensions and layer counts must be positive")
+
     @property
     def n_qubits(self) -> int:
         return self.n_embd // self.n_head

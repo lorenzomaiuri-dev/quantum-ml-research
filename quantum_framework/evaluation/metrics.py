@@ -48,14 +48,17 @@ def compute_classification_metrics(
             "f1"        — macro F1 score; zero_division=0 for unseen classes
     """
     labels = np.asarray(labels)
-    preds  = np.asarray(preds)
-    probs  = np.asarray(probs)
+    preds = np.asarray(preds)
+    probs = np.asarray(probs)
 
     acc = accuracy_score(labels, preds)
-    f1  = f1_score(labels, preds, average="macro", zero_division=0)
+    f1 = f1_score(labels, preds, average="macro", zero_division=0)
 
     try:
-        auc = roc_auc_score(labels, probs, multi_class="ovr", average="macro")
+        if probs.ndim == 2 and probs.shape[1] == 2:
+            auc = roc_auc_score(labels, probs[:, 1])
+        else:
+            auc = roc_auc_score(labels, probs, multi_class="ovr", average="macro")
     except ValueError:
         # Raised when a split contains only one class (rare but possible with
         # small val sets and high class imbalance).

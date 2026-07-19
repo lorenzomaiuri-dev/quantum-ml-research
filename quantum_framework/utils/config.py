@@ -36,29 +36,40 @@ class BaseViTConfig:
     """
 
     # --- Dataset ---
-    dataset_name: str = "pathmnist"   # MedMNIST key: pathmnist | bloodmnist | dermamnist | …
+    dataset_name: str = (
+        "pathmnist"  # MedMNIST key: pathmnist | bloodmnist | dermamnist | …
+    )
     image_size: int = 28
     patch_size: int = 7
-    n_channels: int = 3               # Updated automatically by the data loader
-    n_classes: int = 9                # Updated automatically by the data loader
+    n_channels: int = 3  # Updated automatically by the data loader
+    n_classes: int = 9  # Updated automatically by the data loader
 
     # --- Transformer architecture ---
-    embed_dim: int = 10               # Token embedding dimension; MUST equal n_qubits
+    embed_dim: int = 10  # Token embedding dimension; MUST equal n_qubits
     n_head: int = 2
     n_layer: int = 2
-    ffn_dim: int = 40                 # Feed-forward hidden dimension inside each block
+    ffn_dim: int = 40  # Feed-forward hidden dimension inside each block
     dropout: float = 0.1
 
     # --- Quantum circuit ---
-    n_qlayers: int = 2                # Depth of StronglyEntanglingLayers
+    n_qlayers: int = 2  # Depth of StronglyEntanglingLayers
     q_device: str = "default.qubit"  # "lightning.qubit" for GPU-accelerated simulation
 
     # --- Training ---
+    seed: int = 42
     batch_size: int = 128
     max_epochs: int = 50
     learning_rate: float = 1e-3
     weight_decay: float = 1e-4
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
+
+    def __post_init__(self) -> None:
+        if self.image_size % self.patch_size != 0:
+            raise ValueError("image_size must be divisible by patch_size")
+        if self.embed_dim % self.n_head != 0:
+            raise ValueError("embed_dim must be divisible by n_head")
+        if min(self.embed_dim, self.n_head, self.n_layer, self.n_qlayers) <= 0:
+            raise ValueError("model dimensions and layer counts must be positive")
 
     # --- Computed properties ---
 

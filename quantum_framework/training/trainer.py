@@ -46,11 +46,11 @@ Diagnostic hooks:
     vanishing through tanh-bounded layers.
 
     When log_activations=True, a forward hook on the same module records mean,
-    std, abs_max, and saturation_frac (fraction of pre-activation values above
-    0.95·π, indicating tanh saturation).
+    std, abs_max, and saturation_frac (fraction for which
+    |tanh(pre-activation)| > 0.95).
 """
 
-import json
+import math
 import os
 import time
 
@@ -61,8 +61,11 @@ from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 
 from quantum_framework.data import make_noisy_loader
-from quantum_framework.evaluation import compute_classification_metrics, generalization_gap
-from quantum_framework.utils import set_seed, save_json
+from quantum_framework.evaluation import (
+    compute_classification_metrics,
+    generalization_gap,
+)
+from quantum_framework.utils import collect_run_metadata, set_seed, save_json
 
 
 class BaseTrainer:
@@ -98,6 +101,9 @@ class BaseTrainer:
         log_activations: bool = False,
         monitor_module_name: str = "",
         grad_clip: float = 1.0,
+        experiment_id: str = "",
+        variant: str = "",
+        evaluate_noise: bool = False,
     ):
         self.config = config
         self.model = model.to(config.device)
@@ -109,6 +115,10 @@ class BaseTrainer:
         self.log_activations = log_activations
         self.monitor_module_name = monitor_module_name
         self.grad_clip = grad_clip
+        self.seed = seed
+        self.experiment_id = experiment_id
+        self.variant = variant
+        self.evaluate_noise = evaluate_noise
 
         set_seed(seed)
 
@@ -129,6 +139,16 @@ class BaseTrainer:
     # ------------------------------------------------------------------
     # Diagnostic hooks
     # ------------------------------------------------------------------
+
+    def _parameter_counts(self) -> dict:
+        if hasattr(self.model, "count_params"):
+            return self.model.count_params()
+        return {
+            "total": sum(p.numel() for p in self.model.parameters()),
+            "trainable": sum(
+                p.numel() for p in self.model.parameters() if p.requires_grad
+            ),
+        }
 
     def _resolve_module(self, name: str) -> nn.Module:
         """Traverse dot-path to find a submodule (e.g. 'patch_embed.compression')."""
@@ -157,16 +177,19 @@ class BaseTrainer:
         def act_hook(mod, inp, output):
             with torch.no_grad():
                 out = output.detach()
-                self._activation_stats.append({
-                    "mean": out.mean().item(),
-                    "std": out.std().item(),
-                    "abs_max": out.abs().max().item(),
-                    # |tanh(x)| > 0.95 ⟺ |x| > arctanh(0.95) ≈ 1.83,
-                    # i.e., the pre-activation is in the flat region.
-                    # We approximate this by checking the raw pre-activation
-                    # magnitude against 0.95·π (the scaled threshold).
-                    "saturation_frac": (out.abs() > 0.95 * torch.pi).float().mean().item(),
-                })
+                self._activation_stats.append(
+                    {
+                        "mean": out.mean().item(),
+                        "std": out.std().item(),
+                        "abs_max": out.abs().max().item(),
+                        # The hook observes the raw compression output, before tanh.
+                        # |tanh(x)| > 0.95 iff |x| > arctanh(0.95) ≈ 1.83.
+                        "saturation_frac": (out.abs() > math.atanh(0.95))
+                        .float()
+                        .mean()
+                        .item(),
+                    }
+                )
 
         module.register_full_backward_hook(grad_hook)
         module.register_forward_hook(act_hook)
@@ -188,15 +211,16 @@ class BaseTrainer:
         """
         self.model.eval()
         all_preds, all_labels, all_probs = [], [], []
-        total_loss, n_batches = 0.0, 0
+        total_loss, n_samples = 0.0, 0
 
         for images, labels in loader:
             images = images.to(self.config.device)
             labels = labels.to(self.config.device)
 
             logits, loss = self.model(images, labels)
-            total_loss += loss.item()
-            n_batches += 1
+            batch_size = labels.size(0)
+            total_loss += loss.item() * batch_size
+            n_samples += batch_size
 
             probs = torch.softmax(logits, dim=-1)
             all_preds.extend(logits.argmax(dim=-1).cpu().numpy())
@@ -206,7 +230,7 @@ class BaseTrainer:
         self.model.train()
 
         metrics = compute_classification_metrics(all_labels, all_preds, all_probs)
-        metrics["loss"] = total_loss / max(n_batches, 1)
+        metrics["loss"] = total_loss / max(n_samples, 1)
         return metrics
 
     # ------------------------------------------------------------------
@@ -217,8 +241,8 @@ class BaseTrainer:
         """
         Evaluate the trained model under Gaussian and salt-and-pepper noise.
 
-        Returns a dict structured as {noise_type: {str(intensity): accuracy}},
-        e.g. {"gaussian": {"0.1": 0.72, "0.2": 0.61, ...}, ...}
+        Returns nested loss, accuracy, AUC and F1 values for every noise type
+        and intensity.
 
         Called automatically at the end of train() when the test_loader is
         a MedMNIST-based loader (experiment 03). Override or skip in subclasses
@@ -229,16 +253,20 @@ class BaseTrainer:
         intensities = [0.05, 0.1, 0.2, 0.3, 0.5]
         results = {}
 
-        for noise_type in noise_types:
+        for noise_index, noise_type in enumerate(noise_types):
             results[noise_type] = {}
-            for intensity in intensities:
+            for intensity_index, intensity in enumerate(intensities):
+                # Identical corruptions for variants sharing the same run seed.
+                set_seed(self.seed + 10_000 + noise_index * 100 + intensity_index)
                 noisy_loader = make_noisy_loader(
                     self.test_loader, noise_type, intensity, self.config.batch_size
                 )
                 m = self.evaluate(noisy_loader)
-                results[noise_type][str(intensity)] = round(m["accuracy"], 4)
+                results[noise_type][str(intensity)] = {
+                    key: round(m[key], 4) for key in ("loss", "accuracy", "auc", "f1")
+                }
 
-            accs = list(results[noise_type].values())
+            accs = [entry["accuracy"] for entry in results[noise_type].values()]
             print(f"    {noise_type}: {accs}")
 
         return results
@@ -264,23 +292,28 @@ class BaseTrainer:
             run_dir (str): Path to the run directory.
             results (dict): All metrics, including per-epoch history.
         """
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"  Run: {self.run_dir}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
+        wall_start = time.time()
 
         # Persist config and parameter counts before training starts.
         save_json(os.path.join(self.run_dir, "config.json"), self.config.to_dict())
-        if hasattr(self.model, "count_params"):
-            save_json(os.path.join(self.run_dir, "params.json"), self.model.count_params())
+        save_json(
+            os.path.join(self.run_dir, "run_manifest.json"),
+            collect_run_metadata(self.experiment_id, self.seed, self.variant),
+        )
+        save_json(os.path.join(self.run_dir, "params.json"), self._parameter_counts())
 
         if self.log_gradients or self.log_activations:
             self._register_hooks()
 
-        best_val_acc = 0.0
+        best_val_acc = float("-inf")
         history = []
         start_time = time.time()
 
         for epoch in range(1, self.config.max_epochs + 1):
+            epoch_start = time.time()
             self.model.train()
             epoch_loss = 0.0
             epoch_correct = 0
@@ -306,7 +339,7 @@ class BaseTrainer:
                     nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip)
                 self.optimizer.step()
 
-                epoch_loss += loss.item()
+                epoch_loss += loss.item() * labels.size(0)
                 epoch_correct += (logits.argmax(dim=-1) == labels).sum().item()
                 epoch_total += labels.size(0)
                 pbar.set_postfix(loss=f"{loss.item():.4f}")
@@ -314,19 +347,23 @@ class BaseTrainer:
             self.scheduler.step()
 
             train_acc = epoch_correct / max(epoch_total, 1)
-            avg_loss = epoch_loss / len(self.train_loader)
+            avg_loss = epoch_loss / max(epoch_total, 1)
 
             val_metrics = self.evaluate(self.val_loader)
             gen_gap = generalization_gap(train_acc, val_metrics["accuracy"])
 
             # Gradient diagnostics
-            grad_norm_mean = float(np.mean(self._grad_norms)) if self._grad_norms else 0.0
-            grad_norm_std  = float(np.std(self._grad_norms))  if self._grad_norms else 0.0
+            grad_norm_mean = (
+                float(np.mean(self._grad_norms)) if self._grad_norms else 0.0
+            )
+            grad_norm_std = float(np.std(self._grad_norms)) if self._grad_norms else 0.0
 
             # Activation diagnostics
             if self._activation_stats:
-                act_sat = float(np.mean([s["saturation_frac"] for s in self._activation_stats]))
-                act_std = float(np.mean([s["std"]             for s in self._activation_stats]))
+                act_sat = float(
+                    np.mean([s["saturation_frac"] for s in self._activation_stats])
+                )
+                act_std = float(np.mean([s["std"] for s in self._activation_stats]))
             else:
                 act_sat = act_std = 0.0
 
@@ -339,25 +376,34 @@ class BaseTrainer:
             self.writer.add_scalar("Gap/generalization", gen_gap, epoch)
             self.writer.add_scalar("LR", self.optimizer.param_groups[0]["lr"], epoch)
             if self.log_gradients:
-                self.writer.add_scalar("Diagnostics/grad_norm_mean", grad_norm_mean, epoch)
-                self.writer.add_scalar("Diagnostics/grad_norm_std",  grad_norm_std,  epoch)
+                self.writer.add_scalar(
+                    "Diagnostics/grad_norm_mean", grad_norm_mean, epoch
+                )
+                self.writer.add_scalar(
+                    "Diagnostics/grad_norm_std", grad_norm_std, epoch
+                )
             if self.log_activations:
-                self.writer.add_scalar("Diagnostics/activation_saturation", act_sat, epoch)
-                self.writer.add_scalar("Diagnostics/activation_std",        act_std, epoch)
+                self.writer.add_scalar(
+                    "Diagnostics/activation_saturation", act_sat, epoch
+                )
+                self.writer.add_scalar("Diagnostics/activation_std", act_std, epoch)
 
-            history.append({
-                "epoch":          epoch,
-                "train_loss":     round(avg_loss, 4),
-                "train_acc":      round(train_acc, 4),
-                "val_loss":       round(val_metrics["loss"], 4),
-                "val_acc":        round(val_metrics["accuracy"], 4),
-                "val_auc":        round(val_metrics["auc"], 4),
-                "val_f1":         round(val_metrics["f1"], 4),
-                "gen_gap":        round(gen_gap, 4),
-                "grad_norm_mean": round(grad_norm_mean, 6),
-                "grad_norm_std":  round(grad_norm_std, 6),
-                "act_saturation": round(act_sat, 4),
-            })
+            history.append(
+                {
+                    "epoch": epoch,
+                    "train_loss": round(avg_loss, 4),
+                    "train_acc": round(train_acc, 4),
+                    "val_loss": round(val_metrics["loss"], 4),
+                    "val_acc": round(val_metrics["accuracy"], 4),
+                    "val_auc": round(val_metrics["auc"], 4),
+                    "val_f1": round(val_metrics["f1"], 4),
+                    "gen_gap": round(gen_gap, 4),
+                    "grad_norm_mean": round(grad_norm_mean, 6),
+                    "grad_norm_std": round(grad_norm_std, 6),
+                    "act_saturation": round(act_sat, 4),
+                    "epoch_time_seconds": round(time.time() - epoch_start, 3),
+                }
+            )
 
             print(
                 f"  Epoch {epoch:3d} | "
@@ -376,7 +422,14 @@ class BaseTrainer:
 
         total_time = time.time() - start_time
 
+        # Preserve the final optimisation state separately from the selected
+        # best-validation checkpoint used for reported test metrics.
+        torch.save(
+            self.model.state_dict(), os.path.join(self.run_dir, "final_model.pth")
+        )
+
         # Load best checkpoint for final test evaluation.
+        evaluation_start = time.time()
         self.model.load_state_dict(
             torch.load(
                 os.path.join(self.run_dir, "best_model.pth"),
@@ -384,9 +437,11 @@ class BaseTrainer:
                 weights_only=True,
             )
         )
-        test_metrics  = self.evaluate(self.test_loader)
-        train_final   = self.evaluate(self.train_loader)
-        final_gen_gap = generalization_gap(train_final["accuracy"], test_metrics["accuracy"])
+        test_metrics = self.evaluate(self.test_loader)
+        train_final = self.evaluate(self.train_loader)
+        final_gen_gap = generalization_gap(
+            train_final["accuracy"], test_metrics["accuracy"]
+        )
 
         print(
             f"\n  Test Acc: {test_metrics['accuracy']:.4f} | "
@@ -394,24 +449,35 @@ class BaseTrainer:
             f"Final Gen Gap: {final_gen_gap:+.4f}"
         )
 
-        noise_results = self._test_noise_robustness()
+        noise_results = self._test_noise_robustness() if self.evaluate_noise else {}
+        evaluation_time = time.time() - evaluation_start
+        total_wall_time = time.time() - wall_start
 
         results = {
-            "total_time":            round(total_time, 1),
-            "best_val_acc":          round(best_val_acc, 4),
-            "test_accuracy":         round(test_metrics["accuracy"], 4),
-            "test_auc":              round(test_metrics["auc"], 4),
-            "test_f1":               round(test_metrics["f1"], 4),
-            "train_accuracy_final":  round(train_final["accuracy"], 4),
-            "generalization_gap":    round(final_gen_gap, 4),
-            "noise_robustness":      noise_results,
-            "history":               history,
+            "schema_version": "1.0",
+            "experiment": self.experiment_id,
+            "variant": self.variant,
+            "dataset": self.config.dataset_name,
+            "seed": self.seed,
+            "total_time": round(total_time, 1),
+            "training_time_seconds": round(total_time, 3),
+            "evaluation_time_seconds": round(evaluation_time, 3),
+            "total_wall_time_seconds": round(total_wall_time, 3),
+            "mean_epoch_time": round(total_time / max(self.config.max_epochs, 1), 3),
+            "best_val_acc": round(best_val_acc, 4),
+            "train_loss_final": round(train_final["loss"], 4),
+            "test_loss": round(test_metrics["loss"], 4),
+            "test_accuracy": round(test_metrics["accuracy"], 4),
+            "test_auc": round(test_metrics["auc"], 4),
+            "test_f1": round(test_metrics["f1"], 4),
+            "train_accuracy_final": round(train_final["accuracy"], 4),
+            "generalization_gap": round(final_gen_gap, 4),
+            "noise_robustness": noise_results,
+            "history": history,
         }
-        if hasattr(self.model, "count_params"):
-            results["params"] = self.model.count_params()
+        results["params"] = self._parameter_counts()
 
         save_json(os.path.join(self.run_dir, "results.json"), results)
-        torch.save(self.model.state_dict(), os.path.join(self.run_dir, "final_model.pth"))
         self.writer.close()
 
         print(f"  Training completed in {total_time:.1f}s → {self.run_dir}")

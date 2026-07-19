@@ -1,6 +1,7 @@
 import torchvision
 import torchvision.transforms as transforms
-from torch.utils.data import DataLoader
+import torch
+from torch.utils.data import DataLoader, random_split
 
 
 def get_torchvision_loaders(config):
@@ -19,21 +20,40 @@ def get_torchvision_loaders(config):
         config.n_channels, config.n_classes = 1, 10
         mean, std = (0.5,), (0.5,)
     else:
-        raise ValueError(f"Dataset '{name}' is not supported by the torchvision loader.")
+        raise ValueError(
+            f"Dataset '{name}' is not supported by the torchvision loader."
+        )
 
-    transform = transforms.Compose([
-        transforms.Resize((config.image_size, config.image_size)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean, std),
-    ])
+    transform = transforms.Compose(
+        [
+            transforms.Resize((config.image_size, config.image_size)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean, std),
+        ]
+    )
 
     train_ds = ds_class(root="./data", train=True, download=True, transform=transform)
     test_ds = ds_class(root="./data", train=False, download=True, transform=transform)
 
-    print(f"Loaded {name}: train={len(train_ds)}, test={len(test_ds)}")
+    val_size = max(1, int(0.1 * len(train_ds)))
+    train_size = len(train_ds) - val_size
+    split_generator = torch.Generator().manual_seed(getattr(config, "seed", 42))
+    train_ds, val_ds = random_split(
+        train_ds, [train_size, val_size], generator=split_generator
+    )
 
-    train_loader = DataLoader(train_ds, batch_size=config.batch_size, shuffle=True)
+    print(
+        f"Loaded {name}: train={len(train_ds)}, val={len(val_ds)}, test={len(test_ds)}"
+    )
+
+    loader_generator = torch.Generator().manual_seed(getattr(config, "seed", 42))
+    train_loader = DataLoader(
+        train_ds,
+        batch_size=config.batch_size,
+        shuffle=True,
+        generator=loader_generator,
+    )
+    val_loader = DataLoader(val_ds, batch_size=config.batch_size, shuffle=False)
     test_loader = DataLoader(test_ds, batch_size=config.batch_size, shuffle=False)
 
-    # test_loader doubles as val_loader for these standard datasets
-    return train_loader, test_loader, test_loader
+    return train_loader, val_loader, test_loader

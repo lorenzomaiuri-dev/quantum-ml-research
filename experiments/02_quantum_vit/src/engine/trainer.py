@@ -8,7 +8,7 @@ through the base/torchvision dispatcher so that non-MedMNIST datasets
 """
 
 from quantum_framework.training import BaseTrainer
-from quantum_framework.utils import make_run_dir
+from quantum_framework.utils import make_run_dir, set_seed
 
 from src.data.base import get_dataloaders
 from src.models.hybrid_vit import HybridQCNNViT
@@ -27,7 +27,10 @@ class Trainer(BaseTrainer):
         experiment_name: Optional label for the run directory.
     """
 
-    def __init__(self, config, experiment_name=None):
+    def __init__(self, config, seed=42, experiment_name=None):
+        # Seed before dataset shuffling and model parameter initialisation.
+        set_seed(seed)
+        config.seed = seed
         # Data — routes to MedMNIST or torchvision depending on dataset_name
         train_loader, val_loader, test_loader = get_dataloaders(config)
 
@@ -44,7 +47,11 @@ class Trainer(BaseTrainer):
             val_loader=val_loader,
             test_loader=test_loader,
             run_dir=run_dir,
+            seed=seed,
             log_gradients=False,
             log_activations=False,
             grad_clip=1.0,
+            experiment_id="02_quantum_vit",
+            variant=tag,
+            evaluate_noise=False,
         )

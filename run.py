@@ -37,12 +37,12 @@ EXPERIMENTS = {
     "01": {
         "dir": ROOT / "experiments" / "01_quantum_gpt",
         "description": "Quantum GPT — Shakespeare text generation with VQC attention",
-        "synopsis": "python run.py 01 --mode [train|generate|full] [--config default|fast|big|heavy]",
+        "synopsis": "python run.py 01 --mode [train|generate|full|compare] [--config NAME]",
     },
     "02": {
         "dir": ROOT / "experiments" / "02_quantum_vit",
         "description": "Quantum ViT — MedMNIST image classification with quantum patch embedding",
-        "synopsis": "python run.py 02 [train|compare] [--epochs N] [--classical]",
+        "synopsis": "python run.py 02 [train|compare] [--epochs N] [--classical] [--seeds ...]",
     },
     "03": {
         "dir": ROOT / "experiments" / "03_quantum_reg",
@@ -52,13 +52,14 @@ EXPERIMENTS = {
     "04": {
         "dir": ROOT / "experiments" / "04_quantum_kernel",
         "description": "Quantum Kernel PoC — quantum vs classical similarity on BreastMNIST (~5 min)",
-        "synopsis": "python run.py 04",
+        "synopsis": "python run.py 04 [--repeats N] [--seed N]",
     },
 }
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def print_help() -> None:
     print(__doc__)
@@ -95,6 +96,7 @@ def run_experiment(eid: str, extra_args: list[str]) -> int:
 # Entry point
 # ---------------------------------------------------------------------------
 
+
 def main() -> int:
     args = sys.argv[1:]
 
@@ -109,7 +111,10 @@ def main() -> int:
         if eid == key or eid == key.lstrip("0") or eid.startswith(key):
             return run_experiment(key, args[1:])
 
-    print(f"Error: unknown experiment '{eid}'. Choose from: {', '.join(EXPERIMENTS)}", file=sys.stderr)
+    print(
+        f"Error: unknown experiment '{eid}'. Choose from: {', '.join(EXPERIMENTS)}",
+        file=sys.stderr,
+    )
     print_help()
     return 1
 

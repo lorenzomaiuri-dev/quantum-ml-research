@@ -1,4 +1,3 @@
-import torch.nn as nn
 from .hybrid_vit import HybridQCNNViT
 
 

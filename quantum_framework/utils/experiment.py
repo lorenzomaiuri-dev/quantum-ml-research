@@ -8,11 +8,18 @@ and makes the thesis code easier to follow.
 
 import json
 import os
+import platform
 import random
+import subprocess
+import sys
 from datetime import datetime
+from importlib.metadata import PackageNotFoundError, version
 
 import numpy as np
 import torch
+
+
+RESULT_SCHEMA_VERSION = "1.0"
 
 
 def set_seed(seed: int) -> None:
@@ -69,4 +76,50 @@ def save_json(path: str, data: dict) -> None:
         data: JSON-serializable dictionary.
     """
     with open(path, "w") as f:
-        json.dump(data, f, indent=4)
+        json.dump(data, f, indent=4, allow_nan=False)
+
+
+def collect_run_metadata(experiment: str, seed: int, variant: str = "") -> dict:
+    """Collect provenance needed to identify and reproduce a run."""
+    try:
+        commit = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        dirty = bool(
+            subprocess.run(
+                ["git", "status", "--porcelain"],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+        )
+    except (OSError, subprocess.CalledProcessError):
+        commit, dirty = None, None
+
+    packages = {}
+    for package in ("torch", "pennylane", "numpy", "scikit-learn", "medmnist"):
+        try:
+            packages[package] = version(package)
+        except PackageNotFoundError:
+            packages[package] = None
+
+    return {
+        "schema_version": RESULT_SCHEMA_VERSION,
+        "experiment": experiment,
+        "variant": variant,
+        "seed": seed,
+        "created_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "command": sys.argv,
+        "git": {"commit": commit, "dirty": dirty},
+        "runtime": {
+            "python": platform.python_version(),
+            "platform": platform.platform(),
+            "torch_device": "cuda" if torch.cuda.is_available() else "cpu",
+            "cuda_version": torch.version.cuda,
+            "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
+        },
+        "packages": packages,
+    }
