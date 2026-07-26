@@ -20,6 +20,10 @@ dependencies = [
     # Training infrastructure (01, 02, 03)
     "tensorboard>=2.20.0",
     "tqdm>=4.67.1",
+    "torchinfo>=1.8.0",
+    "torchviz>=0.0.3",
+    "datasets>=5.0.0",
+    "transformers>=5.11.0",
 ]
 
 [project.optional-dependencies]

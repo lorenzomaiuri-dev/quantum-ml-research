@@ -1795,6 +1795,7 @@ name = "quantum-framework"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "datasets" },
     { name = "medmnist" },
     { name = "numpy" },
     { name = "pennylane" },
@@ -1804,7 +1805,9 @@ dependencies = [
     { name = "torch" },
     { name = "torchinfo" },
     { name = "torchvision" },
+    { name = "torchviz" },
     { name = "tqdm" },
+    { name = "transformers" },
 ]
 
 [package.optional-dependencies]
@@ -1823,6 +1826,7 @@ gpu = [
 
 [package.metadata]
 requires-dist = [
+    { name = "datasets", specifier = ">=5.0.0" },
     { name = "datasets", marker = "extra == 'gpt'", specifier = ">=4.4.2" },
     { name = "medmnist", specifier = ">=3.0" },
     { name = "numpy", specifier = ">=1.24" },
@@ -1836,8 +1840,10 @@ requires-dist = [
     { name = "torchinfo", specifier = ">=1.8.0" },
     { name = "torchinfo", marker = "extra == 'gpt'", specifier = ">=1.8.0" },
     { name = "torchvision", specifier = ">=0.15" },
+    { name = "torchviz", specifier = ">=0.0.3" },
     { name = "torchviz", marker = "extra == 'gpt'", specifier = ">=0.0.3" },
     { name = "tqdm", specifier = ">=4.67.1" },
+    { name = "transformers", specifier = ">=5.11.0" },
     { name = "transformers", marker = "extra == 'gpt'", specifier = ">=4.57.3" },
 ]
 provides-extras = ["gpt", "gpu", "dev"]
