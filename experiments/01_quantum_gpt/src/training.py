@@ -59,8 +59,11 @@ class Trainer:
         except Exception as e:
             print(f"Could not generate torchviz graph: {e}")
 
-        with open(os.path.join(self.run_dir, "model_summary_table.txt"), "w") as f:
-            f.write(str(summary(self.model, input_data=dummy_input, verbose=0)))
+        try:
+            with open(os.path.join(self.run_dir, "model_summary_table.txt"), "w") as f:
+                f.write(str(summary(self.model, input_data=dummy_input, verbose=0)))
+        except Exception as e:
+            print(f"Could not write model summary table: {e}")
 
     @torch.no_grad()
     def estimate_loss(self):

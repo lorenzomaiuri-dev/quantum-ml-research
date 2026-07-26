@@ -25,6 +25,17 @@ import torch.nn as nn
 import pennylane as qml
 
 
+def _simulator_device(q_device: str) -> torch.device:
+    """
+    Torch device on which a PennyLane device's tensors must live.
+
+    The statevector simulators (`default.qubit`, `lightning.qubit`) build their
+    initial state on CPU, so feeding them CUDA tensors raises a device mismatch
+    inside the first gate application. Only the `.gpu` backends own CUDA memory.
+    """
+    return torch.device("cuda" if q_device.endswith(".gpu") else "cpu")
+
+
 class QuantumLinear(nn.Module):
     """
     A quantum linear layer that maps n_qubits → n_qubits.
@@ -56,6 +67,20 @@ class QuantumLinear(nn.Module):
 
         weight_shapes = {"weights": (n_qlayers, n_qubits, 3)}
         self.qlayer = qml.qnn.TorchLayer(circuit, weight_shapes)
+        self.sim_device = _simulator_device(q_device)
+        self.qlayer.to(self.sim_device)
+
+    def _apply(self, fn, *args, **kwargs):
+        """
+        Keep the circuit weights on the simulator's device when the host model moves.
+
+        A hybrid model is typically sent to CUDA as a whole; the variational weights
+        must stay where the simulator can use them, so they are pinned back after
+        every `.to()` / `.cuda()` call.
+        """
+        super()._apply(fn, *args, **kwargs)
+        self.qlayer.to(self.sim_device)
+        return self
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -70,8 +95,10 @@ class QuantumLinear(nn.Module):
         # Scale to [-π, π]: tanh keeps gradients alive, π fills the Bloch sphere.
         x_scaled = torch.tanh(x_flat) * torch.pi
 
-        out = self.qlayer(x_scaled)
-        return out.reshape(*leading, self.n_qubits)
+        # The circuit runs on the simulator's device; `.to()` is autograd-aware,
+        # so gradients flow back to the classical part of the model unchanged.
+        out = self.qlayer(x_scaled.to(self.sim_device))
+        return out.to(device=x.device, dtype=x.dtype).reshape(*leading, self.n_qubits)
 
 
 class QuantumLinearWithAdapter(nn.Module):
