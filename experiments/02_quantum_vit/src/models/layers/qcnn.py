@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import pennylane as qml
 
+from quantum_framework.layers import PinnedTorchLayer, simulator_device
+
 
 class QuantumPatchEmbedding(nn.Module):
     """Quantum patch embedding: Linear compression → tanh·π → VQC → ⟨Z⟩."""
@@ -24,7 +26,11 @@ class QuantumPatchEmbedding(nn.Module):
             return [qml.expval(qml.PauliZ(i)) for i in range(self.embed_dim)]
 
         weight_shapes = {"weights": (n_qlayers, self.n_qubits, 3)}
-        self.q_layer = qml.qnn.TorchLayer(qnode, weight_shapes)
+        # Pinned: the simulator's statevector lives on CPU, so the circuit cannot
+        # be evaluated on CUDA even when the surrounding ViT is.
+        self.q_layer = PinnedTorchLayer(
+            qnode, weight_shapes, simulator_device(q_device)
+        )
 
     def forward(self, x):
         # x: (B, n_patches, patch_dim)

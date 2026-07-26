@@ -25,7 +25,7 @@ import torch.nn as nn
 import pennylane as qml
 
 
-def _simulator_device(q_device: str) -> torch.device:
+def simulator_device(q_device: str) -> torch.device:
     """
     Torch device on which a PennyLane device's tensors must live.
 
@@ -34,6 +34,44 @@ def _simulator_device(q_device: str) -> torch.device:
     inside the first gate application. Only the `.gpu` backends own CUDA memory.
     """
     return torch.device("cuda" if q_device.endswith(".gpu") else "cpu")
+
+
+class PinnedTorchLayer(qml.qnn.TorchLayer):
+    """
+    A TorchLayer whose weights stay on the simulator's device.
+
+    A hybrid model is normally sent to the GPU as a whole, but the variational
+    weights must remain where the simulator can use them, so they are moved back
+    after every `.to()` / `.cuda()` applied to an enclosing module.
+    """
+
+    def __init__(self, qnode, weight_shapes: dict, sim_device: torch.device):
+        super().__init__(qnode, weight_shapes)
+        self.sim_device = sim_device
+        self._pin()
+
+    def _pin(self):
+        for tensor in list(self.parameters(recurse=True)) + list(
+            self.buffers(recurse=True)
+        ):
+            if tensor.device != self.sim_device:
+                tensor.data = tensor.data.to(self.sim_device)
+                if getattr(tensor, "grad", None) is not None:
+                    tensor.grad.data = tensor.grad.data.to(self.sim_device)
+
+    def _apply(self, fn, *args, **kwargs):
+        super()._apply(fn, *args, **kwargs)
+        self._pin()
+        return self
+
+    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
+        """Evaluate the circuit on the simulator's device, answer on the caller's.
+
+        `.to()` is autograd-aware, so gradients flow back to the classical part
+        of the model unchanged.
+        """
+        out = super().forward(inputs.to(self.sim_device))
+        return out.to(device=inputs.device, dtype=inputs.dtype)
 
 
 class QuantumLinear(nn.Module):
@@ -66,21 +104,9 @@ class QuantumLinear(nn.Module):
             return [qml.expval(qml.PauliZ(i)) for i in range(n_qubits)]
 
         weight_shapes = {"weights": (n_qlayers, n_qubits, 3)}
-        self.qlayer = qml.qnn.TorchLayer(circuit, weight_shapes)
-        self.sim_device = _simulator_device(q_device)
-        self.qlayer.to(self.sim_device)
-
-    def _apply(self, fn, *args, **kwargs):
-        """
-        Keep the circuit weights on the simulator's device when the host model moves.
-
-        A hybrid model is typically sent to CUDA as a whole; the variational weights
-        must stay where the simulator can use them, so they are pinned back after
-        every `.to()` / `.cuda()` call.
-        """
-        super()._apply(fn, *args, **kwargs)
-        self.qlayer.to(self.sim_device)
-        return self
+        self.qlayer = PinnedTorchLayer(
+            circuit, weight_shapes, simulator_device(q_device)
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -95,10 +121,8 @@ class QuantumLinear(nn.Module):
         # Scale to [-π, π]: tanh keeps gradients alive, π fills the Bloch sphere.
         x_scaled = torch.tanh(x_flat) * torch.pi
 
-        # The circuit runs on the simulator's device; `.to()` is autograd-aware,
-        # so gradients flow back to the classical part of the model unchanged.
-        out = self.qlayer(x_scaled.to(self.sim_device))
-        return out.to(device=x.device, dtype=x.dtype).reshape(*leading, self.n_qubits)
+        out = self.qlayer(x_scaled)
+        return out.reshape(*leading, self.n_qubits)
 
 
 class QuantumLinearWithAdapter(nn.Module):
