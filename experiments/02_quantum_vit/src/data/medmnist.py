@@ -13,6 +13,8 @@ def get_medmnist_loaders(config):
     train_loader, val_loader, test_loader, info = load_medmnist(
         dataset_name=config.dataset_name,
         batch_size=config.batch_size,
+        train_subset=config.train_subset,
+        seed=config.seed,
     )
     config.n_channels = info.n_channels
     config.n_classes = info.n_classes

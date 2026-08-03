@@ -19,11 +19,12 @@ class QViTConfig(BaseViTConfig):
 
     # Override defaults that differ from BaseViTConfig
     dataset_name: str = "pathmnist"
-    embed_dim: int = 8    # Smaller than experiment 03; must equal n_qubits
+    embed_dim: int = 8  # Smaller than experiment 03; must equal n_qubits
     ffn_dim: int = 32
     batch_size: int = 128
     max_epochs: int = 50
+    train_subset: int = 0
 
     # --- Experiment-02-specific ---
-    use_quantum: bool = True   # False → classical linear patch embedding for baseline
-    eval_interval: int = 1     # Evaluate every epoch
+    use_quantum: bool = True  # False → classical linear patch embedding for baseline
+    eval_interval: int = 1  # Evaluate every epoch

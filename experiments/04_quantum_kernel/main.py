@@ -7,6 +7,7 @@ import numpy as np
 import pennylane as qml
 from medmnist import INFO
 from sklearn.decomposition import PCA
+from sklearn.metrics.pairwise import rbf_kernel
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from quantum_framework.evaluation import paired_comparison
 from quantum_framework.utils import collect_run_metadata, make_run_dir, save_json
@@ -51,7 +52,11 @@ def load_samples(dataset_name, n_class0, n_class1, n_qubits, seed=42):
     scaler = StandardScaler()
     all_images = scaler.fit_transform(all_images)
 
-    pca = PCA(n_components=n_qubits)
+    # Use the exact solver so the recorded sample seed fully determines the
+    # preprocessing.  With ``svd_solver="auto"``, scikit-learn may select the
+    # randomized solver for this 100x784 matrix, whose implicit RNG would make
+    # identical runs produce slightly different features and kernel matrices.
+    pca = PCA(n_components=n_qubits, svd_solver="full")
     all_compressed = pca.fit_transform(all_images)
     explained = pca.explained_variance_ratio_.sum()
     print(f"PCA → {n_qubits} dims (variance explained: {explained:.3f})")
@@ -62,12 +67,17 @@ def load_samples(dataset_name, n_class0, n_class1, n_qubits, seed=42):
 
     x0 = all_scaled[: len(images_0)]
     x1 = all_scaled[len(images_0) :]
+    pca_0 = all_compressed[: len(images_0)]
+    pca_1 = all_compressed[len(images_0) :]
 
     return (
         x0,
         x1,
+        pca_0,
+        pca_1,
         {
             "sample_indices": sample_indices,
+            "pca_solver": "full",
             "pca_explained_variance": float(explained),
         },
     )
@@ -84,66 +94,107 @@ def classical_similarity(x0, x1):
     return sim
 
 
-def quantum_kernel_matrix(x0, x1, n_qubits, q_device="default.qubit"):
+def rbf_similarity(x0, x1):
+    """Compute an RBF kernel with a label-free median-distance bandwidth."""
+    all_x = np.vstack([x0, x1])
+    squared_distances = np.sum(
+        (all_x[:, np.newaxis, :] - all_x[np.newaxis, :, :]) ** 2,
+        axis=-1,
+    )
+    upper = squared_distances[np.triu_indices_from(squared_distances, k=1)]
+    median_squared_distance = float(np.median(upper))
+    if median_squared_distance <= 0:
+        raise ValueError("cannot select an RBF bandwidth from zero distances")
+    gamma = 1.0 / (2.0 * median_squared_distance)
+    return rbf_kernel(all_x, gamma=gamma), gamma
+
+
+def quantum_kernel_matrix(
+    x0,
+    x1,
+    n_qubits,
+    q_device="default.qubit",
+    feature_map="custom_cnot_rz",
+    iqp_repeats=2,
+    kernel_method="pairwise",
+):
     """
-    Compute quantum kernel matrix using IQP-style embedding.
+    Compute a fidelity-kernel matrix using the selected quantum feature map.
 
     K(x, y) = |⟨0|U†(y)U(x)|0⟩|²
 
-    where U(x) = H⊗n · diag(exp(i·x)) · CNOT_cascade · H⊗n · diag(exp(i·x))
-
-    This is a standard kernel from the QML literature (Havlicek et al., Nature 2019).
-    No trainable parameters — purely a function of the data.
+    ``custom_cnot_rz`` preserves the repository's original H/RZ/CNOT/RZ map.
+    ``iqp`` uses PennyLane's IQPEmbedding with feature-product ZZ phases, as
+    proposed by Havlicek et al.  No trainable parameters are used.
     """
     dev = qml.device(q_device, wires=n_qubits)
 
+    def encode(features):
+        if feature_map == "iqp":
+            pattern = [[i, i + 1] for i in range(n_qubits - 1)]
+            qml.IQPEmbedding(
+                features,
+                wires=range(n_qubits),
+                n_repeats=iqp_repeats,
+                pattern=pattern,
+            )
+        elif feature_map == "custom_cnot_rz":
+            # Original repository feature map.
+            for i in range(n_qubits):
+                qml.Hadamard(wires=i)
+                qml.RZ(features[i], wires=i)
+            for i in range(n_qubits - 1):
+                qml.CNOT(wires=[i, i + 1])
+            for i in range(n_qubits):
+                qml.RZ(features[i], wires=i)
+        else:
+            raise ValueError(f"unknown feature map: {feature_map}")
+
     @qml.qnode(dev)
     def kernel_circuit(x, y):
-        # Encode x
-        for i in range(n_qubits):
-            qml.Hadamard(wires=i)
-            qml.RZ(x[i], wires=i)
-        for i in range(n_qubits - 1):
-            qml.CNOT(wires=[i, i + 1])
-        for i in range(n_qubits):
-            qml.RZ(x[i], wires=i)
-
-        # Encode x† (adjoint = reverse)
-        for i in range(n_qubits):
-            qml.RZ(-y[i], wires=i)
-        for i in range(n_qubits - 2, -1, -1):
-            qml.CNOT(wires=[i, i + 1])
-        for i in range(n_qubits):
-            qml.RZ(-y[i], wires=i)
-            qml.Hadamard(wires=i)
-
+        encode(x)
+        qml.adjoint(encode)(y)
         # Probability of measuring |0...0⟩
         return qml.probs(wires=range(n_qubits))
+
+    @qml.qnode(dev)
+    def state_circuit(x):
+        encode(x)
+        return qml.state()
 
     all_x = np.vstack([x0, x1])
     n = len(all_x)
     K = np.zeros((n, n))
-
     total_pairs = n * (n + 1) // 2
-    computed = 0
 
-    print(f"Computing quantum kernel ({n}×{n} = {total_pairs} unique pairs)...")
+    print(
+        f"Computing {feature_map} quantum kernel via {kernel_method} "
+        f"({n}×{n} = {total_pairs} unique pairs)..."
+    )
     start = time.time()
+    if kernel_method == "pairwise":
+        computed = 0
+        for i in range(n):
+            for j in range(i, n):
+                probs = kernel_circuit(all_x[i], all_x[j])
+                k_val = probs[0]  # |⟨0...0|U†(y)U(x)|0...0⟩|²
+                K[i, j] = k_val
+                K[j, i] = k_val
+                computed += 1
 
-    for i in range(n):
-        for j in range(i, n):
-            probs = kernel_circuit(all_x[i], all_x[j])
-            k_val = probs[0]  # |⟨0...0|U†(y)U(x)|0...0⟩|²
-            K[i, j] = k_val
-            K[j, i] = k_val
-            computed += 1
-
-            if computed % 500 == 0:
-                elapsed = time.time() - start
-                eta = elapsed / computed * (total_pairs - computed)
-                print(
-                    f"  {computed}/{total_pairs} pairs ({elapsed:.1f}s elapsed, ~{eta:.0f}s remaining)"
-                )
+                if computed % 500 == 0:
+                    elapsed = time.time() - start
+                    eta = elapsed / computed * (total_pairs - computed)
+                    print(
+                        f"  {computed}/{total_pairs} pairs "
+                        f"({elapsed:.1f}s elapsed, ~{eta:.0f}s remaining)"
+                    )
+    elif kernel_method == "statevector":
+        states = np.asarray([state_circuit(x) for x in all_x])
+        overlaps = states.conj() @ states.T
+        K = np.abs(overlaps) ** 2
+    else:
+        raise ValueError(f"unknown kernel method: {kernel_method}")
 
     elapsed = time.time() - start
     print(f"  Done in {elapsed:.1f}s")
@@ -189,8 +240,8 @@ def analyze_separation(sim_matrix, n0, n1, label=""):
 
     print(f"\n  {label}")
     print(f"  {'─' * 40}")
-    print(f"  Intra-class 0 (normal):   {intra_0:.4f}")
-    print(f"  Intra-class 1 (malign):   {intra_1:.4f}")
+    print(f"  Intra-class 0:            {intra_0:.4f}")
+    print(f"  Intra-class 1:            {intra_1:.4f}")
     print(f"  Inter-class:              {inter:.4f}")
     print(f"  Separation ratio:         {ratio:.4f}  (>1 = classes cluster)")
     print(f"  Fisher discriminant:      {fisher:.4f}  (higher = better)")
@@ -211,12 +262,12 @@ def run_once(args, seed, run_dir):
     print("=" * 50)
     print("  QUANTUM KERNEL PoC")
     print("  Does quantum similarity separate classes better")
-    print("  than classical dot product?")
+    print("  than classical cosine and RBF kernels?")
     print("=" * 50)
 
     # Load data
     print("\n--- Loading data ---")
-    x0, x1, preprocessing = load_samples(
+    x0, x1, pca_0, pca_1, preprocessing = load_samples(
         args.dataset, args.n_class0, args.n_class1, args.n_qubits, seed
     )
 
@@ -225,10 +276,20 @@ def run_once(args, seed, run_dir):
     classical_sim = classical_similarity(x0, x1)
     classical_metrics = analyze_separation(classical_sim, len(x0), len(x1), "CLASSICAL")
 
+    print("\n--- Classical Kernel (RBF on centered PCA features) ---")
+    rbf_sim, rbf_gamma = rbf_similarity(pca_0, pca_1)
+    rbf_metrics = analyze_separation(rbf_sim, len(x0), len(x1), "CLASSICAL RBF")
+
     # Quantum kernel
-    print("\n--- Quantum Kernel (IQP embedding) ---")
+    print(f"\n--- Quantum Kernel ({args.feature_map}) ---")
     quantum_sim, quantum_time = quantum_kernel_matrix(
-        x0, x1, args.n_qubits, args.q_device
+        x0,
+        x1,
+        args.n_qubits,
+        args.q_device,
+        feature_map=args.feature_map,
+        iqp_repeats=args.iqp_repeats,
+        kernel_method=args.kernel_method,
     )
     quantum_metrics = analyze_separation(quantum_sim, len(x0), len(x1), "QUANTUM")
 
@@ -254,9 +315,12 @@ def run_once(args, seed, run_dir):
     print(f"  Descriptive verdict: {verdict}")
 
     result = {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "experiment": "04_quantum_kernel",
-        "variant": "iqp_fidelity_vs_cosine",
+        "variant": f"{args.feature_map}_fidelity",
+        "feature_map": args.feature_map,
+        "iqp_repeats": args.iqp_repeats if args.feature_map == "iqp" else None,
+        "kernel_method": args.kernel_method,
         "dataset": args.dataset,
         "seed": seed,
         "n_qubits": args.n_qubits,
@@ -265,6 +329,7 @@ def run_once(args, seed, run_dir):
         "q_device": args.q_device,
         "preprocessing": preprocessing,
         "classical": classical_metrics,
+        "classical_rbf": {**rbf_metrics, "gamma": rbf_gamma},
         "quantum": quantum_metrics,
         "differences": {
             "fisher": q_fisher - c_fisher,
@@ -277,14 +342,19 @@ def run_once(args, seed, run_dir):
     save_json(os.path.join(run_dir, "results.json"), result)
     save_json(
         os.path.join(run_dir, "run_manifest.json"),
-        collect_run_metadata("04_quantum_kernel", seed, "iqp_fidelity_vs_cosine"),
+        collect_run_metadata(
+            "04_quantum_kernel", seed, f"{args.feature_map}_fidelity"
+        ),
     )
     np.savez_compressed(
         os.path.join(run_dir, "kernel_matrices.npz"),
         classical=classical_sim,
+        classical_rbf=rbf_sim,
         quantum=quantum_sim,
         x0=x0,
         x1=x1,
+        pca_0=pca_0,
+        pca_1=pca_1,
     )
     return result
 
@@ -300,11 +370,32 @@ def main():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--repeats", type=int, default=1)
     parser.add_argument("--q-device", default="default.qubit")
+    parser.add_argument(
+        "--feature-map",
+        choices=("custom_cnot_rz", "iqp"),
+        default="iqp",
+    )
+    parser.add_argument("--iqp-repeats", type=int, default=2)
+    parser.add_argument(
+        "--kernel-method",
+        choices=("pairwise", "statevector"),
+        default="pairwise",
+        help="pairwise is hardware-compatible; statevector is an exact simulator cross-check",
+    )
     args = parser.parse_args()
-    if min(args.n_qubits, args.n_class0, args.n_class1, args.repeats) <= 0:
+    if min(
+        args.n_qubits,
+        args.n_class0,
+        args.n_class1,
+        args.repeats,
+        args.iqp_repeats,
+    ) <= 0:
         parser.error("sample counts, qubits and repeats must be positive")
 
-    campaign_dir = make_run_dir("experiments", f"kernel_{args.dataset}")
+    campaign_dir = make_run_dir(
+        "experiments",
+        f"kernel_{args.dataset}_{args.feature_map}_{args.kernel_method}",
+    )
     runs = []
     for repeat in range(args.repeats):
         seed = args.seed + repeat
@@ -320,14 +411,26 @@ def main():
         )
         for metric in ("fisher", "ratio")
     }
+    rbf_analysis = {
+        metric: paired_comparison(
+            [run["quantum"][metric] for run in runs],
+            [run["classical_rbf"][metric] for run in runs],
+            seed=args.seed,
+        )
+        for metric in ("fisher", "ratio")
+    }
     save_json(
         os.path.join(campaign_dir, "campaign_results.json"),
         {
-            "schema_version": "1.0",
+            "schema_version": "1.1",
             "experiment": "04_quantum_kernel",
+            "feature_map": args.feature_map,
+            "iqp_repeats": args.iqp_repeats if args.feature_map == "iqp" else None,
+            "kernel_method": args.kernel_method,
             "seeds": [run["seed"] for run in runs],
             "runs": runs,
             "paired_statistics": analysis,
+            "paired_statistics_vs_rbf": rbf_analysis,
         },
     )
 

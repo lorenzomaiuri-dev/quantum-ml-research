@@ -3,9 +3,11 @@
 A Vision Transformer for medical image classification where the linear patch
 embedding is replaced by a Variational Quantum Circuit.
 
-**Result: falsified.** Equivalent accuracy to the classical ViT on MedMNIST,
-with significantly higher training time. No measurable benefit from replacing
-the linear patch embedding with a VQC embedding.
+**Status: definitive paired campaign in progress.** Historical runs are either
+unpaired or incomplete and are not evidence for or against the hypothesis. The
+official PathMNIST campaign uses five paired seeds, identical shared
+initialisation, data order and dropout RNG stream, best-validation model
+selection, and crash-safe epoch checkpoints.
 
 ## Scientific concept
 
@@ -78,14 +80,22 @@ python run.py 02 train --epochs 50
 python run.py 02 train --classical --epochs 50
 
 # Train both and compare side by side
-python run.py 02 compare --epochs 50 --seeds 42 137 256 512 1024
+python run.py 02 compare --dataset pathmnist --epochs 50 \
+  --seeds 42 137 256 512 1024 --name thesis_pathmnist \
+  --q-device default.qubit --force-cpu
+
+# Resume the same campaign after an interruption
+python run.py 02 compare --dataset pathmnist --epochs 50 \
+  --seeds 42 137 256 512 1024 --name thesis_pathmnist \
+  --q-device default.qubit --force-cpu --resume
 
 # Different dataset
 python run.py 02 train --dataset bloodmnist --epochs 50
 ```
 
 Options: `--dataset` (pathmnist|bloodmnist|dermamnist|fashionmnist|cifar10),
-`--epochs`, `--embed-dim`, `--n-head`, `--seed`, `--seeds`.
+`--epochs`, `--embed-dim`, `--n-head`, `--batch-size`, `--train-subset`,
+`--q-device`, `--seed`, `--seeds`, `--name`, `--resume`, `--force-cpu`.
 
 ## Training outputs
 
@@ -97,6 +107,7 @@ Each run writes to `experiments/<run_name>/`:
 | `run_manifest.json` | Commit, comando, ambiente e versioni |
 | `params.json` | Parametri totali e addestrabili |
 | `best_model.pth` | Best checkpoint (highest val accuracy) |
+| `latest_checkpoint.pth` | Optimiser, scheduler and RNG state for exact epoch-level resume |
 | `final_model.pth` | Final epoch checkpoint |
 | `results.json` | Test metrics and training history |
 | `events.out.tfevents.*` | TensorBoard logs |

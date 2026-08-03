@@ -12,6 +12,7 @@ import platform
 import random
 import subprocess
 import sys
+import tempfile
 from datetime import datetime
 from importlib.metadata import PackageNotFoundError, version
 
@@ -69,14 +70,27 @@ def make_run_dir(base: str, tag: str, timestamp_format: str = "%Y%m%d_%H%M%S") -
 
 def save_json(path: str, data: dict) -> None:
     """
-    Write a dictionary to a JSON file with 4-space indentation.
+    Atomically write a dictionary to a JSON file with 4-space indentation.
 
     Args:
         path: Full file path (e.g. os.path.join(run_dir, "results.json")).
         data: JSON-serializable dictionary.
     """
-    with open(path, "w") as f:
-        json.dump(data, f, indent=4, allow_nan=False)
+    directory = os.path.dirname(os.path.abspath(path))
+    os.makedirs(directory, exist_ok=True)
+    temporary_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w", encoding="utf-8", dir=directory, delete=False
+        ) as temporary:
+            temporary_path = temporary.name
+            json.dump(data, temporary, indent=4, allow_nan=False)
+            temporary.flush()
+            os.fsync(temporary.fileno())
+        os.replace(temporary_path, path)
+    finally:
+        if temporary_path and os.path.exists(temporary_path):
+            os.unlink(temporary_path)
 
 
 def collect_run_metadata(experiment: str, seed: int, variant: str = "") -> dict:

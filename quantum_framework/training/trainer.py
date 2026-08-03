@@ -68,6 +68,17 @@ from quantum_framework.evaluation import (
 from quantum_framework.utils import collect_run_metadata, set_seed, save_json
 
 
+def _atomic_torch_save(payload, path: str) -> None:
+    """Write a PyTorch payload without exposing a partially written target."""
+    temporary_path = f"{path}.tmp"
+    try:
+        torch.save(payload, temporary_path)
+        os.replace(temporary_path, path)
+    finally:
+        if os.path.exists(temporary_path):
+            os.unlink(temporary_path)
+
+
 class BaseTrainer:
     """
     Generic training loop for image-classification experiments.
@@ -104,6 +115,7 @@ class BaseTrainer:
         experiment_id: str = "",
         variant: str = "",
         evaluate_noise: bool = False,
+        evaluate_test: bool = True,
     ):
         self.config = config
         self.model = model.to(config.device)
@@ -119,6 +131,7 @@ class BaseTrainer:
         self.experiment_id = experiment_id
         self.variant = variant
         self.evaluate_noise = evaluate_noise
+        self.evaluate_test = evaluate_test
 
         set_seed(seed)
 
@@ -130,7 +143,9 @@ class BaseTrainer:
         self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             self.optimizer, T_max=config.max_epochs
         )
-        self.writer = SummaryWriter(log_dir=run_dir)
+        # Open TensorBoard lazily in train(). Comparison drivers may construct
+        # both paired models before deciding which run needs to be resumed.
+        self.writer = None
 
         # Storage for hook data, reset each epoch.
         self._grad_norms: list = []
@@ -275,6 +290,57 @@ class BaseTrainer:
     # Training loop
     # ------------------------------------------------------------------
 
+    @property
+    def latest_checkpoint_path(self) -> str:
+        """Epoch-level checkpoint used for crash-safe continuation."""
+        return os.path.join(self.run_dir, "latest_checkpoint.pth")
+
+    def _save_latest_checkpoint(
+        self,
+        *,
+        epoch: int,
+        best_val_acc: float,
+        history: list,
+        elapsed_training_seconds: float,
+    ) -> None:
+        train_generator = getattr(self.train_loader, "generator", None)
+        payload = {
+            "schema_version": "1.0",
+            "completed_epoch": epoch,
+            "best_val_acc": best_val_acc,
+            "history": history,
+            "elapsed_training_seconds": elapsed_training_seconds,
+            "model_state": self.model.state_dict(),
+            "optimizer_state": self.optimizer.state_dict(),
+            "scheduler_state": self.scheduler.state_dict(),
+            "torch_rng_state": torch.get_rng_state(),
+            "cuda_rng_state_all": (
+                torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None
+            ),
+            "train_loader_generator_state": (
+                train_generator.get_state() if train_generator is not None else None
+            ),
+        }
+        _atomic_torch_save(payload, self.latest_checkpoint_path)
+
+    def _restore_latest_checkpoint(self) -> dict:
+        checkpoint = torch.load(
+            self.latest_checkpoint_path,
+            map_location=self.config.device,
+            weights_only=False,
+        )
+        self.model.load_state_dict(checkpoint["model_state"])
+        self.optimizer.load_state_dict(checkpoint["optimizer_state"])
+        self.scheduler.load_state_dict(checkpoint["scheduler_state"])
+        torch.set_rng_state(checkpoint["torch_rng_state"].cpu())
+        if torch.cuda.is_available() and checkpoint["cuda_rng_state_all"] is not None:
+            torch.cuda.set_rng_state_all(checkpoint["cuda_rng_state_all"])
+        train_generator = getattr(self.train_loader, "generator", None)
+        generator_state = checkpoint["train_loader_generator_state"]
+        if train_generator is not None and generator_state is not None:
+            train_generator.set_state(generator_state.cpu())
+        return checkpoint
+
     def train(self) -> tuple:
         """
         Run the full training loop and return (run_dir, results).
@@ -296,13 +362,18 @@ class BaseTrainer:
         print(f"  Run: {self.run_dir}")
         print(f"{'=' * 60}")
         wall_start = time.time()
+        self.writer = SummaryWriter(log_dir=self.run_dir)
 
         # Persist config and parameter counts before training starts.
         save_json(os.path.join(self.run_dir, "config.json"), self.config.to_dict())
-        save_json(
-            os.path.join(self.run_dir, "run_manifest.json"),
-            collect_run_metadata(self.experiment_id, self.seed, self.variant),
-        )
+        manifest_path = os.path.join(self.run_dir, "run_manifest.json")
+        if not os.path.exists(manifest_path):
+            manifest = collect_run_metadata(
+                self.experiment_id, self.seed, self.variant
+            )
+            if getattr(self, "pairing", None):
+                manifest["pairing"] = self.pairing
+            save_json(manifest_path, manifest)
         save_json(os.path.join(self.run_dir, "params.json"), self._parameter_counts())
 
         if self.log_gradients or self.log_activations:
@@ -310,9 +381,27 @@ class BaseTrainer:
 
         best_val_acc = float("-inf")
         history = []
+        previous_training_time = 0.0
+        start_epoch = 1
+        if os.path.exists(self.latest_checkpoint_path):
+            checkpoint = self._restore_latest_checkpoint()
+            start_epoch = checkpoint["completed_epoch"] + 1
+            best_val_acc = checkpoint["best_val_acc"]
+            history = checkpoint["history"]
+            previous_training_time = checkpoint["elapsed_training_seconds"]
+            print(
+                f"  Resuming after epoch {checkpoint['completed_epoch']} "
+                f"(best val acc {best_val_acc:.4f})"
+            )
+        else:
+            # Trainers for all paired variants are constructed before the
+            # first one starts. Reset here so sequential execution does not
+            # give later variants a different dropout RNG stream merely
+            # because an earlier variant has already trained.
+            set_seed(self.seed)
         start_time = time.time()
 
-        for epoch in range(1, self.config.max_epochs + 1):
+        for epoch in range(start_epoch, self.config.max_epochs + 1):
             epoch_start = time.time()
             self.model.train()
             epoch_loss = 0.0
@@ -349,8 +438,18 @@ class BaseTrainer:
             train_acc = epoch_correct / max(epoch_total, 1)
             avg_loss = epoch_loss / max(epoch_total, 1)
 
-            val_metrics = self.evaluate(self.val_loader)
-            gen_gap = generalization_gap(train_acc, val_metrics["accuracy"])
+            eval_interval = max(int(getattr(self.config, "eval_interval", 1)), 1)
+            should_validate = (
+                epoch == 1
+                or epoch % eval_interval == 0
+                or epoch == self.config.max_epochs
+            )
+            val_metrics = self.evaluate(self.val_loader) if should_validate else None
+            gen_gap = (
+                generalization_gap(train_acc, val_metrics["accuracy"])
+                if val_metrics is not None
+                else None
+            )
 
             # Gradient diagnostics
             grad_norm_mean = (
@@ -369,11 +468,12 @@ class BaseTrainer:
 
             # TensorBoard
             self.writer.add_scalar("Loss/train", avg_loss, epoch)
-            self.writer.add_scalar("Loss/val", val_metrics["loss"], epoch)
             self.writer.add_scalar("Accuracy/train", train_acc, epoch)
-            self.writer.add_scalar("Accuracy/val", val_metrics["accuracy"], epoch)
-            self.writer.add_scalar("AUC/val", val_metrics["auc"], epoch)
-            self.writer.add_scalar("Gap/generalization", gen_gap, epoch)
+            if val_metrics is not None:
+                self.writer.add_scalar("Loss/val", val_metrics["loss"], epoch)
+                self.writer.add_scalar("Accuracy/val", val_metrics["accuracy"], epoch)
+                self.writer.add_scalar("AUC/val", val_metrics["auc"], epoch)
+                self.writer.add_scalar("Gap/generalization", gen_gap, epoch)
             self.writer.add_scalar("LR", self.optimizer.param_groups[0]["lr"], epoch)
             if self.log_gradients:
                 self.writer.add_scalar(
@@ -393,11 +493,19 @@ class BaseTrainer:
                     "epoch": epoch,
                     "train_loss": round(avg_loss, 4),
                     "train_acc": round(train_acc, 4),
-                    "val_loss": round(val_metrics["loss"], 4),
-                    "val_acc": round(val_metrics["accuracy"], 4),
-                    "val_auc": round(val_metrics["auc"], 4),
-                    "val_f1": round(val_metrics["f1"], 4),
-                    "gen_gap": round(gen_gap, 4),
+                    "val_loss": (
+                        round(val_metrics["loss"], 4) if val_metrics else None
+                    ),
+                    "val_acc": (
+                        round(val_metrics["accuracy"], 4) if val_metrics else None
+                    ),
+                    "val_auc": (
+                        round(val_metrics["auc"], 4) if val_metrics else None
+                    ),
+                    "val_f1": (
+                        round(val_metrics["f1"], 4) if val_metrics else None
+                    ),
+                    "gen_gap": round(gen_gap, 4) if gen_gap is not None else None,
                     "grad_norm_mean": round(grad_norm_mean, 6),
                     "grad_norm_std": round(grad_norm_std, 6),
                     "act_saturation": round(act_sat, 4),
@@ -405,26 +513,39 @@ class BaseTrainer:
                 }
             )
 
+            if val_metrics is None:
+                validation_text = "Val: deferred | Gap: deferred"
+            else:
+                validation_text = (
+                    f"Val: {val_metrics['accuracy']:.4f} | Gap: {gen_gap:+.4f}"
+                )
             print(
-                f"  Epoch {epoch:3d} | "
-                f"Train: {train_acc:.4f} | Val: {val_metrics['accuracy']:.4f} | "
-                f"Gap: {gen_gap:+.4f} | "
-                f"Grad: {grad_norm_mean:.4f}±{grad_norm_std:.4f} | "
+                f"  Epoch {epoch:3d} | Train: {train_acc:.4f} | "
+                f"{validation_text} | Grad: {grad_norm_mean:.4f}±{grad_norm_std:.4f} | "
                 f"Sat: {act_sat:.3f}"
             )
 
-            if val_metrics["accuracy"] > best_val_acc:
+            if val_metrics is not None and val_metrics["accuracy"] > best_val_acc:
                 best_val_acc = val_metrics["accuracy"]
-                torch.save(
+                _atomic_torch_save(
                     self.model.state_dict(),
                     os.path.join(self.run_dir, "best_model.pth"),
                 )
 
-        total_time = time.time() - start_time
+            self._save_latest_checkpoint(
+                epoch=epoch,
+                best_val_acc=best_val_acc,
+                history=history,
+                elapsed_training_seconds=(
+                    previous_training_time + time.time() - start_time
+                ),
+            )
+
+        total_time = previous_training_time + time.time() - start_time
 
         # Preserve the final optimisation state separately from the selected
         # best-validation checkpoint used for reported test metrics.
-        torch.save(
+        _atomic_torch_save(
             self.model.state_dict(), os.path.join(self.run_dir, "final_model.pth")
         )
 
@@ -437,21 +558,41 @@ class BaseTrainer:
                 weights_only=True,
             )
         )
-        test_metrics = self.evaluate(self.test_loader)
         train_final = self.evaluate(self.train_loader)
-        final_gen_gap = generalization_gap(
-            train_final["accuracy"], test_metrics["accuracy"]
+        validation_final = self.evaluate(self.val_loader)
+        validation_gen_gap = generalization_gap(
+            train_final["accuracy"], validation_final["accuracy"]
+        )
+        test_metrics = self.evaluate(self.test_loader) if self.evaluate_test else None
+        final_gen_gap = (
+            generalization_gap(train_final["accuracy"], test_metrics["accuracy"])
+            if test_metrics is not None
+            else None
         )
 
-        print(
-            f"\n  Test Acc: {test_metrics['accuracy']:.4f} | "
-            f"Test AUC: {test_metrics['auc']:.4f} | "
-            f"Final Gen Gap: {final_gen_gap:+.4f}"
-        )
+        if test_metrics is None:
+            print(
+                f"\n  Validation Acc: {validation_final['accuracy']:.4f} | "
+                f"Validation Gap: {validation_gen_gap:+.4f} | Test: not evaluated"
+            )
+        else:
+            print(
+                f"\n  Test Acc: {test_metrics['accuracy']:.4f} | "
+                f"Test AUC: {test_metrics['auc']:.4f} | "
+                f"Final Gen Gap: {final_gen_gap:+.4f}"
+            )
 
-        noise_results = self._test_noise_robustness() if self.evaluate_noise else {}
+        noise_results = (
+            self._test_noise_robustness()
+            if self.evaluate_noise and self.evaluate_test
+            else {}
+        )
         evaluation_time = time.time() - evaluation_start
-        total_wall_time = time.time() - wall_start
+        invocation_wall_time = time.time() - wall_start
+        # ``total_time`` is restored from the epoch checkpoint and is therefore
+        # cumulative across invocations. Keep the primary wall total cumulative
+        # as well; expose the last invocation separately for diagnostics.
+        total_wall_time = total_time + evaluation_time
 
         results = {
             "schema_version": "1.0",
@@ -459,22 +600,35 @@ class BaseTrainer:
             "variant": self.variant,
             "dataset": self.config.dataset_name,
             "seed": self.seed,
+            "run_dir": self.run_dir,
             "total_time": round(total_time, 1),
             "training_time_seconds": round(total_time, 3),
             "evaluation_time_seconds": round(evaluation_time, 3),
             "total_wall_time_seconds": round(total_wall_time, 3),
+            "invocation_wall_time_seconds": round(invocation_wall_time, 3),
             "mean_epoch_time": round(total_time / max(self.config.max_epochs, 1), 3),
             "best_val_acc": round(best_val_acc, 4),
             "train_loss_final": round(train_final["loss"], 4),
-            "test_loss": round(test_metrics["loss"], 4),
-            "test_accuracy": round(test_metrics["accuracy"], 4),
-            "test_auc": round(test_metrics["auc"], 4),
-            "test_f1": round(test_metrics["f1"], 4),
+            "validation_loss": round(validation_final["loss"], 4),
+            "validation_accuracy": round(validation_final["accuracy"], 4),
+            "validation_auc": round(validation_final["auc"], 4),
+            "validation_f1": round(validation_final["f1"], 4),
+            "validation_generalization_gap": round(validation_gen_gap, 4),
+            "test_loss": round(test_metrics["loss"], 4) if test_metrics else None,
+            "test_accuracy": (
+                round(test_metrics["accuracy"], 4) if test_metrics else None
+            ),
+            "test_auc": round(test_metrics["auc"], 4) if test_metrics else None,
+            "test_f1": round(test_metrics["f1"], 4) if test_metrics else None,
             "train_accuracy_final": round(train_final["accuracy"], 4),
-            "generalization_gap": round(final_gen_gap, 4),
+            "generalization_gap": (
+                round(final_gen_gap, 4) if final_gen_gap is not None else None
+            ),
             "noise_robustness": noise_results,
             "history": history,
         }
+        if getattr(self, "pairing", None):
+            results["pairing"] = self.pairing
         results["params"] = self._parameter_counts()
 
         save_json(os.path.join(self.run_dir, "results.json"), results)

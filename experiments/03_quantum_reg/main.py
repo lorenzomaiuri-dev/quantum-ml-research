@@ -1,7 +1,8 @@
 import argparse
 import json
+import math
 import os
-from collections import defaultdict
+from datetime import datetime
 
 import numpy as np
 
@@ -9,6 +10,7 @@ from quantum_framework.evaluation import paired_comparison, summarize
 from quantum_framework.utils import save_json
 from src.config import AblationConfig
 from src.engine.trainer import Trainer
+from src.models.vit import match_shared_initialization
 
 
 MODEL_TYPES = ["vanilla", "bounded_mlp", "quantum_reg"]
@@ -19,10 +21,10 @@ MODEL_LABELS = {
 }
 
 
-def _make_config(args):
+def _make_config(args, *, dataset=None):
     """Create AblationConfig from parsed CLI args."""
-    return AblationConfig(
-        dataset_name=args.dataset,
+    config = AblationConfig(
+        dataset_name=dataset or args.dataset,
         max_epochs=args.epochs,
         embed_dim=args.embed_dim,
         n_head=args.n_head,
@@ -32,24 +34,50 @@ def _make_config(args):
         train_subset=args.train_subset,
         dropout=args.dropout,
         weight_decay=args.weight_decay,
+        q_device=args.q_device,
+        eval_interval=args.eval_interval,
     )
+    if args.force_cpu:
+        config.device = "cpu"
+    return config
+
+
+def _find_run(runs, seed):
+    """Return the completed run for a seed, if present."""
+    return next((run for run in runs if run["seed"] == seed), None)
 
 
 def run_train(args):
     """Train a single model."""
     config = _make_config(args)
-    trainer = Trainer(config, model_type=args.model, seed=args.seed)
+    trainer = Trainer(
+        config,
+        model_type=args.model,
+        seed=args.seed,
+        evaluate_noise=not args.skip_noise,
+    )
     _, results = trainer.train()
     print_single_result(results)
 
 
 def run_compare(args):
     """Train all 3 models on one dataset, one seed. Side-by-side comparison."""
+    trainers = {
+        model_type: Trainer(
+            _make_config(args),
+            model_type=model_type,
+            seed=args.seed,
+            evaluate_noise=not args.skip_noise,
+        )
+        for model_type in MODEL_TYPES
+    }
+    shared = match_shared_initialization(
+        {name: trainer.model for name, trainer in trainers.items()}
+    )
+    pairing = {"dataset": args.dataset, "seed": args.seed, **shared}
     results = {}
-
-    for model_type in MODEL_TYPES:
-        config = _make_config(args)
-        trainer = Trainer(config, model_type=model_type, seed=args.seed)
+    for model_type, trainer in trainers.items():
+        trainer.pairing = pairing
         _, result = trainer.train()
         results[model_type] = result
 
@@ -79,26 +107,107 @@ def run_ablation(args):
     seeds = args.seeds or [42, 137, 256, 512, 1024]
     datasets = args.datasets or ["pathmnist", "bloodmnist", "dermamnist"]
 
-    all_results = defaultdict(lambda: defaultdict(list))
+    campaign_name = args.name or "thesis_regularization"
+    progress_path = os.path.join(
+        "experiments", f"ablation_{campaign_name}.progress.json"
+    )
+    final_path = os.path.join("experiments", f"ablation_{campaign_name}.json")
+    protocol_config = {
+        "epochs": args.epochs,
+        "embed_dim": args.embed_dim,
+        "n_head": args.n_head,
+        "n_layer": args.n_layer,
+        "ffn_dim": args.ffn_dim,
+        "batch_size": args.batch_size,
+        "train_subset": args.train_subset,
+        "dropout": args.dropout,
+        "weight_decay": args.weight_decay,
+        "q_device": args.q_device,
+        "device": _make_config(args).device,
+        "evaluate_noise": not args.skip_noise,
+        "eval_interval": args.eval_interval,
+    }
+    campaign = {
+        "schema_version": "1.1",
+        "experiment": "03_quantum_reg",
+        "status": "in_progress",
+        "created_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "name": campaign_name,
+        "seeds": seeds,
+        "datasets": datasets,
+        "config": protocol_config,
+        "runs": {
+            dataset: {model_type: [] for model_type in MODEL_TYPES}
+            for dataset in datasets
+        },
+        "active_runs": {},
+        "protocol": {
+            "variant_order": MODEL_TYPES,
+            "shared_initialization": True,
+            "matched_compression_layer": True,
+            "seeded_train_loader_per_block": True,
+            "seeded_training_rng_per_variant": True,
+            "epoch_level_resume": True,
+            "best_validation_checkpoint_for_test": True,
+            "legacy_artifacts_excluded": True,
+        },
+    }
+
     if args.resume:
-        with open(args.resume, "r") as f:
-            resumed = json.load(f)
-        resumed_runs = resumed.get("runs", resumed)
-        for dataset, models in resumed_runs.items():
-            for model_type, runs in models.items():
-                all_results[dataset][model_type].extend(runs)
+        resume_path = progress_path if args.resume == "auto" else args.resume
+        with open(resume_path, encoding="utf-8") as stream:
+            campaign = json.load(stream)
+        if campaign.get("schema_version") != "1.1" or "config" not in campaign:
+            raise ValueError(
+                "Legacy ablation files cannot be resumed into the definitive campaign"
+            )
+        if campaign["config"] != protocol_config:
+            raise ValueError("Resume requires exactly the original configuration")
+        if campaign["seeds"] != seeds or campaign["datasets"] != datasets:
+            raise ValueError("Resume requires the original seed and dataset lists")
+        campaign["status"] = "in_progress"
+
+    all_results = campaign["runs"]
+
+    def save_progress():
+        save_json(progress_path, campaign)
 
     total_runs = len(MODEL_TYPES) * len(seeds) * len(datasets)
     run_idx = 0
 
     for dataset in datasets:
-        for model_type in MODEL_TYPES:
-            for seed in seeds:
+        for seed in seeds:
+            if all(_find_run(all_results[dataset][model], seed) for model in MODEL_TYPES):
+                print(f"  SKIP complete block | {dataset} | seed={seed}")
+                run_idx += len(MODEL_TYPES)
+                continue
+
+            block_key = f"{dataset}:{seed}"
+            active = campaign["active_runs"].setdefault(block_key, {})
+            trainers = {}
+            for model_type in MODEL_TYPES:
+                config = _make_config(args, dataset=dataset)
+                trainers[model_type] = Trainer(
+                    config,
+                    model_type=model_type,
+                    seed=seed,
+                    run_tag=f"{campaign_name}_{model_type}_{dataset}_s{seed}",
+                    run_dir=active.get(model_type),
+                    evaluate_noise=not args.skip_noise,
+                )
+                active[model_type] = trainers[model_type].run_dir
+
+            shared = match_shared_initialization(
+                {name: trainer.model for name, trainer in trainers.items()}
+            )
+            pairing = {"dataset": dataset, "seed": seed, **shared}
+            for trainer in trainers.values():
+                trainer.pairing = pairing
+            save_progress()
+
+            for model_type in MODEL_TYPES:
                 run_idx += 1
-                completed_seeds = {
-                    run["seed"] for run in all_results[dataset][model_type]
-                }
-                if seed in completed_seeds:
+                if _find_run(all_results[dataset][model_type], seed):
                     print(f"  SKIP {model_type} | {dataset} | seed={seed} (completed)")
                     continue
                 print(f"\n{'#' * 60}")
@@ -106,32 +215,22 @@ def run_ablation(args):
                     f"  RUN {run_idx}/{total_runs}: {model_type} | {dataset} | seed={seed}"
                 )
                 print(f"{'#' * 60}")
-
-                config = _make_config(args)
-                config.dataset_name = dataset
-                trainer = Trainer(
-                    config,
-                    model_type=model_type,
-                    seed=seed,
-                    run_tag=f"abl_{model_type}_{dataset}_s{seed}",
-                )
-                _, result = trainer.train()
+                _, result = trainers[model_type].train()
                 all_results[dataset][model_type].append(result)
-                save_json(
-                    "experiments/ablation_progress.json",
-                    {
-                        "schema_version": "1.0",
-                        "experiment": "03_quantum_reg",
-                        "seeds": seeds,
-                        "datasets": datasets,
-                        "runs": {
-                            ds: {mt: values for mt, values in models.items()}
-                            for ds, models in all_results.items()
-                        },
-                    },
+                all_results[dataset][model_type].sort(
+                    key=lambda run: seeds.index(run["seed"])
                 )
+                save_progress()
 
     # Aggregate and print
+    if any(
+        _find_run(all_results[dataset][model], seed) is None
+        for dataset in datasets
+        for model in MODEL_TYPES
+        for seed in seeds
+    ):
+        raise RuntimeError("Campaign ended with incomplete dataset/seed/model blocks")
+
     print_ablation_summary(all_results, seeds)
     statistics = build_paired_statistics(all_results, bootstrap_seed=seeds[0])
 
@@ -142,17 +241,129 @@ def run_ablation(args):
         ds: {mt: runs for mt, runs in models.items()}
         for ds, models in all_results.items()
     }
-    save_json(
-        "experiments/ablation_full_results.json",
-        {
-            "schema_version": "1.0",
-            "experiment": "03_quantum_reg",
-            "seeds": seeds,
-            "datasets": datasets,
-            "runs": serializable,
-            "paired_statistics": statistics,
-        },
+    campaign["runs"] = serializable
+    campaign["paired_statistics"] = statistics
+    campaign["status"] = "complete"
+    campaign["completed_at"] = datetime.now().astimezone().isoformat(
+        timespec="seconds"
     )
+    save_json(final_path, campaign)
+    save_json(progress_path, campaign)
+
+
+def run_screen(args):
+    """Select an informative scarce-data regime without evaluating the test set."""
+    seeds = args.seeds or [42, 137, 256]
+    datasets = args.datasets or ["pathmnist", "bloodmnist", "dermamnist"]
+    subsets = args.subsets or [100, 250, 500, 1000]
+    campaign_name = args.name or "classical_regime_screen"
+    progress_path = os.path.join("experiments", f"{campaign_name}.progress.json")
+    final_path = os.path.join("experiments", f"{campaign_name}.json")
+    protocol_config = {
+        "target_optimizer_steps": args.target_steps,
+        "validation_checkpoints": args.validation_checkpoints,
+        "embed_dim": args.embed_dim,
+        "n_head": args.n_head,
+        "n_layer": args.n_layer,
+        "ffn_dim": args.ffn_dim,
+        "batch_size": args.batch_size,
+        "dropout": args.dropout,
+        "weight_decay": args.weight_decay,
+        "device": _make_config(args).device,
+        "model_type": "bounded_mlp",
+        "test_set_evaluated": False,
+    }
+    campaign = {
+        "schema_version": "1.0",
+        "experiment": "03_quantum_reg_regime_screen",
+        "status": "in_progress",
+        "created_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "name": campaign_name,
+        "seeds": seeds,
+        "datasets": datasets,
+        "subsets": subsets,
+        "config": protocol_config,
+        "runs": [],
+        "active_runs": {},
+        "selection_rule": (
+            "Choose one common subset using only bounded-MLP train/validation "
+            "metrics; require positive validation gap and adequate train fit."
+        ),
+    }
+    if args.resume:
+        with open(progress_path, encoding="utf-8") as stream:
+            campaign = json.load(stream)
+        if campaign["config"] != protocol_config:
+            raise ValueError("Screen resume requires exactly the original configuration")
+        if (
+            campaign["seeds"] != seeds
+            or campaign["datasets"] != datasets
+            or campaign["subsets"] != subsets
+        ):
+            raise ValueError("Screen resume requires the original sweep grid")
+        campaign["status"] = "in_progress"
+
+    def find_screen_run(dataset, subset, seed):
+        return next(
+            (
+                run
+                for run in campaign["runs"]
+                if run["dataset"] == dataset
+                and run["train_subset"] == subset
+                and run["seed"] == seed
+            ),
+            None,
+        )
+
+    for dataset in datasets:
+        for subset in subsets:
+            for seed in seeds:
+                if find_screen_run(dataset, subset, seed):
+                    continue
+                key = f"{dataset}:{subset}:{seed}"
+                config = _make_config(args, dataset=dataset)
+                config.train_subset = subset
+                steps_per_epoch = math.ceil(subset / config.batch_size)
+                config.max_epochs = math.ceil(args.target_steps / steps_per_epoch)
+                config.eval_interval = max(
+                    1,
+                    round(config.max_epochs / args.validation_checkpoints),
+                )
+                trainer = Trainer(
+                    config,
+                    model_type="bounded_mlp",
+                    seed=seed,
+                    run_tag=f"{campaign_name}_{dataset}_n{subset}_s{seed}",
+                    run_dir=campaign["active_runs"].get(key),
+                    evaluate_noise=False,
+                    evaluate_test=False,
+                )
+                campaign["active_runs"][key] = trainer.run_dir
+                save_json(progress_path, campaign)
+                _, result = trainer.train()
+                result["train_subset"] = subset
+                result["screen_schedule"] = {
+                    "steps_per_epoch": steps_per_epoch,
+                    "epochs": config.max_epochs,
+                    "planned_optimizer_steps": steps_per_epoch * config.max_epochs,
+                    "eval_interval": config.eval_interval,
+                }
+                campaign["runs"].append(result)
+                campaign["runs"].sort(
+                    key=lambda run: (
+                        datasets.index(run["dataset"]),
+                        subsets.index(run["train_subset"]),
+                        seeds.index(run["seed"]),
+                    )
+                )
+                save_json(progress_path, campaign)
+
+    campaign["status"] = "complete"
+    campaign["completed_at"] = datetime.now().astimezone().isoformat(
+        timespec="seconds"
+    )
+    save_json(final_path, campaign)
+    save_json(progress_path, campaign)
 
 
 def build_paired_statistics(all_results, bootstrap_seed=42):
@@ -285,6 +496,10 @@ def main():
     shared.add_argument("--batch-size", type=int, default=128)
     shared.add_argument("--dropout", type=float, default=0.1)
     shared.add_argument("--weight-decay", type=float, default=1e-4)
+    shared.add_argument("--q-device", default="default.qubit")
+    shared.add_argument("--force-cpu", "--force_cpu", action="store_true")
+    shared.add_argument("--skip-noise", action="store_true")
+    shared.add_argument("--eval-interval", type=int, default=5)
     shared.add_argument(
         "--train-subset",
         type=int,
@@ -311,9 +526,22 @@ def main():
     abl_p.add_argument("--datasets", type=str, nargs="+", default=None)
     abl_p.add_argument(
         "--resume",
+        nargs="?",
+        const="auto",
         default=None,
-        help="Resume from ablation_progress.json or ablation_full_results.json",
+        help="Resume the definitive campaign (optionally from an explicit path)",
     )
+    abl_p.add_argument("--name", default=None)
+
+    # Classical-only protocol selection; deliberately never touches the test set.
+    screen_p = sub.add_parser("screen", parents=[shared])
+    screen_p.add_argument("--seeds", type=int, nargs="+", default=None)
+    screen_p.add_argument("--datasets", type=str, nargs="+", default=None)
+    screen_p.add_argument("--subsets", type=int, nargs="+", default=None)
+    screen_p.add_argument("--name", default=None)
+    screen_p.add_argument("--resume", action="store_true")
+    screen_p.add_argument("--target-steps", type=int, default=400)
+    screen_p.add_argument("--validation-checkpoints", type=int, default=10)
 
     args = parser.parse_args()
 
@@ -323,6 +551,8 @@ def main():
         run_compare(args)
     elif args.mode == "ablation":
         run_ablation(args)
+    elif args.mode == "screen":
+        run_screen(args)
     else:
         parser.print_help()
 

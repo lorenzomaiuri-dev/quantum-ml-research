@@ -1,3 +1,5 @@
+import hashlib
+
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -7,6 +9,7 @@ from src.quantum_layers import QuantumLayerAdapter
 class Head(nn.Module):
     def __init__(self, config, head_size):
         super().__init__()
+        self.scale = head_size**-0.5
         self.key = self._get_layer(config, config.n_embd, head_size)
         self.query = self._get_layer(config, config.n_embd, head_size)
         self.value = self._get_layer(config, config.n_embd, head_size)
@@ -29,7 +32,7 @@ class Head(nn.Module):
         B, T, C = x.shape
         k = self.key(x)
         q = self.query(x)
-        wei = q @ k.transpose(-2, -1) * C**-0.5
+        wei = q @ k.transpose(-2, -1) * self.scale
         wei = wei.masked_fill(self.tril[:T, :T] == 0, float("-inf"))
         wei = self.dropout(F.softmax(wei, dim=-1))
         return wei @ self.value(x)
@@ -112,3 +115,31 @@ class QuantumGPT(nn.Module):
             if print_in_place:
                 print(decode_function(idx_next[0].tolist()), end="", flush=True)
         return idx
+
+
+def match_shared_initialization(
+    reference: nn.Module, target: nn.Module
+) -> dict[str, object]:
+    """Copy every shape-compatible shared state tensor into ``target``.
+
+    The quantum and classical projections consume different numbers of random
+    draws during construction. Without this explicit matching, downstream
+    modules start from different weights despite using the same nominal seed.
+    Projection-specific tensors have different names and remain untouched.
+    """
+    reference_state = reference.state_dict()
+    target_state = target.state_dict()
+    matched_keys = sorted(
+        key
+        for key in reference_state.keys() & target_state.keys()
+        if reference_state[key].shape == target_state[key].shape
+    )
+    digest = hashlib.sha256()
+    with torch.no_grad():
+        for key in matched_keys:
+            tensor = reference_state[key].detach().cpu().contiguous()
+            target_state[key].copy_(reference_state[key])
+            digest.update(key.encode("utf-8"))
+            digest.update(tensor.numpy().tobytes())
+    target.load_state_dict(target_state)
+    return {"matched_keys": matched_keys, "sha256": digest.hexdigest()}

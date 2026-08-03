@@ -43,6 +43,7 @@ class AblationConfig(BaseViTConfig):
 
     # --- Data regime ---
     train_subset: int = 0  # 0 = full dataset. >0 = stratified subset of N samples
+    eval_interval: int = 5  # Full validation cadence; final epoch is always evaluated
 
     # --- Ablation sweep ---
     seeds: List[int] = field(default_factory=lambda: [42, 137, 256, 512, 1024])

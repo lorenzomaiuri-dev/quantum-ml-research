@@ -16,15 +16,22 @@ from quantum_framework.utils import collect_run_metadata, save_json, set_seed
 
 class Trainer:
     def __init__(
-        self, config, model_name, dataset_name, seed=1337, config_name="default"
+        self,
+        config,
+        model_name,
+        dataset_name,
+        seed=1337,
+        config_name="default",
+        pairing_metadata=None,
     ):
         self.config = config
         self.model_name = model_name
         self.dataset_name = dataset_name
         self.seed = seed
         self.config_name = config_name
-        self.run_dir = self._setup_run_dir()
-        self.writer = SummaryWriter(log_dir=self.run_dir)
+        self.pairing_metadata = pairing_metadata
+        self.run_dir = None
+        self.writer = None
         self.dataset = InputDataset(config, dataset_name, seed=seed)
         self.model = QuantumGPT(config, self.dataset.tokenizer.vocab_size).to(
             config.device
@@ -81,6 +88,12 @@ class Trainer:
 
     def train(self):
         wall_start = time.time()
+        self.run_dir = self._setup_run_dir()
+        self.writer = SummaryWriter(log_dir=self.run_dir)
+        # Re-establish identical stochastic state and batch streams even when
+        # paired trainers were constructed before either one starts training.
+        set_seed(self.seed + 1_000)
+        self.dataset.reset_generators(self.seed)
         print(f"\n--- Starting Training | Run: {self.run_dir} ---")
         print(
             f"Dataset: {self.dataset_name} | Tokenizer: {self.config.tokenizer_class}"
@@ -91,10 +104,9 @@ class Trainer:
         with open(os.path.join(self.run_dir, "dictionary.json"), "w") as f:
             json.dump(self.dataset.tokenizer.to_dict(), f, indent=4)
         variant = "quantum" if self.config.use_quantum else "classical"
-        save_json(
-            os.path.join(self.run_dir, "run_manifest.json"),
-            collect_run_metadata("01_quantum_gpt", self.seed, variant),
-        )
+        manifest = collect_run_metadata("01_quantum_gpt", self.seed, variant)
+        manifest["pairing"] = self.pairing_metadata
+        save_json(os.path.join(self.run_dir, "run_manifest.json"), manifest)
 
         self._log_architecture()
 
@@ -180,16 +192,25 @@ class Trainer:
             "n_val_tokens": len(self.dataset.val_data),
             "vocab_size": self.dataset.tokenizer.vocab_size,
             "tokenizer": self.config.tokenizer_class,
+            "baselines": {
+                "uniform_val_loss": round(self.dataset.uniform_val_loss, 6),
+                "unigram_val_loss": round(self.dataset.unigram_val_loss, 6),
+            },
             "total_training_time_seconds": round(total_duration, 2),
             "total_wall_time_seconds": round(time.time() - wall_start, 2),
             "best_val_loss": round(best_val_loss, 4),
             "selected_train_loss": round(selected_losses["train"], 4),
             "selected_val_loss": round(selected_losses["val"], 4),
             "selected_val_perplexity": round(math.exp(selected_losses["val"]), 4),
+            "selected_loss_improvement_over_unigram": round(
+                self.dataset.unigram_val_loss - selected_losses["val"], 6
+            ),
             "mean_iteration_time_seconds": round(
                 total_duration / max(self.config.max_iters, 1), 6
             ),
             "params": {"total": total_params, "trainable": trainable_params},
+            "pairing": self.pairing_metadata,
+            "run_dir": self.run_dir,
             "history": history,
         }
         with open(os.path.join(self.run_dir, "metrics.json"), "w") as f:

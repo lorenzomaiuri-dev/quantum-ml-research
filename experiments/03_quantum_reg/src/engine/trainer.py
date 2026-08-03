@@ -27,7 +27,16 @@ class Trainer(BaseTrainer):
         run_tag:    Optional label override for the run directory.
     """
 
-    def __init__(self, config, model_type: str, seed: int, run_tag: str = ""):
+    def __init__(
+        self,
+        config,
+        model_type: str,
+        seed: int,
+        run_tag: str = "",
+        run_dir: str | None = None,
+        evaluate_noise: bool = True,
+        evaluate_test: bool = True,
+    ):
         self.model_type = model_type
         self.seed = seed
         config.seed = seed
@@ -48,7 +57,7 @@ class Trainer(BaseTrainer):
         )
 
         tag = run_tag or f"{model_type}_{config.dataset_name}_s{seed}"
-        run_dir = make_run_dir("experiments", tag)
+        run_dir = run_dir or make_run_dir("experiments", tag)
 
         super().__init__(
             config=config,
@@ -64,7 +73,8 @@ class Trainer(BaseTrainer):
             grad_clip=1.0,
             experiment_id="03_quantum_reg",
             variant=model_type,
-            evaluate_noise=True,
+            evaluate_noise=evaluate_noise,
+            evaluate_test=evaluate_test,
         )
 
     def train(self):

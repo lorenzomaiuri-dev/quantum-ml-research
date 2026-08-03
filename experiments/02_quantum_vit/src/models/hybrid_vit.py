@@ -1,3 +1,5 @@
+import hashlib
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -63,3 +65,50 @@ class HybridQCNNViT(nn.Module):
             loss = F.cross_entropy(logits, labels)
 
         return logits, loss
+
+
+def match_shared_initialization(
+    classical: HybridQCNNViT, quantum: HybridQCNNViT
+) -> dict[str, object]:
+    """Copy the classical adapter and every shared body tensor into ``quantum``.
+
+    Constructing the VQC consumes extra random draws before the CLS token and
+    Transformer are initialized. A nominally equal seed is therefore
+    insufficient for a paired comparison unless the common tensors are copied
+    explicitly.
+    """
+    classical_state = classical.state_dict()
+    quantum_state = quantum.state_dict()
+    mappings = {
+        "patch_embed.weight": "patch_embed.classical_pre_process.weight",
+        "patch_embed.bias": "patch_embed.classical_pre_process.bias",
+    }
+    mappings.update(
+        {
+            key: key
+            for key in classical_state.keys() & quantum_state.keys()
+            if not key.startswith("patch_embed.")
+            and classical_state[key].shape == quantum_state[key].shape
+        }
+    )
+
+    digest = hashlib.sha256()
+    with torch.no_grad():
+        for classical_key, quantum_key in sorted(mappings.items()):
+            source = classical_state[classical_key]
+            if source.shape != quantum_state[quantum_key].shape:
+                raise ValueError(
+                    f"cannot pair {classical_key} with {quantum_key}: shape mismatch"
+                )
+            quantum_state[quantum_key].copy_(source)
+            tensor = source.detach().cpu().contiguous()
+            digest.update(classical_key.encode("utf-8"))
+            digest.update(quantum_key.encode("utf-8"))
+            digest.update(tensor.numpy().tobytes())
+    quantum.load_state_dict(quantum_state)
+    return {
+        "matched_keys": [
+            f"{source}->{target}" for source, target in sorted(mappings.items())
+        ],
+        "sha256": digest.hexdigest(),
+    }

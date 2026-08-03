@@ -27,7 +27,7 @@ class Trainer(BaseTrainer):
         experiment_name: Optional label for the run directory.
     """
 
-    def __init__(self, config, seed=42, experiment_name=None):
+    def __init__(self, config, seed=42, experiment_name=None, run_dir=None):
         # Seed before dataset shuffling and model parameter initialisation.
         set_seed(seed)
         config.seed = seed
@@ -38,7 +38,7 @@ class Trainer(BaseTrainer):
         model = HybridQCNNViT(config)
         tag = "quantum" if config.use_quantum else "classical"
         name = experiment_name or f"hybrid_{tag}_{config.dataset_name}"
-        run_dir = make_run_dir("experiments", name)
+        run_dir = run_dir or make_run_dir("experiments", name)
 
         super().__init__(
             config=config,

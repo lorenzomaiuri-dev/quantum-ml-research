@@ -19,15 +19,24 @@ class QuantumPatchEmbedding(nn.Module):
 
         dev = qml.device(q_device, wires=self.n_qubits)
 
-        @qml.qnode(dev, interface="torch", diff_method="backprop")
+        # Lightning's CPU and GPU statevector devices expose exact adjoint
+        # differentiation rather than backpropagation through their internal
+        # statevector implementations.
+        diff_method = (
+            "adjoint"
+            if q_device in {"lightning.qubit", "lightning.gpu"}
+            else "backprop"
+        )
+
+        @qml.qnode(dev, interface="torch", diff_method=diff_method)
         def qnode(inputs, weights):
             qml.AngleEmbedding(inputs, wires=range(self.n_qubits))
             qml.StronglyEntanglingLayers(weights, wires=range(self.n_qubits))
             return [qml.expval(qml.PauliZ(i)) for i in range(self.embed_dim)]
 
         weight_shapes = {"weights": (n_qlayers, self.n_qubits, 3)}
-        # Pinned: the simulator's statevector lives on CPU, so the circuit cannot
-        # be evaluated on CUDA even when the surrounding ViT is.
+        # Pin circuit tensors to the simulator-owned device (CPU for the standard
+        # exact simulators, CUDA for lightning.gpu).
         self.q_layer = PinnedTorchLayer(
             qnode, weight_shapes, simulator_device(q_device)
         )

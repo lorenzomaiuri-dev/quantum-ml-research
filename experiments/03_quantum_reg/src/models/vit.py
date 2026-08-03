@@ -6,6 +6,8 @@ Only the patch embedding differs. This ensures any difference
 in generalization is attributable to the patch embedding alone.
 """
 
+import hashlib
+
 import torch
 import torch.nn as nn
 
@@ -113,3 +115,48 @@ class AblationViT(nn.Module):
             "classifier": head_params,
             "other": other_params,
         }
+
+
+def match_shared_initialization(models: dict[str, AblationViT]) -> dict[str, object]:
+    """Copy the compression layer and shared ViT body from vanilla to all variants.
+
+    Equal seeds alone are insufficient because each model-specific embedding
+    consumes a different number of random draws before the shared body is
+    constructed. The returned digest identifies the exact common starting
+    tensors used by one paired dataset/seed block.
+    """
+    required = {"vanilla", "bounded_mlp", "quantum_reg"}
+    if set(models) != required:
+        raise ValueError(f"expected exactly {sorted(required)}, got {sorted(models)}")
+
+    reference_state = models["vanilla"].state_dict()
+    target_states = {
+        name: model.state_dict() for name, model in models.items() if name != "vanilla"
+    }
+    shared_keys = []
+    digest = hashlib.sha256()
+
+    with torch.no_grad():
+        for key in sorted(reference_state):
+            is_shared = key.startswith("patch_embed.compression.") or not key.startswith(
+                "patch_embed."
+            )
+            if not is_shared:
+                continue
+            source = reference_state[key]
+            if any(
+                key not in state or state[key].shape != source.shape
+                for state in target_states.values()
+            ):
+                raise ValueError(f"shared tensor mismatch for {key}")
+            for state in target_states.values():
+                state[key].copy_(source)
+            tensor = source.detach().cpu().contiguous()
+            digest.update(key.encode("utf-8"))
+            digest.update(tensor.numpy().tobytes())
+            shared_keys.append(key)
+
+    for name, state in target_states.items():
+        models[name].load_state_dict(state)
+
+    return {"shared_state_keys": shared_keys, "sha256": digest.hexdigest()}

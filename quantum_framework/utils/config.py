@@ -53,7 +53,7 @@ class BaseViTConfig:
 
     # --- Quantum circuit ---
     n_qlayers: int = 2  # Depth of StronglyEntanglingLayers
-    q_device: str = "default.qubit"  # "lightning.qubit" for GPU-accelerated simulation
+    q_device: str = "default.qubit"  # "lightning.gpu" selects NVIDIA/cuStateVec
 
     # --- Training ---
     seed: int = 42

@@ -4,10 +4,13 @@ A character-level language model (inspired by Karpathy's nanoGPT) where the
 Q/K/V projections in each attention head are replaced by Variational Quantum
 Circuits (VQC).
 
-**Result: falsified.** Comparable validation loss to the classical baseline,
-with 9× more parameters and 7× slower training. The quantum bottleneck
-(compressing n_embd → n_qubits per head) introduces lossy compression that
-the VQC cannot compensate for.
+**Status: definitive campaign complete.** Ten paired runs with the preregistered
+`thesis` preset found no detectable validation-loss or perplexity advantage.
+The mean quantum-minus-classical perplexity difference is +0.067 (95% CI
+[-0.141, +0.275], paired t-test p=0.484). Both variants clearly beat the
+held-out unigram baseline, while the quantum simulator is 46.5x slower and the
+quantum model has 11.4% more parameters. The frozen aggregate is
+`docs/checkpoints/experiment_01_quantum_gpt_n10.json`.
 
 ## Scientific concept
 
@@ -24,9 +27,10 @@ The classical adapter (Linear) is the bottleneck: n_embd is typically much
 larger than n_qubits (e.g. 32 → 4). The VQC operates in a 2^n_qubits Hilbert
 space, but the information bottleneck prevents it from utilizing this capacity.
 
-This is the key structural limitation identified by experiment 01, which
-motivated the "no-bottleneck" design constraint adopted in experiments 02 and 03
-(where embed_dim == n_qubits by design).
+This is the structural limitation tested by experiment 01 and motivates the
+"no-bottleneck" design constraint adopted in experiments 02 and 03 (where
+`embed_dim == n_qubits` by design). Whether it harms predictive quality is an
+empirical question answered by the paired campaign rather than assumed here.
 
 ## Structure
 
@@ -58,6 +62,11 @@ python run.py 01 --mode train --config fast
 # Paired variants over identical seeds and configuration
 python run.py 01 --mode compare --config fast --seeds 42,137,256,512,1024
 
+# Definitive thesis campaign; add --resume after an interruption
+python run.py 01 --mode compare --config thesis --dataset data/input.txt \
+  --seeds 42,137,256,512,1024,2048,4096,8192,16384,32768 \
+  --name thesis_shakespeare --force_cpu --resume
+
 # Generate text from a trained run
 python run.py 01 --mode generate --run_dir experiments/01_quantum_gpt/experiments/<run_name>
 
@@ -71,7 +80,18 @@ Or directly from this directory:
 python main.py --mode train --config fast
 ```
 
-Available `--config` variants: `default`, `fast`, `light`, `big`, `heavy`.
+Available `--config` variants: `default`, `fast`, `light`, `thesis`, `big`,
+`heavy`. The `thesis` preset uses character tokens, a 16-token context and 1500
+iterations; it was selected before the definitive campaign because its pilot
+clearly beat the held-out unigram baseline.
+
+## Reproduce the figures
+
+```bash
+python experiments/01_quantum_gpt/analyze_results.py \
+  docs/checkpoints/experiment_01_quantum_gpt_n10.json \
+  --output-dir docs/checkpoints/figures
+```
 
 ## Training outputs
 

@@ -1,5 +1,6 @@
 import os
 import hashlib
+import math
 import torch
 from datasets import load_dataset as load_hf_dataset
 from src.tokenizer import CharTokenizer, BiCharTokenizer, HFTokenizerWrapper
@@ -26,6 +27,17 @@ class InputDataset:
         self.train_data = full_data[:n]
         self.val_data = full_data[n:]
         self.n_tokens = len(full_data)
+
+        counts = torch.bincount(
+            self.train_data, minlength=self.tokenizer.vocab_size
+        ).to(torch.float64)
+        # Add-one smoothing makes the held-out unigram score finite even when a
+        # token occurs only in the temporally later validation partition.
+        probabilities = (counts + 1.0) / (
+            len(self.train_data) + self.tokenizer.vocab_size
+        )
+        self.uniform_val_loss = math.log(self.tokenizer.vocab_size)
+        self.unigram_val_loss = float(-probabilities[self.val_data].log().mean())
 
     def reset_generators(self, seed):
         """Reset split-specific batch sampling without touching model RNG state."""
