@@ -1,0 +1,265 @@
+{
+    "schema_version": "1.1",
+    "experiment": "04_quantum_kernel",
+    "feature_map": "iqp",
+    "iqp_repeats": 2,
+    "kernel_method": "statevector",
+    "seeds": [
+        42
+    ],
+    "runs": [
+        {
+            "schema_version": "1.1",
+            "experiment": "04_quantum_kernel",
+            "variant": "iqp_fidelity",
+            "feature_map": "iqp",
+            "iqp_repeats": 2,
+            "kernel_method": "statevector",
+            "dataset": "breastmnist",
+            "seed": 42,
+            "n_qubits": 8,
+            "n_class0": 80,
+            "n_class1": 20,
+            "q_device": "default.qubit",
+            "preprocessing": {
+                "sample_indices": {
+                    "class_0": [
+                        333,
+                        242,
+                        232,
+                        314,
+                        411,
+                        357,
+                        345,
+                        492,
+                        307,
+                        430,
+                        489,
+                        45,
+                        144,
+                        516,
+                        149,
+                        420,
+                        439,
+                        99,
+                        72,
+                        424,
+                        31,
+                        328,
+                        447,
+                        312,
+                        74,
+                        190,
+                        478,
+                        226,
+                        359,
+                        185,
+                        537,
+                        534,
+                        496,
+                        192,
+                        173,
+                        256,
+                        472,
+                        103,
+                        365,
+                        49,
+                        281,
+                        182,
+                        288,
+                        220,
+                        443,
+                        317,
+                        156,
+                        166,
+                        139,
+                        233,
+                        521,
+                        342,
+                        371,
+                        200,
+                        403,
+                        409,
+                        30,
+                        208,
+                        303,
+                        423,
+                        64,
+                        260,
+                        386,
+                        257,
+                        287,
+                        503,
+                        231,
+                        85,
+                        122,
+                        364,
+                        467,
+                        27,
+                        66,
+                        215,
+                        436,
+                        417,
+                        223,
+                        230,
+                        340,
+                        261
+                    ],
+                    "class_1": [
+                        394,
+                        168,
+                        520,
+                        408,
+                        246,
+                        494,
+                        384,
+                        211,
+                        418,
+                        206,
+                        44,
+                        525,
+                        543,
+                        433,
+                        159,
+                        54,
+                        83,
+                        348,
+                        542,
+                        10
+                    ]
+                },
+                "pca_solver": "full",
+                "pca_explained_variance": 0.7718543294550358
+            },
+            "classical": {
+                "intra_0": 0.914191326458282,
+                "intra_1": 0.9195682076423042,
+                "inter": 0.9096164006644539,
+                "ratio": 1.007985087318713,
+                "fisher": 0.0038465846137689928
+            },
+            "classical_rbf": {
+                "intra_0": 0.6077819636509517,
+                "intra_1": 0.5655563530866243,
+                "inter": 0.5435954759204324,
+                "ratio": 1.0792384858895705,
+                "fisher": 0.05092385571580531,
+                "gamma": 0.0004964349169015876
+            },
+            "quantum": {
+                "intra_0": 0.01861506656496776,
+                "intra_1": 0.018838867281380685,
+                "inter": 0.014186863925844334,
+                "ratio": 1.3200216073870379,
+                "fisher": 0.004662659525027278
+            },
+            "differences": {
+                "fisher": 0.0008160749112582854,
+                "ratio": 0.31203652006832483
+            },
+            "descriptive_verdict": "quantum_higher",
+            "quantum_kernel_time_seconds": 0.3908195495605469,
+            "total_wall_time_seconds": 1.8037564754486084
+        }
+    ],
+    "paired_statistics": {
+        "fisher": {
+            "direction": "quantum_minus_classical",
+            "quantum": {
+                "n": 1,
+                "mean": 0.004662659525027278,
+                "std": null
+            },
+            "classical": {
+                "n": 1,
+                "mean": 0.0038465846137689928,
+                "std": null
+            },
+            "differences": {
+                "n": 1,
+                "mean": 0.0008160749112582854,
+                "std": null
+            },
+            "confidence_level": 0.95,
+            "mean_difference_ci": null,
+            "bootstrap_mean_difference_ci": null,
+            "paired_t_test": null,
+            "wilcoxon": null,
+            "cohens_dz": null
+        },
+        "ratio": {
+            "direction": "quantum_minus_classical",
+            "quantum": {
+                "n": 1,
+                "mean": 1.3200216073870379,
+                "std": null
+            },
+            "classical": {
+                "n": 1,
+                "mean": 1.007985087318713,
+                "std": null
+            },
+            "differences": {
+                "n": 1,
+                "mean": 0.31203652006832483,
+                "std": null
+            },
+            "confidence_level": 0.95,
+            "mean_difference_ci": null,
+            "bootstrap_mean_difference_ci": null,
+            "paired_t_test": null,
+            "wilcoxon": null,
+            "cohens_dz": null
+        }
+    },
+    "paired_statistics_vs_rbf": {
+        "fisher": {
+            "direction": "quantum_minus_classical",
+            "quantum": {
+                "n": 1,
+                "mean": 0.004662659525027278,
+                "std": null
+            },
+            "classical": {
+                "n": 1,
+                "mean": 0.05092385571580531,
+                "std": null
+            },
+            "differences": {
+                "n": 1,
+                "mean": -0.04626119619077803,
+                "std": null
+            },
+            "confidence_level": 0.95,
+            "mean_difference_ci": null,
+            "bootstrap_mean_difference_ci": null,
+            "paired_t_test": null,
+            "wilcoxon": null,
+            "cohens_dz": null
+        },
+        "ratio": {
+            "direction": "quantum_minus_classical",
+            "quantum": {
+                "n": 1,
+                "mean": 1.3200216073870379,
+                "std": null
+            },
+            "classical": {
+                "n": 1,
+                "mean": 1.0792384858895705,
+                "std": null
+            },
+            "differences": {
+                "n": 1,
+                "mean": 0.2407831214974674,
+                "std": null
+            },
+            "confidence_level": 0.95,
+            "mean_difference_ci": null,
+            "bootstrap_mean_difference_ci": null,
+            "paired_t_test": null,
+            "wilcoxon": null,
+            "cohens_dz": null
+        }
+    }
+}

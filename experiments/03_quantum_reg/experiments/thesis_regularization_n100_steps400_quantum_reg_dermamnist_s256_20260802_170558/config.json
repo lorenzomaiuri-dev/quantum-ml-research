@@ -1,0 +1,41 @@
+{
+    "dataset_name": "dermamnist",
+    "image_size": 28,
+    "patch_size": 7,
+    "n_channels": 3,
+    "n_classes": 7,
+    "embed_dim": 10,
+    "n_head": 2,
+    "n_layer": 2,
+    "ffn_dim": 40,
+    "dropout": 0.0,
+    "n_qlayers": 2,
+    "q_device": "default.qubit",
+    "seed": 256,
+    "batch_size": 128,
+    "max_epochs": 400,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0,
+    "device": "cuda",
+    "mlp_hidden": 20,
+    "train_subset": 100,
+    "eval_interval": 40,
+    "seeds": [
+        42,
+        137,
+        256,
+        512,
+        1024
+    ],
+    "datasets": [
+        "pathmnist",
+        "bloodmnist",
+        "dermamnist"
+    ],
+    "log_gradients": true,
+    "log_activations": true,
+    "n_patches": 16,
+    "seq_len": 17,
+    "patch_dim": 147,
+    "n_qubits": 10
+}

@@ -1,0 +1,18 @@
+{
+    "tokenizer_class": "CharTokenizer",
+    "batch_size": 8,
+    "block_size": 16,
+    "max_iters": 1500,
+    "eval_interval": 100,
+    "learning_rate": 0.003,
+    "device": "cpu",
+    "eval_iters": 100,
+    "n_embd": 8,
+    "n_head": 2,
+    "n_layer": 2,
+    "dropout": 0.0,
+    "use_quantum": false,
+    "n_qlayers": 2,
+    "q_device": "default.qubit",
+    "n_qubits": 4
+}

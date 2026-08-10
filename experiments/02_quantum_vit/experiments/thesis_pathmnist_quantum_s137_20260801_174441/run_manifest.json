@@ -1,0 +1,83 @@
+{
+    "schema_version": "1.0",
+    "experiment": "02_quantum_vit",
+    "variant": "quantum",
+    "seed": 137,
+    "created_at": "2026-08-01T18:03:13+02:00",
+    "command": [
+        "main.py",
+        "compare",
+        "--dataset",
+        "pathmnist",
+        "--epochs",
+        "50",
+        "--seeds",
+        "42",
+        "137",
+        "256",
+        "512",
+        "1024",
+        "--name",
+        "thesis_pathmnist",
+        "--q-device",
+        "default.qubit",
+        "--force-cpu",
+        "--resume"
+    ],
+    "git": {
+        "commit": "b91c318ce87e697d7da459cd209a4c11a742fb11",
+        "dirty": true
+    },
+    "runtime": {
+        "python": "3.12.9",
+        "platform": "Linux-6.12.100+deb13-amd64-x86_64-with-glibc2.41",
+        "torch_device": "cpu",
+        "cuda_version": "13.0",
+        "gpu": null
+    },
+    "packages": {
+        "torch": "2.12.0",
+        "pennylane": "0.45.0",
+        "numpy": "2.4.6",
+        "scikit-learn": "1.9.0",
+        "medmnist": "3.0.2"
+    },
+    "pairing": {
+        "seed": 137,
+        "shared_state_sha256": "21e65109fed85e0ee3420519a9791a914d4366218789f4d5b288ee3a510515ea",
+        "matched_state_keys": [
+            "cls_token->cls_token",
+            "head.bias->head.bias",
+            "head.weight->head.weight",
+            "norm.bias->norm.bias",
+            "norm.weight->norm.weight",
+            "patch_embed.bias->patch_embed.classical_pre_process.bias",
+            "patch_embed.weight->patch_embed.classical_pre_process.weight",
+            "pos_embedding->pos_embedding",
+            "transformer.layers.0.linear1.bias->transformer.layers.0.linear1.bias",
+            "transformer.layers.0.linear1.weight->transformer.layers.0.linear1.weight",
+            "transformer.layers.0.linear2.bias->transformer.layers.0.linear2.bias",
+            "transformer.layers.0.linear2.weight->transformer.layers.0.linear2.weight",
+            "transformer.layers.0.norm1.bias->transformer.layers.0.norm1.bias",
+            "transformer.layers.0.norm1.weight->transformer.layers.0.norm1.weight",
+            "transformer.layers.0.norm2.bias->transformer.layers.0.norm2.bias",
+            "transformer.layers.0.norm2.weight->transformer.layers.0.norm2.weight",
+            "transformer.layers.0.self_attn.in_proj_bias->transformer.layers.0.self_attn.in_proj_bias",
+            "transformer.layers.0.self_attn.in_proj_weight->transformer.layers.0.self_attn.in_proj_weight",
+            "transformer.layers.0.self_attn.out_proj.bias->transformer.layers.0.self_attn.out_proj.bias",
+            "transformer.layers.0.self_attn.out_proj.weight->transformer.layers.0.self_attn.out_proj.weight",
+            "transformer.layers.1.linear1.bias->transformer.layers.1.linear1.bias",
+            "transformer.layers.1.linear1.weight->transformer.layers.1.linear1.weight",
+            "transformer.layers.1.linear2.bias->transformer.layers.1.linear2.bias",
+            "transformer.layers.1.linear2.weight->transformer.layers.1.linear2.weight",
+            "transformer.layers.1.norm1.bias->transformer.layers.1.norm1.bias",
+            "transformer.layers.1.norm1.weight->transformer.layers.1.norm1.weight",
+            "transformer.layers.1.norm2.bias->transformer.layers.1.norm2.bias",
+            "transformer.layers.1.norm2.weight->transformer.layers.1.norm2.weight",
+            "transformer.layers.1.self_attn.in_proj_bias->transformer.layers.1.self_attn.in_proj_bias",
+            "transformer.layers.1.self_attn.in_proj_weight->transformer.layers.1.self_attn.in_proj_weight",
+            "transformer.layers.1.self_attn.out_proj.bias->transformer.layers.1.self_attn.out_proj.bias",
+            "transformer.layers.1.self_attn.out_proj.weight->transformer.layers.1.self_attn.out_proj.weight"
+        ]
+    }
+}

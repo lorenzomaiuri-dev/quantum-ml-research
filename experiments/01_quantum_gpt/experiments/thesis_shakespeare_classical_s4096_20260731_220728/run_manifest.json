@@ -1,0 +1,76 @@
+{
+    "schema_version": "1.0",
+    "experiment": "01_quantum_gpt",
+    "variant": "classical",
+    "seed": 4096,
+    "created_at": "2026-07-31T22:07:28+02:00",
+    "command": [
+        "main.py",
+        "--mode",
+        "compare",
+        "--config",
+        "thesis",
+        "--dataset",
+        "data/input.txt",
+        "--seeds",
+        "42,137,256,512,1024,2048,4096,8192,16384,32768",
+        "--name",
+        "thesis_shakespeare",
+        "--force_cpu",
+        "--resume"
+    ],
+    "git": {
+        "commit": "b91c318ce87e697d7da459cd209a4c11a742fb11",
+        "dirty": true
+    },
+    "runtime": {
+        "python": "3.12.9",
+        "platform": "Linux-6.12.96+deb13-amd64-x86_64-with-glibc2.41",
+        "torch_device": "cpu",
+        "cuda_version": "13.0",
+        "gpu": null
+    },
+    "packages": {
+        "torch": "2.12.0",
+        "pennylane": "0.45.0",
+        "numpy": "2.4.6",
+        "scikit-learn": "1.9.0",
+        "medmnist": "3.0.2"
+    },
+    "pairing": {
+        "seed": 4096,
+        "shared_state_sha256": "d16efcb6345bdcd536343bf169ae3f508b2e0cfa6ffca582459c8da3f0499089",
+        "matched_state_keys": [
+            "blocks.0.ffwd.net.0.bias",
+            "blocks.0.ffwd.net.0.weight",
+            "blocks.0.ffwd.net.2.bias",
+            "blocks.0.ffwd.net.2.weight",
+            "blocks.0.ln1.bias",
+            "blocks.0.ln1.weight",
+            "blocks.0.ln2.bias",
+            "blocks.0.ln2.weight",
+            "blocks.0.sa.heads.0.tril",
+            "blocks.0.sa.heads.1.tril",
+            "blocks.0.sa.proj.bias",
+            "blocks.0.sa.proj.weight",
+            "blocks.1.ffwd.net.0.bias",
+            "blocks.1.ffwd.net.0.weight",
+            "blocks.1.ffwd.net.2.bias",
+            "blocks.1.ffwd.net.2.weight",
+            "blocks.1.ln1.bias",
+            "blocks.1.ln1.weight",
+            "blocks.1.ln2.bias",
+            "blocks.1.ln2.weight",
+            "blocks.1.sa.heads.0.tril",
+            "blocks.1.sa.heads.1.tril",
+            "blocks.1.sa.proj.bias",
+            "blocks.1.sa.proj.weight",
+            "lm_head.bias",
+            "lm_head.weight",
+            "ln_f.bias",
+            "ln_f.weight",
+            "position_embedding_table.weight",
+            "token_embedding_table.weight"
+        ]
+    }
+}

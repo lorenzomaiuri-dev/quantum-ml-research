@@ -1,0 +1,150 @@
+{
+    "schema_version": "1.0",
+    "experiment": "01_quantum_gpt",
+    "variant": "classical",
+    "config_name": "thesis",
+    "seed": 42,
+    "model_name": "thesis_shakespeare_classical_s42",
+    "dataset": "data/input.txt",
+    "dataset_sha256": "434c0554a8c4c53dc17e56a0abb0f30b88f83cbceb0289cb897db68c25e89eba",
+    "n_tokens": 1115390,
+    "n_train_tokens": 1003851,
+    "n_val_tokens": 111539,
+    "vocab_size": 65,
+    "tokenizer": "CharTokenizer",
+    "baselines": {
+        "uniform_val_loss": 4.174387,
+        "unigram_val_loss": 3.347305
+    },
+    "total_training_time_seconds": 13.62,
+    "total_wall_time_seconds": 14.6,
+    "best_val_loss": 2.5132,
+    "selected_train_loss": 2.504,
+    "selected_val_loss": 2.537,
+    "selected_val_perplexity": 12.6411,
+    "selected_loss_improvement_over_unigram": 0.810353,
+    "mean_iteration_time_seconds": 0.009077,
+    "params": {
+        "total": 2945,
+        "trainable": 2945
+    },
+    "pairing": {
+        "seed": 42,
+        "shared_state_sha256": "8823075bab9646feed01bc3b56aa3217002a226c82d7a667ff9da71ff139aba2",
+        "matched_state_keys": [
+            "blocks.0.ffwd.net.0.bias",
+            "blocks.0.ffwd.net.0.weight",
+            "blocks.0.ffwd.net.2.bias",
+            "blocks.0.ffwd.net.2.weight",
+            "blocks.0.ln1.bias",
+            "blocks.0.ln1.weight",
+            "blocks.0.ln2.bias",
+            "blocks.0.ln2.weight",
+            "blocks.0.sa.heads.0.tril",
+            "blocks.0.sa.heads.1.tril",
+            "blocks.0.sa.proj.bias",
+            "blocks.0.sa.proj.weight",
+            "blocks.1.ffwd.net.0.bias",
+            "blocks.1.ffwd.net.0.weight",
+            "blocks.1.ffwd.net.2.bias",
+            "blocks.1.ffwd.net.2.weight",
+            "blocks.1.ln1.bias",
+            "blocks.1.ln1.weight",
+            "blocks.1.ln2.bias",
+            "blocks.1.ln2.weight",
+            "blocks.1.sa.heads.0.tril",
+            "blocks.1.sa.heads.1.tril",
+            "blocks.1.sa.proj.bias",
+            "blocks.1.sa.proj.weight",
+            "lm_head.bias",
+            "lm_head.weight",
+            "ln_f.bias",
+            "ln_f.weight",
+            "position_embedding_table.weight",
+            "token_embedding_table.weight"
+        ]
+    },
+    "run_dir": "experiments/thesis_shakespeare_classical_s42_20260731_204223",
+    "history": [
+        {
+            "step": 0,
+            "train_loss": 4.4082,
+            "val_loss": 4.4096
+        },
+        {
+            "step": 100,
+            "train_loss": 3.3009,
+            "val_loss": 3.3404
+        },
+        {
+            "step": 200,
+            "train_loss": 3.1839,
+            "val_loss": 3.1957
+        },
+        {
+            "step": 300,
+            "train_loss": 3.0261,
+            "val_loss": 3.0809
+        },
+        {
+            "step": 400,
+            "train_loss": 2.8789,
+            "val_loss": 2.968
+        },
+        {
+            "step": 500,
+            "train_loss": 2.7965,
+            "val_loss": 2.8046
+        },
+        {
+            "step": 600,
+            "train_loss": 2.7214,
+            "val_loss": 2.714
+        },
+        {
+            "step": 700,
+            "train_loss": 2.6666,
+            "val_loss": 2.6389
+        },
+        {
+            "step": 800,
+            "train_loss": 2.6159,
+            "val_loss": 2.6299
+        },
+        {
+            "step": 900,
+            "train_loss": 2.6151,
+            "val_loss": 2.6049
+        },
+        {
+            "step": 1000,
+            "train_loss": 2.6106,
+            "val_loss": 2.5871
+        },
+        {
+            "step": 1100,
+            "train_loss": 2.5734,
+            "val_loss": 2.5779
+        },
+        {
+            "step": 1200,
+            "train_loss": 2.5649,
+            "val_loss": 2.5555
+        },
+        {
+            "step": 1300,
+            "train_loss": 2.5554,
+            "val_loss": 2.5584
+        },
+        {
+            "step": 1400,
+            "train_loss": 2.5363,
+            "val_loss": 2.5416
+        },
+        {
+            "step": 1499,
+            "train_loss": 2.533,
+            "val_loss": 2.5132
+        }
+    ]
+}
