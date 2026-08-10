@@ -1,0 +1,520 @@
+{
+    "schema_version": "1.0",
+    "experiment": "02_quantum_vit_checkpoint_validation",
+    "source": "experiments/02_quantum_vit/experiments/comparison_thesis_pathmnist.json",
+    "seeds": [
+        42,
+        137,
+        256,
+        512,
+        1024
+    ],
+    "runs": {
+        "classical": [
+            {
+                "seed": 42,
+                "run_dir": "experiments/thesis_pathmnist_classical_s42_20260801_142507",
+                "recorded_best": {
+                    "loss": 0.8003,
+                    "accuracy": 0.6943,
+                    "auc": 0.9564,
+                    "f1": 0.6115
+                },
+                "recomputed_best": {
+                    "loss": 0.8003402148448657,
+                    "accuracy": 0.6942896935933147,
+                    "auc": 0.9563739701657418,
+                    "f1": 0.6115412395467028
+                },
+                "recording_errors": {
+                    "loss": 4.0214844865715804e-05,
+                    "accuracy": -1.030640668531202e-05,
+                    "auc": -2.6029834258256557e-05,
+                    "f1": 4.123954670276486e-05
+                },
+                "final": {
+                    "loss": 0.8131060268221459,
+                    "accuracy": 0.6902506963788301,
+                    "auc": 0.9555840364802665,
+                    "f1": 0.6087319677512525
+                }
+            },
+            {
+                "seed": 137,
+                "run_dir": "experiments/thesis_pathmnist_classical_s137_20260801_174438",
+                "recorded_best": {
+                    "loss": 0.772,
+                    "accuracy": 0.7216,
+                    "auc": 0.959,
+                    "f1": 0.6527
+                },
+                "recomputed_best": {
+                    "loss": 0.7719593307434018,
+                    "accuracy": 0.7215877437325905,
+                    "auc": 0.9589673892138806,
+                    "f1": 0.6526970453105435
+                },
+                "recording_errors": {
+                    "loss": -4.0669256598180326e-05,
+                    "accuracy": -1.2256267409527233e-05,
+                    "auc": -3.2610786119380286e-05,
+                    "f1": -2.954689456435844e-06
+                },
+                "final": {
+                    "loss": 0.7576524332373256,
+                    "accuracy": 0.7243732590529248,
+                    "auc": 0.9602604500103413,
+                    "f1": 0.6556305236659681
+                }
+            },
+            {
+                "seed": 256,
+                "run_dir": "experiments/thesis_pathmnist_classical_s256_20260801_210816",
+                "recorded_best": {
+                    "loss": 0.7427,
+                    "accuracy": 0.7563,
+                    "auc": 0.9594,
+                    "f1": 0.6954
+                },
+                "recomputed_best": {
+                    "loss": 0.7427430357441597,
+                    "accuracy": 0.7562674094707521,
+                    "auc": 0.9593625859295921,
+                    "f1": 0.6954470713076717
+                },
+                "recording_errors": {
+                    "loss": 4.303574415964739e-05,
+                    "accuracy": -3.259052924786676e-05,
+                    "auc": -3.741407040791511e-05,
+                    "f1": 4.7071307671675555e-05
+                },
+                "final": {
+                    "loss": 0.7447762867866452,
+                    "accuracy": 0.7555710306406686,
+                    "auc": 0.9593565689216482,
+                    "f1": 0.693257016950512
+                }
+            },
+            {
+                "seed": 512,
+                "run_dir": "experiments/thesis_pathmnist_classical_s512_20260802_003924",
+                "recorded_best": {
+                    "loss": 0.8537,
+                    "accuracy": 0.7079,
+                    "auc": 0.9491,
+                    "f1": 0.6324
+                },
+                "recomputed_best": {
+                    "loss": 0.8536926505293355,
+                    "accuracy": 0.7079387186629527,
+                    "auc": 0.9490773304316931,
+                    "f1": 0.6323786581267634
+                },
+                "recording_errors": {
+                    "loss": -7.349470664497204e-06,
+                    "accuracy": 3.871866295268589e-05,
+                    "auc": -2.2669568306987742e-05,
+                    "f1": -2.1341873236546682e-05
+                },
+                "final": {
+                    "loss": 0.8195703204295761,
+                    "accuracy": 0.7167130919220056,
+                    "auc": 0.9518103314938762,
+                    "f1": 0.6391130391717357
+                }
+            },
+            {
+                "seed": 1024,
+                "run_dir": "experiments/thesis_pathmnist_classical_s1024_20260802_034428",
+                "recorded_best": {
+                    "loss": 0.7556,
+                    "accuracy": 0.7315,
+                    "auc": 0.9529,
+                    "f1": 0.65
+                },
+                "recomputed_best": {
+                    "loss": 0.7556364342694827,
+                    "accuracy": 0.7314763231197772,
+                    "auc": 0.952869767342452,
+                    "f1": 0.6499717766743693
+                },
+                "recording_errors": {
+                    "loss": 3.643426948263251e-05,
+                    "accuracy": -2.367688022286707e-05,
+                    "auc": -3.0232657547979436e-05,
+                    "f1": -2.822332563068297e-05
+                },
+                "final": {
+                    "loss": 0.7604366711587295,
+                    "accuracy": 0.7309192200557103,
+                    "auc": 0.9529922598557048,
+                    "f1": 0.6505386998031973
+                }
+            }
+        ],
+        "quantum": [
+            {
+                "seed": 42,
+                "run_dir": "experiments/thesis_pathmnist_quantum_s42_20260801_145159",
+                "recorded_best": {
+                    "loss": 0.9192,
+                    "accuracy": 0.7036,
+                    "auc": 0.9508,
+                    "f1": 0.6506
+                },
+                "recomputed_best": {
+                    "loss": 0.9192456467237977,
+                    "accuracy": 0.7036211699164345,
+                    "auc": 0.9507776820454862,
+                    "f1": 0.6505510450072399
+                },
+                "recording_errors": {
+                    "loss": 4.564672379769874e-05,
+                    "accuracy": 2.1169916434526925e-05,
+                    "auc": -2.2317954513795257e-05,
+                    "f1": -4.895499276003079e-05
+                },
+                "final": {
+                    "loss": 0.9082518285363498,
+                    "accuracy": 0.7020891364902507,
+                    "auc": 0.9517532504970608,
+                    "f1": 0.6463953261147221
+                }
+            },
+            {
+                "seed": 137,
+                "run_dir": "experiments/thesis_pathmnist_quantum_s137_20260801_174441",
+                "recorded_best": {
+                    "loss": 0.8563,
+                    "accuracy": 0.7156,
+                    "auc": 0.9511,
+                    "f1": 0.6537
+                },
+                "recomputed_best": {
+                    "loss": 0.8562600306979793,
+                    "accuracy": 0.7155988857938719,
+                    "auc": 0.951068948104107,
+                    "f1": 0.6536666850558291
+                },
+                "recording_errors": {
+                    "loss": -3.996930202065929e-05,
+                    "accuracy": -1.1142061281388393e-06,
+                    "auc": -3.105189589291957e-05,
+                    "f1": -3.3314944170803606e-05
+                },
+                "final": {
+                    "loss": 0.8485275003073275,
+                    "accuracy": 0.7194986072423398,
+                    "auc": 0.9512707595056362,
+                    "f1": 0.6601456942203907
+                }
+            },
+            {
+                "seed": 256,
+                "run_dir": "experiments/thesis_pathmnist_quantum_s256_20260801_210820",
+                "recorded_best": {
+                    "loss": 0.8877,
+                    "accuracy": 0.7111,
+                    "auc": 0.9452,
+                    "f1": 0.6402
+                },
+                "recomputed_best": {
+                    "loss": 0.8877058677354563,
+                    "accuracy": 0.7111420612813371,
+                    "auc": 0.9452135273666191,
+                    "f1": 0.6402073928319054
+                },
+                "recording_errors": {
+                    "loss": 5.867735456299705e-06,
+                    "accuracy": 4.206128133710241e-05,
+                    "auc": 1.3527366619081604e-05,
+                    "f1": 7.3928319054283875e-06
+                },
+                "final": {
+                    "loss": 0.8894493617387204,
+                    "accuracy": 0.7119777158774373,
+                    "auc": 0.9446798284242851,
+                    "f1": 0.6416985890292053
+                }
+            },
+            {
+                "seed": 512,
+                "run_dir": "experiments/thesis_pathmnist_quantum_s512_20260802_003928",
+                "recorded_best": {
+                    "loss": 1.0103,
+                    "accuracy": 0.6703,
+                    "auc": 0.9343,
+                    "f1": 0.6092
+                },
+                "recomputed_best": {
+                    "loss": 1.0102926505309293,
+                    "accuracy": 0.6703342618384401,
+                    "auc": 0.9343476001806938,
+                    "f1": 0.6092178286810797
+                },
+                "recording_errors": {
+                    "loss": -7.34946907066103e-06,
+                    "accuracy": 3.426183844013053e-05,
+                    "auc": 4.760018069382976e-05,
+                    "f1": 1.7828681079690156e-05
+                },
+                "final": {
+                    "loss": 1.0142376394324981,
+                    "accuracy": 0.6700557103064066,
+                    "auc": 0.9342005333881604,
+                    "f1": 0.6081776018364592
+                }
+            },
+            {
+                "seed": 1024,
+                "run_dir": "experiments/thesis_pathmnist_quantum_s1024_20260802_034432",
+                "recorded_best": {
+                    "loss": 0.9093,
+                    "accuracy": 0.6903,
+                    "auc": 0.9446,
+                    "f1": 0.6262
+                },
+                "recomputed_best": {
+                    "loss": 0.9093351997704892,
+                    "accuracy": 0.6902506963788301,
+                    "auc": 0.9446178071674137,
+                    "f1": 0.626246610000064
+                },
+                "recording_errors": {
+                    "loss": 3.519977048915823e-05,
+                    "accuracy": -4.930362116994935e-05,
+                    "auc": 1.780716741373034e-05,
+                    "f1": 4.661000006400684e-05
+                },
+                "final": {
+                    "loss": 0.8908460090419376,
+                    "accuracy": 0.6997214484679666,
+                    "auc": 0.9457196274416526,
+                    "f1": 0.6368503180254139
+                }
+            }
+        ]
+    },
+    "paired_statistics": {
+        "recomputed_best": {
+            "accuracy": {
+                "direction": "quantum_minus_classical",
+                "quantum": {
+                    "n": 5,
+                    "mean": 0.6981894150417827,
+                    "std": 0.018298206821191466
+                },
+                "classical": {
+                    "n": 5,
+                    "mean": 0.7223119777158775,
+                    "std": 0.023607838054619655
+                },
+                "differences": {
+                    "n": 5,
+                    "mean": -0.024122562674094693,
+                    "std": 0.024307392097968
+                },
+                "confidence_level": 0.95,
+                "mean_difference_ci": [
+                    -0.05430417633236422,
+                    0.006059050984174835
+                ],
+                "bootstrap_mean_difference_ci": [
+                    -0.04206128133704736,
+                    -0.0038440111420612543
+                ],
+                "paired_t_test": {
+                    "statistic": -2.2190652832429514,
+                    "p_value": 0.09070648613239342
+                },
+                "wilcoxon": {
+                    "statistic": 2.0,
+                    "p_value": 0.1875
+                },
+                "cohens_dz": -0.992396163968213
+            },
+            "auc": {
+                "direction": "quantum_minus_classical",
+                "quantum": {
+                    "n": 5,
+                    "mean": 0.9452051129728639,
+                    "std": 0.0067762207656410795
+                },
+                "classical": {
+                    "n": 5,
+                    "mean": 0.9553302086166718,
+                    "std": 0.004351173534859613
+                },
+                "differences": {
+                    "n": 5,
+                    "mean": -0.010125095643807924,
+                    "std": 0.004073440251318354
+                },
+                "confidence_level": 0.95,
+                "mean_difference_ci": [
+                    -0.015182939752704017,
+                    -0.005067251534911831
+                ],
+                "bootstrap_mean_difference_ci": [
+                    -0.01324733808514884,
+                    -0.007048283727019311
+                ],
+                "paired_t_test": {
+                    "statistic": -5.5580543082506315,
+                    "p_value": 0.00512982117498805
+                },
+                "wilcoxon": {
+                    "statistic": 0.0,
+                    "p_value": 0.0625
+                },
+                "cohens_dz": -2.4856374511767965
+            },
+            "f1": {
+                "direction": "quantum_minus_classical",
+                "quantum": {
+                    "n": 5,
+                    "mean": 0.6359779123152236,
+                    "std": 0.018398082127115214
+                },
+                "classical": {
+                    "n": 5,
+                    "mean": 0.64840715819321,
+                    "std": 0.031022626260191605
+                },
+                "differences": {
+                    "n": 5,
+                    "mean": -0.012429245877986527,
+                    "std": 0.0350035854958782
+                },
+                "confidence_level": 0.95,
+                "mean_difference_ci": [
+                    -0.05589193779626594,
+                    0.03103344604029288
+                ],
+                "bootstrap_mean_difference_ci": [
+                    -0.03758204502553939,
+                    0.014141551498048766
+                ],
+                "paired_t_test": {
+                    "statistic": -0.7939940522810045,
+                    "p_value": 0.4716433014422119
+                },
+                "wilcoxon": {
+                    "statistic": 5.0,
+                    "p_value": 0.625
+                },
+                "cohens_dz": -0.35508493492616966
+            }
+        },
+        "final": {
+            "accuracy": {
+                "direction": "quantum_minus_classical",
+                "quantum": {
+                    "n": 5,
+                    "mean": 0.7006685236768802,
+                    "std": 0.01885821644525026
+                },
+                "classical": {
+                    "n": 5,
+                    "mean": 0.7235654596100278,
+                    "std": 0.02364273303634985
+                },
+                "differences": {
+                    "n": 5,
+                    "mean": -0.022896935933147657,
+                    "std": 0.025461499475794864
+                },
+                "confidence_level": 0.95,
+                "mean_difference_ci": [
+                    -0.05451156317252615,
+                    0.008717691306230839
+                ],
+                "bootstrap_mean_difference_ci": [
+                    -0.04233983286908083,
+                    -0.0025905292479108553
+                ],
+                "paired_t_test": {
+                    "statistic": -2.0108440695587664,
+                    "p_value": 0.114688489833916
+                },
+                "wilcoxon": {
+                    "statistic": 2.0,
+                    "p_value": 0.1875
+                },
+                "cohens_dz": -0.8992768063371435
+            },
+            "auc": {
+                "direction": "quantum_minus_classical",
+                "quantum": {
+                    "n": 5,
+                    "mean": 0.945524799851359,
+                    "std": 0.007085206334796459
+                },
+                "classical": {
+                    "n": 5,
+                    "mean": 0.9560007293523674,
+                    "std": 0.0037480273202438663
+                },
+                "differences": {
+                    "n": 5,
+                    "mean": -0.010475929501008351,
+                    "std": 0.005593899472862256
+                },
+                "confidence_level": 0.95,
+                "mean_difference_ci": [
+                    -0.01742167308603243,
+                    -0.0035301859159842745
+                ],
+                "bootstrap_mean_difference_ci": [
+                    -0.014955753445712493,
+                    -0.006239305459844147
+                ],
+                "paired_t_test": {
+                    "statistic": -4.1875780223422945,
+                    "p_value": 0.013833493434736945
+                },
+                "wilcoxon": {
+                    "statistic": 0.0,
+                    "p_value": 0.0625
+                },
+                "cohens_dz": -1.8727418238083005
+            },
+            "f1": {
+                "direction": "quantum_minus_classical",
+                "quantum": {
+                    "n": 5,
+                    "mean": 0.6386535058452383,
+                    "std": 0.019125602508817768
+                },
+                "classical": {
+                    "n": 5,
+                    "mean": 0.6494542494685331,
+                    "std": 0.030509218661065044
+                },
+                "differences": {
+                    "n": 5,
+                    "mean": -0.010800743623294884,
+                    "std": 0.03412579516584809
+                },
+                "confidence_level": 0.95,
+                "mean_difference_ci": [
+                    -0.05317351489080451,
+                    0.03157202764421475
+                ],
+                "bootstrap_mean_difference_ci": [
+                    -0.0362191101089548,
+                    0.01712266230696837
+                ],
+                "paired_t_test": {
+                    "statistic": -0.7077108923575917,
+                    "p_value": 0.5181810807117869
+                },
+                "wilcoxon": {
+                    "statistic": 5.0,
+                    "p_value": 0.625
+                },
+                "cohens_dz": -0.3164979327457223
+            }
+        }
+    }
+}

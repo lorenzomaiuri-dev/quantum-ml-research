@@ -1,0 +1,2927 @@
+{
+    "schema_version": "1.0",
+    "experiment": "03_quantum_reg_checkpoint_validation",
+    "source": "experiments/03_quantum_reg/experiments/ablation_thesis_regularization_n100_steps400.json",
+    "source_sha256": "a47fcf0c946d4e66fbdf1dd3a2b774016d5f219b28154f741457ecbf7409581c",
+    "mode": "full_recomputation",
+    "metric_tolerance": 5.1e-05,
+    "datasets": [
+        "pathmnist",
+        "bloodmnist",
+        "dermamnist"
+    ],
+    "seeds": [
+        42,
+        137,
+        256,
+        512,
+        1024
+    ],
+    "runs": {
+        "pathmnist": {
+            "vanilla": [
+                {
+                    "seed": 42,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_vanilla_pathmnist_s42_20260802_121543",
+                    "pairing_sha256": "fcbf54a1c2c71ea54f0a1c5d29d2df886ccb30257d3f258b51fad77b6f9f61df",
+                    "artifact_sha256": {
+                        "best_model.pth": "66b99ef41efd3059e6b0cb5fa33e209ab034733ce1f9c83c996d5e39fb44b6a5",
+                        "config.json": "91aeca98fcdec6fae69ca33821c06afbafbf0dcbc60bac7b92f39a3c8954ab6d",
+                        "final_model.pth": "12ae7f94040cda4d6e2ea1c150d12e262be8eb3d04615c3a66bb5d99f56b85b4",
+                        "latest_checkpoint.pth": "9b2b4d4f3f34a200ce1fe36d476dc87c7053b6fcebd01742ecf353c0dc78e9e3",
+                        "params.json": "aad4cac72277ca9154ba26272f0c499788c877971b69b8c3fb1b68f881960d91",
+                        "results.json": "961ff0b8f7414ac4520eeda9f1866c40456693828d7dcf1807e13636e52e27c4",
+                        "run_manifest.json": "938d28537ce6ec499f84c0940575d13202b344071fb1bb5926fe03d673db626c"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 1.2042,
+                            "train_accuracy": 0.76,
+                            "validation_loss": 1.7974,
+                            "validation_accuracy": 0.4076,
+                            "validation_auc": 0.7701,
+                            "validation_f1": 0.3749,
+                            "test_loss": 1.6822,
+                            "test_accuracy": 0.4678,
+                            "test_auc": 0.7927,
+                            "test_f1": 0.3728,
+                            "generalization_gap": 0.2922
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 1.2041860818862915,
+                                "accuracy": 0.76,
+                                "auc": 0.9585400325970616,
+                                "f1": 0.732336720670054
+                            },
+                            "validation": {
+                                "loss": 1.797422584177541,
+                                "accuracy": 0.40763694522191124,
+                                "auc": 0.7701304646757429,
+                                "f1": 0.3748979877118382
+                            },
+                            "test": {
+                                "loss": 1.6821845615142568,
+                                "accuracy": 0.4678272980501393,
+                                "auc": 0.7927273046961223,
+                                "f1": 0.3728405143909301
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -1.391811370843321e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 2.2584177540974082e-05,
+                            "validation_accuracy": 3.694522191122207e-05,
+                            "validation_auc": 3.0464675742858383e-05,
+                            "validation_f1": -2.0122881618234167e-06,
+                            "test_loss": -1.5438485743146657e-05,
+                            "test_accuracy": 2.729805013929054e-05,
+                            "test_auc": 2.7304696122332217e-05,
+                            "test_f1": 4.05143909300576e-05,
+                            "generalization_gap": -2.729805013929054e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 137,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_vanilla_pathmnist_s137_20260802_124924",
+                    "pairing_sha256": "fd89f5a878b1e9c334d5d7352c7bebd123ee781972c9c4d7a4433b47793b9b7a",
+                    "artifact_sha256": {
+                        "best_model.pth": "b68232906757422830094aa5a888f4dee1eae2755ef6a8205837958846068580",
+                        "config.json": "69644445e680cc6bf87ef924b5c0b2af472f6a3485c577f307cac4fec35a6446",
+                        "final_model.pth": "0a167a1875afb52004df3de236c95d5132c1fd419f05f310cc179de7d16deff1",
+                        "latest_checkpoint.pth": "d097dd82a2bd4a5f308f877904984b3088a962d4e4cb8aeb45ce19492c7a58f5",
+                        "params.json": "aad4cac72277ca9154ba26272f0c499788c877971b69b8c3fb1b68f881960d91",
+                        "results.json": "4b2c727f6d7b20c531cd6970bb0209b06c6c9660c600342b9b8d734c053eaa82",
+                        "run_manifest.json": "48e22e289ec9b8f90c58f107976b294b0ddbd08f160a7867608450b201b0698f"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 1.3419,
+                            "train_accuracy": 0.64,
+                            "validation_loss": 1.8494,
+                            "validation_accuracy": 0.3447,
+                            "validation_auc": 0.7342,
+                            "validation_f1": 0.3296,
+                            "test_loss": 1.6556,
+                            "test_accuracy": 0.4462,
+                            "test_auc": 0.7726,
+                            "test_f1": 0.3707,
+                            "generalization_gap": 0.1938
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 1.3419286012649536,
+                                "accuracy": 0.64,
+                                "auc": 0.9262133827172805,
+                                "f1": 0.6298625103062667
+                            },
+                            "validation": {
+                                "loss": 1.8494139096108688,
+                                "accuracy": 0.34466213514594163,
+                                "auc": 0.7341825369209806,
+                                "f1": 0.3296245080155253
+                            },
+                            "test": {
+                                "loss": 1.6555726625129041,
+                                "accuracy": 0.44623955431754875,
+                                "auc": 0.7726356643062451,
+                                "f1": 0.37073695451805533
+                            }
+                        },
+                        "errors": {
+                            "train_loss": 2.8601264953520555e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 1.3909610868889644e-05,
+                            "validation_accuracy": -3.786485405837814e-05,
+                            "validation_auc": -1.7463079019397476e-05,
+                            "validation_f1": 2.4508015525281923e-05,
+                            "test_loss": -2.7337487095824287e-05,
+                            "test_accuracy": 3.955431754876226e-05,
+                            "test_auc": 3.566430624513117e-05,
+                            "test_f1": 3.6954518055354324e-05,
+                            "generalization_gap": -3.955431754873451e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 256,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_vanilla_pathmnist_s256_20260802_132442",
+                    "pairing_sha256": "19bdfb4b5541ed21f81f29ab46b08abb92b26c5d127d955e22c9ab0b3d0270c3",
+                    "artifact_sha256": {
+                        "best_model.pth": "aafceb19f5cea883ebfcfb5d97faf773522755fa7948aa353d2f6ba5602f501c",
+                        "config.json": "2424e8dc27d23581dc0791aa7315fa6cb9351dad076bb58f644c472c28284d99",
+                        "final_model.pth": "506d71e7d9e02ee510bf046d442076fc0a558947f9a68468960c586bf5b63d84",
+                        "latest_checkpoint.pth": "59fcd37d15e9ea0993a0c19f473b94e9672e6eb89e6ffbf546888f56ed058ffa",
+                        "params.json": "aad4cac72277ca9154ba26272f0c499788c877971b69b8c3fb1b68f881960d91",
+                        "results.json": "773542640b3b331661e2b04d3cddc5e25714bd9a677481426db6b4945f8d4c9c",
+                        "run_manifest.json": "77ea25cece26f9cd2a7b01487928bd2fdc01b9f6fc60560deacf4bc7e8b5bd24"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 1.0207,
+                            "train_accuracy": 0.81,
+                            "validation_loss": 1.77,
+                            "validation_accuracy": 0.4104,
+                            "validation_auc": 0.7853,
+                            "validation_f1": 0.3857,
+                            "test_loss": 1.8917,
+                            "test_accuracy": 0.4489,
+                            "test_auc": 0.7497,
+                            "test_f1": 0.3639,
+                            "generalization_gap": 0.3611
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 1.0206940174102783,
+                                "accuracy": 0.81,
+                                "auc": 0.9794524285535522,
+                                "f1": 0.7824562677572653
+                            },
+                            "validation": {
+                                "loss": 1.7699787511867506,
+                                "accuracy": 0.4104358256697321,
+                                "auc": 0.7853388254363772,
+                                "f1": 0.3857411155146647
+                            },
+                            "test": {
+                                "loss": 1.8917335658352354,
+                                "accuracy": 0.4488857938718663,
+                                "auc": 0.7497029069152804,
+                                "f1": 0.3638624188884
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -5.982589721620357e-06,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -2.124881324938599e-05,
+                            "validation_accuracy": 3.582566973209245e-05,
+                            "validation_auc": 3.8825436377232236e-05,
+                            "validation_f1": 4.111551466473573e-05,
+                            "test_loss": 3.356583523550505e-05,
+                            "test_accuracy": -1.4206128133742446e-05,
+                            "test_auc": 2.906915280376232e-06,
+                            "test_f1": -3.758111160001576e-05,
+                            "generalization_gap": 1.4206128133797957e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 512,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_vanilla_pathmnist_s512_20260802_140237",
+                    "pairing_sha256": "8284c8ff1fdda61bd6c967b483dfe3fb151608c492f71a2abeb1dedf3b120448",
+                    "artifact_sha256": {
+                        "best_model.pth": "93c9278042e5b6deab4b4b7b97d49ada37025a8bbd990e460071c3d35fe0fb06",
+                        "config.json": "50e2e3ef498d6ca5a3753f54496223726d47c9ea822b2983edd6a29cff02d5ab",
+                        "final_model.pth": "284b79ac02e0f2179e239501c12f613940bc400ddc40f1de18acd931e8424ec4",
+                        "latest_checkpoint.pth": "bd408111c58b3f321bd665fc83f5f40189f2b0c6012829497bd25c9297f6a580",
+                        "params.json": "aad4cac72277ca9154ba26272f0c499788c877971b69b8c3fb1b68f881960d91",
+                        "results.json": "8b872591f6994fa77d793c7ce8418c8dc6e3e35921c90865ff7e65d1160f6229",
+                        "run_manifest.json": "fa1bb2fbfc93cd7b338ee6c5b317cc18554f08cb1045afffaabf04157b9ded3e"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.8982,
+                            "train_accuracy": 0.84,
+                            "validation_loss": 1.8024,
+                            "validation_accuracy": 0.4106,
+                            "validation_auc": 0.7551,
+                            "validation_f1": 0.3761,
+                            "test_loss": 1.6672,
+                            "test_accuracy": 0.4723,
+                            "test_auc": 0.7905,
+                            "test_f1": 0.3511,
+                            "generalization_gap": 0.3677
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.8981968760490417,
+                                "accuracy": 0.84,
+                                "auc": 0.9904125174441349,
+                                "f1": 0.8403528751567967
+                            },
+                            "validation": {
+                                "loss": 1.8023864550859343,
+                                "accuracy": 0.4106357457017193,
+                                "auc": 0.7550594204132371,
+                                "f1": 0.3760631402028778
+                            },
+                            "test": {
+                                "loss": 1.6671527578306065,
+                                "accuracy": 0.4722841225626741,
+                                "auc": 0.7904671004838356,
+                                "f1": 0.351080099494445
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -3.1239509582503544e-06,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -1.3544914065688474e-05,
+                            "validation_accuracy": 3.574570171926972e-05,
+                            "validation_auc": -4.0579586762845565e-05,
+                            "validation_f1": -3.6859797122201776e-05,
+                            "test_loss": -4.724216939355763e-05,
+                            "test_accuracy": -1.5877437325895194e-05,
+                            "test_auc": -3.289951616436415e-05,
+                            "test_f1": -1.990050555500389e-05,
+                            "generalization_gap": 1.5877437325839683e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 1024,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_vanilla_pathmnist_s1024_20260802_143703",
+                    "pairing_sha256": "443df61e7ecc3ba06582556853b9b453f6beed9ee5ec74662fbd5de918c4acd6",
+                    "artifact_sha256": {
+                        "best_model.pth": "b20e85746c8ca470ab66ed3ddce91367d3fdf6f1245d5873ae329de04a576f08",
+                        "config.json": "bc935f4080c42a6216900dc38088d2acb00d5b2ef723439b64d90372c9ff2a6f",
+                        "final_model.pth": "72e2b772324ebe92481e0d7eeadad3359b0d883dcfdfb618c3b662820ef79018",
+                        "latest_checkpoint.pth": "5b8a7047e160c1138d2876a03023c39a248629cae861d17258c7cda212955f7d",
+                        "params.json": "aad4cac72277ca9154ba26272f0c499788c877971b69b8c3fb1b68f881960d91",
+                        "results.json": "3a41d588ab9c9dfe5190e23d4d1e8f57a0ced75d8e17dcaae5e567aeccf118be",
+                        "run_manifest.json": "f9e5dc8244abc46a2c983699d4d31d8dcac28300512de2d5152c084ae6599282"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.4752,
+                            "train_accuracy": 0.98,
+                            "validation_loss": 1.9638,
+                            "validation_accuracy": 0.3825,
+                            "validation_auc": 0.7263,
+                            "validation_f1": 0.3653,
+                            "test_loss": 1.8362,
+                            "test_accuracy": 0.4032,
+                            "test_auc": 0.7321,
+                            "test_f1": 0.3352,
+                            "generalization_gap": 0.5768
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.4752119481563568,
+                                "accuracy": 0.98,
+                                "auc": 1.0,
+                                "f1": 0.9813184060527055
+                            },
+                            "validation": {
+                                "loss": 1.9638095975923138,
+                                "accuracy": 0.382546981207517,
+                                "auc": 0.7262781400982626,
+                                "f1": 0.3652664372497619
+                            },
+                            "test": {
+                                "loss": 1.8361761150253848,
+                                "accuracy": 0.4032033426183844,
+                                "auc": 0.7321455453582837,
+                                "f1": 0.33515451697700005
+                            }
+                        },
+                        "errors": {
+                            "train_loss": 1.1948156356800244e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 9.597592313781433e-06,
+                            "validation_accuracy": 4.6981207517005075e-05,
+                            "validation_auc": -2.1859901737308896e-05,
+                            "validation_f1": -3.3562750238136374e-05,
+                            "test_loss": -2.388497461525141e-05,
+                            "test_accuracy": 3.342618384416518e-06,
+                            "test_auc": 4.55453582837162e-05,
+                            "test_f1": -4.548302299994811e-05,
+                            "generalization_gap": -3.342618384416518e-06
+                        }
+                    }
+                }
+            ],
+            "bounded_mlp": [
+                {
+                    "seed": 42,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_bounded_mlp_pathmnist_s42_20260802_121601",
+                    "pairing_sha256": "fcbf54a1c2c71ea54f0a1c5d29d2df886ccb30257d3f258b51fad77b6f9f61df",
+                    "artifact_sha256": {
+                        "best_model.pth": "a503f8461c5d6b7f0ca61916af5c65c4451fb223183ce29f48d2af43bf625429",
+                        "config.json": "91aeca98fcdec6fae69ca33821c06afbafbf0dcbc60bac7b92f39a3c8954ab6d",
+                        "final_model.pth": "615545c75a6d924bf5f29d6fe865e1862fd8b3ce38f7738afe109110316cb108",
+                        "latest_checkpoint.pth": "bc935a895462c0c52ac122ba52c6c48bd459d7e664734a6db4dcc928995dc892",
+                        "params.json": "878f00bf90be1c4a452bc2d6c0905e50f844197c372065ce8ed88ae8938b15e8",
+                        "results.json": "8922515aaa51541fb47d8cdf39288c364aa88566b19a08940cf6d4727d1c2c4d",
+                        "run_manifest.json": "c616e6fdbc4f5197c30fd2c51d0fd9ac270a88f0593053624e602c5a4ce49db4"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.7381,
+                            "train_accuracy": 0.92,
+                            "validation_loss": 1.8325,
+                            "validation_accuracy": 0.4203,
+                            "validation_auc": 0.7545,
+                            "validation_f1": 0.3865,
+                            "test_loss": 1.6693,
+                            "test_accuracy": 0.5142,
+                            "test_auc": 0.771,
+                            "test_f1": 0.4161,
+                            "generalization_gap": 0.4058
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.738099217414856,
+                                "accuracy": 0.92,
+                                "auc": 0.9867082424248612,
+                                "f1": 0.9203481342382093
+                            },
+                            "validation": {
+                                "loss": 1.8324529393965223,
+                                "accuracy": 0.42033186725309873,
+                                "auc": 0.7545359016095403,
+                                "f1": 0.38649612635193853
+                            },
+                            "test": {
+                                "loss": 1.6693134097335731,
+                                "accuracy": 0.5142061281337047,
+                                "auc": 0.7709655134975907,
+                                "f1": 0.41607034765741197
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -7.825851440212972e-07,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -4.7060603477699914e-05,
+                            "validation_accuracy": 3.18672530987274e-05,
+                            "validation_auc": 3.5901609540367474e-05,
+                            "validation_f1": -3.873648061480939e-06,
+                            "test_loss": 1.3409733573110927e-05,
+                            "test_accuracy": 6.128133704708105e-06,
+                            "test_auc": -3.4486502409336595e-05,
+                            "test_f1": -2.9652342588060154e-05,
+                            "generalization_gap": -6.128133704652594e-06
+                        }
+                    }
+                },
+                {
+                    "seed": 137,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_bounded_mlp_pathmnist_s137_20260802_124941",
+                    "pairing_sha256": "fd89f5a878b1e9c334d5d7352c7bebd123ee781972c9c4d7a4433b47793b9b7a",
+                    "artifact_sha256": {
+                        "best_model.pth": "949e4a0b781a9b2f9f4103656784d0e2f93b7389242a03ed900a443454a3e3cd",
+                        "config.json": "69644445e680cc6bf87ef924b5c0b2af472f6a3485c577f307cac4fec35a6446",
+                        "final_model.pth": "81f3377972919d867c216162464978adba8aa3f83ecda5944b6ef0221e4e852a",
+                        "latest_checkpoint.pth": "5101c66f1041d2cf7e8ad9933500fd8514434c9123a23e3481161d140ae24e27",
+                        "params.json": "878f00bf90be1c4a452bc2d6c0905e50f844197c372065ce8ed88ae8938b15e8",
+                        "results.json": "72eb9ac244a31125b19737ed91f4563d74ac47ec0fde03f4caa013e9132adcc6",
+                        "run_manifest.json": "f499f3af98da7e21a051839fe082942454907bd34469ec5b8e36b7d319c391c8"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.9182,
+                            "train_accuracy": 0.88,
+                            "validation_loss": 1.9026,
+                            "validation_accuracy": 0.3884,
+                            "validation_auc": 0.7234,
+                            "validation_f1": 0.3713,
+                            "test_loss": 1.8044,
+                            "test_accuracy": 0.4397,
+                            "test_auc": 0.7507,
+                            "test_f1": 0.3688,
+                            "generalization_gap": 0.4403
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.9181793928146362,
+                                "accuracy": 0.88,
+                                "auc": 0.9888528576656788,
+                                "f1": 0.8845421343908941
+                            },
+                            "validation": {
+                                "loss": 1.9025832709671258,
+                                "accuracy": 0.38844462215113956,
+                                "auc": 0.723376716746357,
+                                "f1": 0.37129840425325195
+                            },
+                            "test": {
+                                "loss": 1.8044457280204156,
+                                "accuracy": 0.4396935933147632,
+                                "auc": 0.7507036765980444,
+                                "f1": 0.3687686346330714
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -2.0607185363785696e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -1.6729032874307492e-05,
+                            "validation_accuracy": 4.462215113953949e-05,
+                            "validation_auc": -2.3283253643091584e-05,
+                            "validation_f1": -1.595746748073168e-06,
+                            "test_loss": 4.572802041558077e-05,
+                            "test_accuracy": -6.406685236770571e-06,
+                            "test_auc": 3.6765980443442814e-06,
+                            "test_f1": -3.136536692860403e-05,
+                            "generalization_gap": 6.406685236770571e-06
+                        }
+                    }
+                },
+                {
+                    "seed": 256,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_bounded_mlp_pathmnist_s256_20260802_132459",
+                    "pairing_sha256": "19bdfb4b5541ed21f81f29ab46b08abb92b26c5d127d955e22c9ab0b3d0270c3",
+                    "artifact_sha256": {
+                        "best_model.pth": "8e1c4cb590382d1320fb622a5acdeb376c0a59181d2d7bb9d59aa7f77d4ef440",
+                        "config.json": "2424e8dc27d23581dc0791aa7315fa6cb9351dad076bb58f644c472c28284d99",
+                        "final_model.pth": "f586c5cc8bf28f959a07cdef6e5a31c3f4f3f52d7653ba714cee75be6fbda3f1",
+                        "latest_checkpoint.pth": "cedc523a02e8ffe8db337d3d536b5a7a366b3e02863b671a1a591a538ec52f3f",
+                        "params.json": "878f00bf90be1c4a452bc2d6c0905e50f844197c372065ce8ed88ae8938b15e8",
+                        "results.json": "d0868b50dd987331dc47d43845783c20e522c84ac07459d03bf414b0680dea25",
+                        "run_manifest.json": "56bf23bc0da75173bfcf026059457b6bdfcfd62bc94affc94f5867fdf14475b4"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 1.0023,
+                            "train_accuracy": 0.81,
+                            "validation_loss": 1.764,
+                            "validation_accuracy": 0.4094,
+                            "validation_auc": 0.7696,
+                            "validation_f1": 0.3932,
+                            "test_loss": 1.8374,
+                            "test_accuracy": 0.4481,
+                            "test_auc": 0.7231,
+                            "test_f1": 0.3608,
+                            "generalization_gap": 0.3619
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 1.0023270845413208,
+                                "accuracy": 0.81,
+                                "auc": 0.9913398749179605,
+                                "f1": 0.8001579706842864
+                            },
+                            "validation": {
+                                "loss": 1.7639655457263659,
+                                "accuracy": 0.4094362255097961,
+                                "auc": 0.7695845584272012,
+                                "f1": 0.3932315875946869
+                            },
+                            "test": {
+                                "loss": 1.8373526844141543,
+                                "accuracy": 0.44805013927576604,
+                                "auc": 0.7231186275023289,
+                                "f1": 0.36076288657008415
+                            }
+                        },
+                        "errors": {
+                            "train_loss": 2.7084541320832045e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -3.445427363413245e-05,
+                            "validation_accuracy": 3.622550979609507e-05,
+                            "validation_auc": -1.5441572798757797e-05,
+                            "validation_f1": 3.1587594686910414e-05,
+                            "test_loss": -4.731558584558648e-05,
+                            "test_accuracy": -4.986072423396326e-05,
+                            "test_auc": 1.8627502328949497e-05,
+                            "test_f1": -3.71134299158582e-05,
+                            "generalization_gap": 4.986072423401877e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 512,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_bounded_mlp_pathmnist_s512_20260802_140254",
+                    "pairing_sha256": "8284c8ff1fdda61bd6c967b483dfe3fb151608c492f71a2abeb1dedf3b120448",
+                    "artifact_sha256": {
+                        "best_model.pth": "72f5a9fb472c922f2f506e025d89c65b2f02848b58fe54e954812427ade974b5",
+                        "config.json": "50e2e3ef498d6ca5a3753f54496223726d47c9ea822b2983edd6a29cff02d5ab",
+                        "final_model.pth": "8fa4b42327538b3d63aa2c72dab4353021f9365fad673e3af2cb3b634dd0429c",
+                        "latest_checkpoint.pth": "bb367c30cd1e69e2a9536f450ea3797fc341fb0ce677217b6199d7f5a9744986",
+                        "params.json": "878f00bf90be1c4a452bc2d6c0905e50f844197c372065ce8ed88ae8938b15e8",
+                        "results.json": "63a35f674c4ece9fd98348ac557e1651b68a7d442744eee0022917956bb2aff6",
+                        "run_manifest.json": "64794dd837e50cb75e82cbfff1910d99b196ef6677bcea35af5d78c48de6ae28"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.7339,
+                            "train_accuracy": 0.95,
+                            "validation_loss": 1.9285,
+                            "validation_accuracy": 0.3701,
+                            "validation_auc": 0.7296,
+                            "validation_f1": 0.3618,
+                            "test_loss": 1.7293,
+                            "test_accuracy": 0.4542,
+                            "test_auc": 0.7743,
+                            "test_f1": 0.4032,
+                            "generalization_gap": 0.4958
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.733917236328125,
+                                "accuracy": 0.95,
+                                "auc": 0.9992350236911904,
+                                "f1": 0.9489671850782962
+                            },
+                            "validation": {
+                                "loss": 1.9284535733664907,
+                                "accuracy": 0.3700519792083167,
+                                "auc": 0.7295637069813996,
+                                "f1": 0.3617617166091952
+                            },
+                            "test": {
+                                "loss": 1.7292661077132796,
+                                "accuracy": 0.4541782729805014,
+                                "auc": 0.7743186770340043,
+                                "f1": 0.40321425277588197
+                            }
+                        },
+                        "errors": {
+                            "train_loss": 1.7236328125003197e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -4.6426633509399906e-05,
+                            "validation_accuracy": -4.802079168331197e-05,
+                            "validation_auc": -3.629301860041956e-05,
+                            "validation_f1": -3.828339080480525e-05,
+                            "test_loss": -3.389228672046052e-05,
+                            "test_accuracy": -2.1727019498596345e-05,
+                            "test_auc": 1.8677034004266346e-05,
+                            "test_f1": 1.4252775881962165e-05,
+                            "generalization_gap": 2.1727019498540834e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 1024,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_bounded_mlp_pathmnist_s1024_20260802_143720",
+                    "pairing_sha256": "443df61e7ecc3ba06582556853b9b453f6beed9ee5ec74662fbd5de918c4acd6",
+                    "artifact_sha256": {
+                        "best_model.pth": "ffd7dee6c5d08f76431ac27a4992f5cc9ef635ae831f75f91eb68dd22d2b6f4a",
+                        "config.json": "bc935f4080c42a6216900dc38088d2acb00d5b2ef723439b64d90372c9ff2a6f",
+                        "final_model.pth": "db6336c6fed614f7f4a7d85dda63b63be0f7e86370526f33d43b9ea95b2eb636",
+                        "latest_checkpoint.pth": "017c0a6f5c81ea7a202c6309ac141019a5195ccc51ac30c8fa85f1194b1b7fa8",
+                        "params.json": "878f00bf90be1c4a452bc2d6c0905e50f844197c372065ce8ed88ae8938b15e8",
+                        "results.json": "f9a9abc78463f8aee840d78e8e9da4d87eb5ca023915b7e96e2da70b1bcd24e1",
+                        "run_manifest.json": "290d6c242908542be2435558ba36473f454ca6e32dcfddc857b428bb1019f50f"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.8843,
+                            "train_accuracy": 0.87,
+                            "validation_loss": 1.8372,
+                            "validation_accuracy": 0.3776,
+                            "validation_auc": 0.751,
+                            "validation_f1": 0.3579,
+                            "test_loss": 1.7127,
+                            "test_accuracy": 0.4613,
+                            "test_auc": 0.7512,
+                            "test_f1": 0.3785,
+                            "generalization_gap": 0.4087
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.8843278288841248,
+                                "accuracy": 0.87,
+                                "auc": 0.9786147755601635,
+                                "f1": 0.8767356798770504
+                            },
+                            "validation": {
+                                "loss": 1.837242763979537,
+                                "accuracy": 0.37764894042383046,
+                                "auc": 0.7510034010078374,
+                                "f1": 0.35788602457638247
+                            },
+                            "test": {
+                                "loss": 1.7126819977189174,
+                                "accuracy": 0.46128133704735375,
+                                "auc": 0.751169141364415,
+                                "f1": 0.3785463151370083
+                            }
+                        },
+                        "errors": {
+                            "train_loss": 2.7828884124780906e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 4.276397953706379e-05,
+                            "validation_accuracy": 4.894042383046804e-05,
+                            "validation_auc": 3.4010078373558628e-06,
+                            "validation_f1": -1.3975423617529348e-05,
+                            "test_loss": -1.8002281082507565e-05,
+                            "test_accuracy": -1.8662952646242292e-05,
+                            "test_auc": -3.085863558494051e-05,
+                            "test_f1": 4.631513700831258e-05,
+                            "generalization_gap": 1.8662952646242292e-05
+                        }
+                    }
+                }
+            ],
+            "quantum_reg": [
+                {
+                    "seed": 42,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_quantum_reg_pathmnist_s42_20260802_121617",
+                    "pairing_sha256": "fcbf54a1c2c71ea54f0a1c5d29d2df886ccb30257d3f258b51fad77b6f9f61df",
+                    "artifact_sha256": {
+                        "best_model.pth": "d5abdf0e6d0f9238d2ea73cb80420a591a8d43993fa9a7e3524d3412c2cddd0a",
+                        "config.json": "91aeca98fcdec6fae69ca33821c06afbafbf0dcbc60bac7b92f39a3c8954ab6d",
+                        "final_model.pth": "091de752f9513429dc110aeb806e2daa8b3c9783d4042ddf696f0f8b5fc1f600",
+                        "latest_checkpoint.pth": "c25a6d3b9c9a0417fd29314bc7cda8a40579f3173bae45793db647fa3e5bbea6",
+                        "params.json": "40406243527b3f87c92a5d7efdc07fbedcbc2888b46c1581258f6b8a66147fa1",
+                        "results.json": "71807be8f7f2f679e849a78a02ad440109c884fad39adedf524b61b17e8067c4",
+                        "run_manifest.json": "2c299fdaa91cfacf776a015592ef13756126334a9346a68d99f84942f3374ee8"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.8913,
+                            "train_accuracy": 0.88,
+                            "validation_loss": 1.6693,
+                            "validation_accuracy": 0.4521,
+                            "validation_auc": 0.802,
+                            "validation_f1": 0.4315,
+                            "test_loss": 1.5761,
+                            "test_accuracy": 0.4804,
+                            "test_auc": 0.7963,
+                            "test_f1": 0.4085,
+                            "generalization_gap": 0.3996
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.8913366198539734,
+                                "accuracy": 0.88,
+                                "auc": 0.9915030504912702,
+                                "f1": 0.8687614096970822
+                            },
+                            "validation": {
+                                "loss": 1.6693463843138587,
+                                "accuracy": 0.45211915233906436,
+                                "auc": 0.8019859948693369,
+                                "f1": 0.4314922986420433
+                            },
+                            "test": {
+                                "loss": 1.5761007372715348,
+                                "accuracy": 0.48036211699164344,
+                                "auc": 0.7962629667006038,
+                                "f1": 0.40852653571959113
+                            }
+                        },
+                        "errors": {
+                            "train_loss": 3.66198539734075e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 4.638431385872721e-05,
+                            "validation_accuracy": 1.915233906435443e-05,
+                            "validation_auc": -1.4005130663186094e-05,
+                            "validation_f1": -7.701357956690913e-06,
+                            "test_loss": 7.372715347120362e-07,
+                            "test_accuracy": -3.7883008356554004e-05,
+                            "test_auc": -3.703329939619415e-05,
+                            "test_f1": 2.6535719591158635e-05,
+                            "generalization_gap": 3.7883008356554004e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 137,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_quantum_reg_pathmnist_s137_20260802_124957",
+                    "pairing_sha256": "fd89f5a878b1e9c334d5d7352c7bebd123ee781972c9c4d7a4433b47793b9b7a",
+                    "artifact_sha256": {
+                        "best_model.pth": "2103eae3c5deb2d424b4c2a6e30bc8c38fda713c10afac4041614517d52b7e1d",
+                        "config.json": "69644445e680cc6bf87ef924b5c0b2af472f6a3485c577f307cac4fec35a6446",
+                        "final_model.pth": "8ba86416b92ae45e89057e525289b7d91d81b94e1e68997e979584b96e8012ad",
+                        "latest_checkpoint.pth": "1cdd34fb5bac74054536295993762bea3c152a486fa2b8700e0f2da30235b07e",
+                        "params.json": "40406243527b3f87c92a5d7efdc07fbedcbc2888b46c1581258f6b8a66147fa1",
+                        "results.json": "9be6f3dd08c7df77b6491d65d255d5983899b585eee776f9abc60d6c594ae193",
+                        "run_manifest.json": "0be0178b2484d398ea6de5b2745d77aa9adb0dc20baf1978cfdc275be8bf5174"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.9502,
+                            "train_accuracy": 0.92,
+                            "validation_loss": 1.933,
+                            "validation_accuracy": 0.3678,
+                            "validation_auc": 0.7253,
+                            "validation_f1": 0.3698,
+                            "test_loss": 2.0863,
+                            "test_accuracy": 0.2999,
+                            "test_auc": 0.6891,
+                            "test_f1": 0.267,
+                            "generalization_gap": 0.6201
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.9501672387123108,
+                                "accuracy": 0.92,
+                                "auc": 0.9897720485761597,
+                                "f1": 0.9232864343296434
+                            },
+                            "validation": {
+                                "loss": 1.933045495991133,
+                                "accuracy": 0.3677528988404638,
+                                "auc": 0.7252524871916699,
+                                "f1": 0.3698286012884975
+                            },
+                            "test": {
+                                "loss": 2.0863422589049696,
+                                "accuracy": 0.2998607242339833,
+                                "auc": 0.6891199261011106,
+                                "f1": 0.26698830496059534
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -3.276128768925357e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 4.549599113290448e-05,
+                            "validation_accuracy": -4.710115953621141e-05,
+                            "validation_auc": -4.7512808330041345e-05,
+                            "validation_f1": 2.8601288497465127e-05,
+                            "test_loss": 4.225890496956097e-05,
+                            "test_accuracy": -3.92757660166998e-05,
+                            "test_auc": 1.9926101110567807e-05,
+                            "test_f1": -1.1695039404679974e-05,
+                            "generalization_gap": 3.92757660166998e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 256,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_quantum_reg_pathmnist_s256_20260802_132516",
+                    "pairing_sha256": "19bdfb4b5541ed21f81f29ab46b08abb92b26c5d127d955e22c9ab0b3d0270c3",
+                    "artifact_sha256": {
+                        "best_model.pth": "8f4ed436ff19f5e77cbc9206836bd66d4b6ede1405699b4d41aae3de9e4ca8e2",
+                        "config.json": "2424e8dc27d23581dc0791aa7315fa6cb9351dad076bb58f644c472c28284d99",
+                        "final_model.pth": "8419a7bd8ad5a0f02aa9150751d2f5bb06b2f54b2b2605f8e138f3c92d1d7733",
+                        "latest_checkpoint.pth": "498ac2abd8a844f53696315ada528342739f22c88b8c70855d992955cd9baabc",
+                        "params.json": "40406243527b3f87c92a5d7efdc07fbedcbc2888b46c1581258f6b8a66147fa1",
+                        "results.json": "906454b948641e998661e1caa9de55a67ca6244771b1fa1481a3dcaa9bd0b4ca",
+                        "run_manifest.json": "f61bf52ae68746467765699575095f283cf5a7e74291291260ba0d95caa47636"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.3651,
+                            "train_accuracy": 1.0,
+                            "validation_loss": 1.9412,
+                            "validation_accuracy": 0.3905,
+                            "validation_auc": 0.7357,
+                            "validation_f1": 0.3823,
+                            "test_loss": 1.9648,
+                            "test_accuracy": 0.3915,
+                            "test_auc": 0.724,
+                            "test_f1": 0.34,
+                            "generalization_gap": 0.6085
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.3651418387889862,
+                                "accuracy": 1.0,
+                                "auc": 1.0,
+                                "f1": 1.0
+                            },
+                            "validation": {
+                                "loss": 1.941210802008466,
+                                "accuracy": 0.3905437824870052,
+                                "auc": 0.7356785261225367,
+                                "f1": 0.382308054106135
+                            },
+                            "test": {
+                                "loss": 1.964761214800864,
+                                "accuracy": 0.3915041782729805,
+                                "auc": 0.7239607100287802,
+                                "f1": 0.3399901348500756
+                            }
+                        },
+                        "errors": {
+                            "train_loss": 4.183878898622595e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 1.0802008465926605e-05,
+                            "validation_accuracy": 4.378248700520615e-05,
+                            "validation_auc": -2.1473877463318303e-05,
+                            "validation_f1": 8.054106135024774e-06,
+                            "test_loss": -3.878519913613765e-05,
+                            "test_accuracy": 4.178272980492892e-06,
+                            "test_auc": -3.928997121982469e-05,
+                            "test_f1": -9.865149924404015e-06,
+                            "generalization_gap": -4.178272980492892e-06
+                        }
+                    }
+                },
+                {
+                    "seed": 512,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_quantum_reg_pathmnist_s512_20260802_140311",
+                    "pairing_sha256": "8284c8ff1fdda61bd6c967b483dfe3fb151608c492f71a2abeb1dedf3b120448",
+                    "artifact_sha256": {
+                        "best_model.pth": "f2d8bc67c03f09418afcb43f287a3e51fc2a51cd4e3632821f952554e3c02f2e",
+                        "config.json": "50e2e3ef498d6ca5a3753f54496223726d47c9ea822b2983edd6a29cff02d5ab",
+                        "final_model.pth": "c9b4550b2d2d95e99c6f73aab19b43bdea3116ed3fcfa283143acc0a44285ef6",
+                        "latest_checkpoint.pth": "8b8ef68b8a3c76791b1e50660117260c1fd7f8e18b0ae6750fb157c13e565f73",
+                        "params.json": "40406243527b3f87c92a5d7efdc07fbedcbc2888b46c1581258f6b8a66147fa1",
+                        "results.json": "b754898c92fd43d2cc561d5926e157e107114238f1f9979ccfcb52f0066bb818",
+                        "run_manifest.json": "4a2f6136ca8b3d19d05b1f877b0e6ed7959b53a0c0326589aac34329834cbc6f"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.63,
+                            "train_accuracy": 0.99,
+                            "validation_loss": 2.089,
+                            "validation_accuracy": 0.3496,
+                            "validation_auc": 0.6982,
+                            "validation_f1": 0.3343,
+                            "test_loss": 1.976,
+                            "test_accuracy": 0.3635,
+                            "test_auc": 0.7032,
+                            "test_f1": 0.302,
+                            "generalization_gap": 0.6265
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.6300074458122253,
+                                "accuracy": 0.99,
+                                "auc": 0.999773011008966,
+                                "f1": 0.9894179894179894
+                            },
+                            "validation": {
+                                "loss": 2.088964781538099,
+                                "accuracy": 0.3495601759296281,
+                                "auc": 0.6982380226886861,
+                                "f1": 0.3343047932558939
+                            },
+                            "test": {
+                                "loss": 1.9760499468088815,
+                                "accuracy": 0.3635097493036212,
+                                "auc": 0.7031529695823402,
+                                "f1": 0.3020367122182283
+                            }
+                        },
+                        "errors": {
+                            "train_loss": 7.445812225337356e-06,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -3.521846190102096e-05,
+                            "validation_accuracy": -3.9824070371896614e-05,
+                            "validation_auc": 3.802268868602354e-05,
+                            "validation_f1": 4.793255893920101e-06,
+                            "test_loss": 4.994680888148473e-05,
+                            "test_accuracy": 9.749303621187089e-06,
+                            "test_auc": -4.7030417659854606e-05,
+                            "test_f1": 3.6712218228318605e-05,
+                            "generalization_gap": -9.749303621187089e-06
+                        }
+                    }
+                },
+                {
+                    "seed": 1024,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_quantum_reg_pathmnist_s1024_20260802_143736",
+                    "pairing_sha256": "443df61e7ecc3ba06582556853b9b453f6beed9ee5ec74662fbd5de918c4acd6",
+                    "artifact_sha256": {
+                        "best_model.pth": "12dcec9ec40d523726adbb32673d2f85fa12e47511abdfd4a02fe92c29bd9294",
+                        "config.json": "bc935f4080c42a6216900dc38088d2acb00d5b2ef723439b64d90372c9ff2a6f",
+                        "final_model.pth": "2e30c140380eab8e518178f3cd6585e348cf522b700c92b4cf0adc433c3950d2",
+                        "latest_checkpoint.pth": "eaa265d3191b0a04d2a73fe0731f65425f2534a8c414f270b069a389308e451d",
+                        "params.json": "40406243527b3f87c92a5d7efdc07fbedcbc2888b46c1581258f6b8a66147fa1",
+                        "results.json": "26dcc83027c670634a3093377eae2d062c30439a800354d6ce002725f90de9ce",
+                        "run_manifest.json": "34db5cabad752986cb358ef2bc8cd3a2edfdf82184cdce37979f00336eade21d"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.8108,
+                            "train_accuracy": 0.96,
+                            "validation_loss": 1.9453,
+                            "validation_accuracy": 0.365,
+                            "validation_auc": 0.7097,
+                            "validation_f1": 0.3486,
+                            "test_loss": 1.9679,
+                            "test_accuracy": 0.3603,
+                            "test_auc": 0.6819,
+                            "test_f1": 0.2932,
+                            "generalization_gap": 0.5997
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.8107956051826477,
+                                "accuracy": 0.96,
+                                "auc": 0.990754339970436,
+                                "f1": 0.9596913489242351
+                            },
+                            "validation": {
+                                "loss": 1.9453028859447736,
+                                "accuracy": 0.36495401839264296,
+                                "auc": 0.7097468189132278,
+                                "f1": 0.3486105951714652
+                            },
+                            "test": {
+                                "loss": 1.9678804032317776,
+                                "accuracy": 0.3603064066852368,
+                                "auc": 0.6819133148137446,
+                                "f1": 0.29316043759766625
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -4.394817352260105e-06,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 2.8859447736007127e-06,
+                            "validation_accuracy": -4.598160735702628e-05,
+                            "validation_auc": 4.6818913227775205e-05,
+                            "validation_f1": 1.0595171465177522e-05,
+                            "test_loss": -1.9596768222385208e-05,
+                            "test_accuracy": 6.406685236770571e-06,
+                            "test_auc": 1.3314813744669252e-05,
+                            "test_f1": -3.95624023337704e-05,
+                            "generalization_gap": -6.406685236881593e-06
+                        }
+                    }
+                }
+            ]
+        },
+        "bloodmnist": {
+            "vanilla": [
+                {
+                    "seed": 42,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_vanilla_bloodmnist_s42_20260802_150804",
+                    "pairing_sha256": "3c565f0a44d406033cd56b925a4cfe5ceeac8ab072e9c8aa018870c0c2c992e0",
+                    "artifact_sha256": {
+                        "best_model.pth": "7bb5c0acc9dccb4ff4db6b59272132f03de29eecc45f704f7ec946007ecb18bd",
+                        "config.json": "f5446b5e189e3ad7061176d7901558fe3fb1957cc690636d4f3a928ad77189fb",
+                        "final_model.pth": "f431d49527bea7d527a612a7594ace420868df068bdb6ea8594f168de65d0823",
+                        "latest_checkpoint.pth": "ff1ee5d19454055f5e63eb86cb4028421a56f9c1b3d247700d6eb869b3bdb934",
+                        "params.json": "5b9adf88d1036935610a3bd1238d67957c9391538527c88467c493f5d6a8583f",
+                        "results.json": "46365b1bdc604ef4bf563b777d38be413019f396845c78cc11d191e942d237bc",
+                        "run_manifest.json": "3029b7d71a2fb721ade4f9a35f8a8b8bf98291a0e1b629636429ced8ec3a7174"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.7633,
+                            "train_accuracy": 0.9,
+                            "validation_loss": 1.5254,
+                            "validation_accuracy": 0.528,
+                            "validation_auc": 0.8006,
+                            "validation_f1": 0.4463,
+                            "test_loss": 1.5195,
+                            "test_accuracy": 0.5037,
+                            "test_auc": 0.8101,
+                            "test_f1": 0.4201,
+                            "generalization_gap": 0.3963
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.7633016705513,
+                                "accuracy": 0.9,
+                                "auc": 0.9808328187484887,
+                                "f1": 0.8464367120897929
+                            },
+                            "validation": {
+                                "loss": 1.5253945644770828,
+                                "accuracy": 0.5280373831775701,
+                                "auc": 0.800596296100285,
+                                "f1": 0.4463214978138386
+                            },
+                            "test": {
+                                "loss": 1.5194791326464285,
+                                "accuracy": 0.5036539023677288,
+                                "auc": 0.8100764624048672,
+                                "f1": 0.4200852633556488
+                            }
+                        },
+                        "errors": {
+                            "train_loss": 1.670551300070322e-06,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -5.435522917318636e-06,
+                            "validation_accuracy": 3.73831775700717e-05,
+                            "validation_auc": -3.7038997149352326e-06,
+                            "validation_f1": 2.1497813838644575e-05,
+                            "test_loss": -2.0867353571540903e-05,
+                            "test_accuracy": -4.609763227125807e-05,
+                            "test_auc": -2.353759513284981e-05,
+                            "test_f1": -1.4736644351198702e-05,
+                            "generalization_gap": 4.609763227125807e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 137,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_vanilla_bloodmnist_s137_20260802_152558",
+                    "pairing_sha256": "5f71e623524d8750f0848fca3607821441e8ea72aac044372bf45c216cc92d0c",
+                    "artifact_sha256": {
+                        "best_model.pth": "096b3811d6ed4248cc9ce242f3f07013642f74ef649e03cc4d729d57d1ad5a76",
+                        "config.json": "e59bd86d1825e161d8a012fe70f721bb5f87abeacf93cfe9084f0341ecb0d522",
+                        "final_model.pth": "a84e8cc1652aa61984f650086c58dbad12f4758f8a7300be3ff6157f326f6250",
+                        "latest_checkpoint.pth": "5f2b19cb292133d62466ef0b606678fe76b8ad5e3a79879dd3d55843706a8cc7",
+                        "params.json": "5b9adf88d1036935610a3bd1238d67957c9391538527c88467c493f5d6a8583f",
+                        "results.json": "58507cd31c124bd1a8138e01e160838909582c7e22d653d2ce66c2e2be636e97",
+                        "run_manifest.json": "99c4654eeb0ce28513d86c32d8808a4eba719e5e4b2386e006789a845955b272"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.775,
+                            "train_accuracy": 0.85,
+                            "validation_loss": 1.3561,
+                            "validation_accuracy": 0.5613,
+                            "validation_auc": 0.8359,
+                            "validation_f1": 0.4257,
+                            "test_loss": 1.362,
+                            "test_accuracy": 0.565,
+                            "test_auc": 0.838,
+                            "test_f1": 0.4373,
+                            "generalization_gap": 0.285
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.7749611139297485,
+                                "accuracy": 0.85,
+                                "auc": 0.9709355841814582,
+                                "f1": 0.7298970870399442
+                            },
+                            "validation": {
+                                "loss": 1.3561159494881319,
+                                "accuracy": 0.5613317757009346,
+                                "auc": 0.8358738779971195,
+                                "f1": 0.4257074053481933
+                            },
+                            "test": {
+                                "loss": 1.3619691446419175,
+                                "accuracy": 0.5650394621455714,
+                                "auc": 0.83798858006969,
+                                "f1": 0.43729510310458314
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -3.888607025148705e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 1.5949488131772327e-05,
+                            "validation_accuracy": 3.1775700934599804e-05,
+                            "validation_auc": -2.6122002880435424e-05,
+                            "validation_f1": 7.40534819326788e-06,
+                            "test_loss": -3.08553580825599e-05,
+                            "test_accuracy": 3.9462145571489415e-05,
+                            "test_auc": -1.1419930309952697e-05,
+                            "test_f1": -4.896895416883762e-06,
+                            "generalization_gap": -3.9462145571433904e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 256,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_vanilla_bloodmnist_s256_20260802_154332",
+                    "pairing_sha256": "8625d9724f11f049dccdfade3726e3b53299010b8c3706b8dac7efc2ecd9b6ef",
+                    "artifact_sha256": {
+                        "best_model.pth": "f45f87930bc956f32201eb81f514f5fedd68e4e35b4a0c3c2fac11a3624025fd",
+                        "config.json": "794e23bee4d5ccca6f227121e7acdf6fcf9e2cc980ff3f1ca1fe78f4f1746064",
+                        "final_model.pth": "5772c032066324018e740a48e87be7983d7a4a2b6fa9e3bdd224995a502d87d1",
+                        "latest_checkpoint.pth": "bea2afe0e06c94b70fbb2ec1efb87e13a9ca20c55e20313591a392ad2c2c2c44",
+                        "params.json": "5b9adf88d1036935610a3bd1238d67957c9391538527c88467c493f5d6a8583f",
+                        "results.json": "17c1cdb264033f57524b1a9493374b693313bb9f355bd80da642a65b361fcde2",
+                        "run_manifest.json": "43958b3cfcb88d5bc18dd46e028c02d98b8f5715196913c6135e488fe4dddb2d"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.7574,
+                            "train_accuracy": 0.86,
+                            "validation_loss": 1.4257,
+                            "validation_accuracy": 0.5397,
+                            "validation_auc": 0.8288,
+                            "validation_f1": 0.4134,
+                            "test_loss": 1.4081,
+                            "test_accuracy": 0.5589,
+                            "test_auc": 0.8366,
+                            "test_f1": 0.4433,
+                            "generalization_gap": 0.3011
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.7573781609535217,
+                                "accuracy": 0.86,
+                                "auc": 0.9915087768780362,
+                                "f1": 0.7817699016100179
+                            },
+                            "validation": {
+                                "loss": 1.425725253942971,
+                                "accuracy": 0.5397196261682243,
+                                "auc": 0.8288302991904101,
+                                "f1": 0.41340627427078624
+                            },
+                            "test": {
+                                "loss": 1.4080881446608673,
+                                "accuracy": 0.5589009061677872,
+                                "auc": 0.83663909810593,
+                                "f1": 0.4432927314805588
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -2.1839046478233648e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 2.5253942971037446e-05,
+                            "validation_accuracy": 1.9626168224373686e-05,
+                            "validation_auc": 3.0299190410087995e-05,
+                            "validation_f1": 6.274270786255087e-06,
+                            "test_loss": -1.1855339132615939e-05,
+                            "test_accuracy": 9.061677872512774e-07,
+                            "test_auc": 3.909810592994667e-05,
+                            "test_f1": -7.268519441216981e-06,
+                            "generalization_gap": -9.061677871957663e-07
+                        }
+                    }
+                },
+                {
+                    "seed": 512,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_vanilla_bloodmnist_s512_20260802_160022",
+                    "pairing_sha256": "ff95f60cf08c5dfbfd9befda42e0652ef8b2407c9649353671b968e9d5bacf6b",
+                    "artifact_sha256": {
+                        "best_model.pth": "991285522459cb37c31e21b8953ac4f1fb2f42dff94abec7f25eba6a2c28c153",
+                        "config.json": "451d3216a537cfeeb0197736251a35fa561672d5747af21c1e01128bc0c23db7",
+                        "final_model.pth": "7f0a17e3da5ff9778461e19a2a786855bbb2a59d2e4d7d5e8fbbcb4e943999a3",
+                        "latest_checkpoint.pth": "43eb6f49d759e8bc22cfe78a5993968c0598857ba8348ddaa8a83a0e7bb985a0",
+                        "params.json": "5b9adf88d1036935610a3bd1238d67957c9391538527c88467c493f5d6a8583f",
+                        "results.json": "4671771bf1c0a0e0e4e45a8daccd39043bfd06e4bca6f8ed09535bbb75d80186",
+                        "run_manifest.json": "1f156dca06d50071fdba17780920c8789df60621ebe612ad3357963ec68490fc"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.5492,
+                            "train_accuracy": 0.97,
+                            "validation_loss": 1.2015,
+                            "validation_accuracy": 0.6133,
+                            "validation_auc": 0.8636,
+                            "validation_f1": 0.5559,
+                            "test_loss": 1.2254,
+                            "test_accuracy": 0.6016,
+                            "test_auc": 0.8585,
+                            "test_f1": 0.5347,
+                            "generalization_gap": 0.3684
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.5491828918457031,
+                                "accuracy": 0.97,
+                                "auc": 0.9964258948205754,
+                                "f1": 0.9623007623007622
+                            },
+                            "validation": {
+                                "loss": 1.2015304632276018,
+                                "accuracy": 0.6133177570093458,
+                                "auc": 0.8635526383071752,
+                                "f1": 0.5559014745446884
+                            },
+                            "test": {
+                                "loss": 1.2253831524278853,
+                                "accuracy": 0.6015784858228588,
+                                "auc": 0.8585006265113225,
+                                "f1": 0.5346639495968287
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -1.7108154296896494e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 3.0463227601806864e-05,
+                            "validation_accuracy": 1.775700934580904e-05,
+                            "validation_auc": -4.7361692824821056e-05,
+                            "validation_f1": 1.4745446884623092e-06,
+                            "test_loss": -1.684757211473098e-05,
+                            "test_accuracy": -2.151417714124637e-05,
+                            "test_auc": 6.265113224879215e-07,
+                            "test_f1": -3.605040317122832e-05,
+                            "generalization_gap": 2.151417714119086e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 1024,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_vanilla_bloodmnist_s1024_20260802_161722",
+                    "pairing_sha256": "65b71eaa6a17f036489b65be9408e4826740d7dc544b66f312915d432238956f",
+                    "artifact_sha256": {
+                        "best_model.pth": "246c24efa1687072c579e92295142d1c2121efc90a496e0b1339dc445107a481",
+                        "config.json": "a7ff57f6475d11a7190ecca5f40d83b9309c00ad99f87db373076306a99e2180",
+                        "final_model.pth": "0efc046c884fde797d490357acc685f9c888d083eba2309e46650bf5c8d6500b",
+                        "latest_checkpoint.pth": "9420bc20cfbb44c439910c8442a7d1b724000af23fa6e5c3805c3e3355f53926",
+                        "params.json": "5b9adf88d1036935610a3bd1238d67957c9391538527c88467c493f5d6a8583f",
+                        "results.json": "5bbc2c1ec406faea315ea8d6c32c90c48e791af1e3e37b543a363b03cba03fd6",
+                        "run_manifest.json": "0ded616483708e48dc6a92bd6f2f42712c3f94e3e27164d51a1b42003ae0279d"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.9689,
+                            "train_accuracy": 0.79,
+                            "validation_loss": 1.3079,
+                            "validation_accuracy": 0.5905,
+                            "validation_auc": 0.8826,
+                            "validation_f1": 0.5195,
+                            "test_loss": 1.3021,
+                            "test_accuracy": 0.5951,
+                            "test_auc": 0.8815,
+                            "test_f1": 0.5257,
+                            "generalization_gap": 0.1949
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.9689303636550903,
+                                "accuracy": 0.79,
+                                "auc": 0.9736584975627451,
+                                "f1": 0.7130610126933656
+                            },
+                            "validation": {
+                                "loss": 1.3079105392794743,
+                                "accuracy": 0.5905373831775701,
+                                "auc": 0.882570860302565,
+                                "f1": 0.5195351142545568
+                            },
+                            "test": {
+                                "loss": 1.3021178322206357,
+                                "accuracy": 0.5951476176556563,
+                                "auc": 0.8815417800817411,
+                                "f1": 0.5256633049309909
+                            }
+                        },
+                        "errors": {
+                            "train_loss": 3.036365509034855e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 1.053927947425315e-05,
+                            "validation_accuracy": 3.73831775700717e-05,
+                            "validation_auc": -2.9139697435009992e-05,
+                            "validation_f1": 3.511425455682282e-05,
+                            "test_loss": 1.7832220635671803e-05,
+                            "test_accuracy": 4.761765565630682e-05,
+                            "test_auc": 4.178008174116066e-05,
+                            "test_f1": -3.669506900905173e-05,
+                            "generalization_gap": -4.7617655656223556e-05
+                        }
+                    }
+                }
+            ],
+            "bounded_mlp": [
+                {
+                    "seed": 42,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_bounded_mlp_bloodmnist_s42_20260802_150806",
+                    "pairing_sha256": "3c565f0a44d406033cd56b925a4cfe5ceeac8ab072e9c8aa018870c0c2c992e0",
+                    "artifact_sha256": {
+                        "best_model.pth": "d939bfd67bc3b6c2083104c9d6dbe59c80ae64a710637f0fbf5b41b3c11cd9b6",
+                        "config.json": "f5446b5e189e3ad7061176d7901558fe3fb1957cc690636d4f3a928ad77189fb",
+                        "final_model.pth": "c5cb6b57f09f659b68d089a50c29886bf9c29038b1e2b1f90c64d85f8aea1aea",
+                        "latest_checkpoint.pth": "84c8911c3686d48c30b00150faf262c20ca7ae42cfbea6fbace705bf1b356a82",
+                        "params.json": "878898dd2f8fb8dc48182788d42ff2c3a83b3280b30a9447c86e96e966f7cf26",
+                        "results.json": "3b3fb26c406f22060113dcab47db563defb0ecc9e320b6d8901b7d1d91d7319f",
+                        "run_manifest.json": "11cff8b9017ae4fc92b84b885f5c4fc9a21eb69420bcbb6480976176d38c8900"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.5172,
+                            "train_accuracy": 0.97,
+                            "validation_loss": 1.6755,
+                            "validation_accuracy": 0.4725,
+                            "validation_auc": 0.769,
+                            "validation_f1": 0.3876,
+                            "test_loss": 1.6789,
+                            "test_accuracy": 0.4563,
+                            "test_auc": 0.762,
+                            "test_f1": 0.3654,
+                            "generalization_gap": 0.5137
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.5171920657157898,
+                                "accuracy": 0.97,
+                                "auc": 0.99943879611697,
+                                "f1": 0.9557739557739557
+                            },
+                            "validation": {
+                                "loss": 1.6755154767883158,
+                                "accuracy": 0.4725467289719626,
+                                "auc": 0.7690084702820426,
+                                "f1": 0.3876180291032755
+                            },
+                            "test": {
+                                "loss": 1.6789242702421128,
+                                "accuracy": 0.45629932768196435,
+                                "auc": 0.761990208228064,
+                                "f1": 0.3653552315820118
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -7.93428421019815e-06,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 1.547678831581578e-05,
+                            "validation_accuracy": 4.672897196261738e-05,
+                            "validation_auc": 8.470282042538635e-06,
+                            "validation_f1": 1.8029103275474245e-05,
+                            "test_loss": 2.427024211271167e-05,
+                            "test_accuracy": -6.723180356327241e-07,
+                            "test_auc": -9.791771936051852e-06,
+                            "test_f1": -4.476841798822795e-05,
+                            "generalization_gap": 6.723180355772129e-07
+                        }
+                    }
+                },
+                {
+                    "seed": 137,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_bounded_mlp_bloodmnist_s137_20260802_152600",
+                    "pairing_sha256": "5f71e623524d8750f0848fca3607821441e8ea72aac044372bf45c216cc92d0c",
+                    "artifact_sha256": {
+                        "best_model.pth": "f371fb4e266c94978ceffd6255ad5e19ec308850c3adda97dc1310ac0adb1a5f",
+                        "config.json": "e59bd86d1825e161d8a012fe70f721bb5f87abeacf93cfe9084f0341ecb0d522",
+                        "final_model.pth": "c72bba44e53e480e48f3d9a4e8715d2ea83c51ddbe766678b9d29716dd2c9da4",
+                        "latest_checkpoint.pth": "5119c579fd8455ed3719940efef1a420980826eac6256bd7ddf5577dbdf52f33",
+                        "params.json": "878898dd2f8fb8dc48182788d42ff2c3a83b3280b30a9447c86e96e966f7cf26",
+                        "results.json": "10e25d9fd6503223134e34eb59bce64637e70d5582bc1c7f9f0b74f2fcb194bc",
+                        "run_manifest.json": "9096a2d02f997e5379d58a3801c98eb91a4acb95545addb71f3e0efb518f8f4a"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.6524,
+                            "train_accuracy": 0.89,
+                            "validation_loss": 1.4094,
+                            "validation_accuracy": 0.5269,
+                            "validation_auc": 0.8241,
+                            "validation_f1": 0.4208,
+                            "test_loss": 1.4154,
+                            "test_accuracy": 0.5218,
+                            "test_auc": 0.8254,
+                            "test_f1": 0.4232,
+                            "generalization_gap": 0.3682
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.6524011492729187,
+                                "accuracy": 0.89,
+                                "auc": 0.9921507864063772,
+                                "f1": 0.8277848595563615
+                            },
+                            "validation": {
+                                "loss": 1.409371250143675,
+                                "accuracy": 0.5268691588785047,
+                                "auc": 0.8240639317157618,
+                                "f1": 0.4207969388337388
+                            },
+                            "test": {
+                                "loss": 1.4153680871781185,
+                                "accuracy": 0.5217772581116633,
+                                "auc": 0.8253579023244834,
+                                "f1": 0.42319400096512083
+                            }
+                        },
+                        "errors": {
+                            "train_loss": 1.1492729187212447e-06,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -2.8749856324949974e-05,
+                            "validation_accuracy": -3.084112149531748e-05,
+                            "validation_auc": -3.6068284238299775e-05,
+                            "validation_f1": -3.0611662611979007e-06,
+                            "test_loss": -3.191282188153011e-05,
+                            "test_accuracy": -2.2741888336730298e-05,
+                            "test_auc": -4.2097675516661326e-05,
+                            "test_f1": -5.999034879189402e-06,
+                            "generalization_gap": 2.2741888336674787e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 256,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_bounded_mlp_bloodmnist_s256_20260802_154334",
+                    "pairing_sha256": "8625d9724f11f049dccdfade3726e3b53299010b8c3706b8dac7efc2ecd9b6ef",
+                    "artifact_sha256": {
+                        "best_model.pth": "e7b4c15fc263c89bcef2ae85dae00ca2271da9193c89e2c6a19ed8e11db2b1eb",
+                        "config.json": "794e23bee4d5ccca6f227121e7acdf6fcf9e2cc980ff3f1ca1fe78f4f1746064",
+                        "final_model.pth": "376f60297c387b6f10e0ad8caf044e58ea1499c9740cf7ccc15a5c1bdbe14b15",
+                        "latest_checkpoint.pth": "a57b40c110d991846794ec0a95bbd18e940ab5513a65770f1043b792ac3bf56f",
+                        "params.json": "878898dd2f8fb8dc48182788d42ff2c3a83b3280b30a9447c86e96e966f7cf26",
+                        "results.json": "50308c98f0124d026c2255d1959fc073dbe1fa6944befebce6722ac4be07beae",
+                        "run_manifest.json": "dff70ca0fd67e8a057e31350d1aa2e151569d6500509305d4e23086fd0c703cc"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.5438,
+                            "train_accuracy": 0.93,
+                            "validation_loss": 1.3386,
+                            "validation_accuracy": 0.5765,
+                            "validation_auc": 0.8502,
+                            "validation_f1": 0.4966,
+                            "test_loss": 1.296,
+                            "test_accuracy": 0.5791,
+                            "test_auc": 0.8577,
+                            "test_f1": 0.4951,
+                            "generalization_gap": 0.3509
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.5438401103019714,
+                                "accuracy": 0.93,
+                                "auc": 0.998522593164715,
+                                "f1": 0.9015282958297663
+                            },
+                            "validation": {
+                                "loss": 1.3385775267520799,
+                                "accuracy": 0.576518691588785,
+                                "auc": 0.8501579955759225,
+                                "f1": 0.49663938265468455
+                            },
+                            "test": {
+                                "loss": 1.2960013395441585,
+                                "accuracy": 0.5790704472376498,
+                                "auc": 0.8576685661194261,
+                                "f1": 0.49510405805746915
+                            }
+                        },
+                        "errors": {
+                            "train_loss": 4.011030197148546e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -2.2473247920151707e-05,
+                            "validation_accuracy": 1.869158878498034e-05,
+                            "validation_auc": -4.200442407742422e-05,
+                            "validation_f1": 3.9382654684561036e-05,
+                            "test_loss": 1.3395441584851397e-06,
+                            "test_accuracy": -2.9552762350171236e-05,
+                            "test_auc": -3.143388057391672e-05,
+                            "test_f1": 4.05805746916954e-06,
+                            "generalization_gap": 2.9552762350282258e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 512,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_bounded_mlp_bloodmnist_s512_20260802_160024",
+                    "pairing_sha256": "ff95f60cf08c5dfbfd9befda42e0652ef8b2407c9649353671b968e9d5bacf6b",
+                    "artifact_sha256": {
+                        "best_model.pth": "0b57bad2184697c7db01ef8ac2e589d957025da143d7963fe361892501ac03f5",
+                        "config.json": "451d3216a537cfeeb0197736251a35fa561672d5747af21c1e01128bc0c23db7",
+                        "final_model.pth": "9d2f502e9ddc30a606b60a165d1d8f46617344eb6d3e21cd9e6fb926e208b638",
+                        "latest_checkpoint.pth": "5d7eb2d858dae687a5d85d06f38f62051088cd0c79a2b37cbaa47c7a1d963545",
+                        "params.json": "878898dd2f8fb8dc48182788d42ff2c3a83b3280b30a9447c86e96e966f7cf26",
+                        "results.json": "b20cf8bc1816e5dda097b8e3ef20890d20aeb2ac3293b56a6cdebb92730fa3d1",
+                        "run_manifest.json": "da3d0a5a7bc67cc838323af6337541d60e3df78076dd4a68e34b9b4c3b65b7ac"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.8103,
+                            "train_accuracy": 0.93,
+                            "validation_loss": 1.3623,
+                            "validation_accuracy": 0.5561,
+                            "validation_auc": 0.8138,
+                            "validation_f1": 0.4693,
+                            "test_loss": 1.3416,
+                            "test_accuracy": 0.5814,
+                            "test_auc": 0.8217,
+                            "test_f1": 0.4924,
+                            "generalization_gap": 0.3486
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.8102648854255676,
+                                "accuracy": 0.93,
+                                "auc": 0.983201523540347,
+                                "f1": 0.8983805668016194
+                            },
+                            "validation": {
+                                "loss": 1.3622741520961867,
+                                "accuracy": 0.5560747663551402,
+                                "auc": 0.8138349095280139,
+                                "f1": 0.4693309043831333
+                            },
+                            "test": {
+                                "loss": 1.3415528024298795,
+                                "accuracy": 0.5814089447529962,
+                                "auc": 0.821701238219883,
+                                "f1": 0.49243682606086714
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -3.51145744323933e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -2.5847903813325246e-05,
+                            "validation_accuracy": -2.5233644859845583e-05,
+                            "validation_auc": 3.490952801388225e-05,
+                            "validation_f1": 3.090438313330113e-05,
+                            "test_loss": -4.719757012039416e-05,
+                            "test_accuracy": 8.944752996176142e-06,
+                            "test_auc": 1.2382198829596902e-06,
+                            "test_f1": 3.682606086713447e-05,
+                            "generalization_gap": -8.944752996176142e-06
+                        }
+                    }
+                },
+                {
+                    "seed": 1024,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_bounded_mlp_bloodmnist_s1024_20260802_161725",
+                    "pairing_sha256": "65b71eaa6a17f036489b65be9408e4826740d7dc544b66f312915d432238956f",
+                    "artifact_sha256": {
+                        "best_model.pth": "347cb76518c0f34fb2a9c552ca48aa14b6e12217e925a66fb708a7283c66e552",
+                        "config.json": "a7ff57f6475d11a7190ecca5f40d83b9309c00ad99f87db373076306a99e2180",
+                        "final_model.pth": "66b2a7c02386e88b7e439f7e9b7f0138bd404322b24aacdbf2a2a0d644d5a6a0",
+                        "latest_checkpoint.pth": "f3fc93358e6d5f1380dc1dfe5f8106d8f0e9bcf6ebf1b9e3995268fae671dcff",
+                        "params.json": "878898dd2f8fb8dc48182788d42ff2c3a83b3280b30a9447c86e96e966f7cf26",
+                        "results.json": "c6f3f9e85337e24a709e89b19ba5124550d44368cb3862321390252dfaf84cb0",
+                        "run_manifest.json": "d6cf2cccfb245e46e4fefeb65f92ef60f57ac794679bbd9c0c0874fda856e975"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.6629,
+                            "train_accuracy": 0.94,
+                            "validation_loss": 1.3614,
+                            "validation_accuracy": 0.5502,
+                            "validation_auc": 0.8351,
+                            "validation_f1": 0.4765,
+                            "test_loss": 1.376,
+                            "test_accuracy": 0.5428,
+                            "test_auc": 0.8262,
+                            "test_f1": 0.467,
+                            "generalization_gap": 0.3972
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.6628738641738892,
+                                "accuracy": 0.94,
+                                "auc": 0.9985939205064693,
+                                "f1": 0.931510778493537
+                            },
+                            "validation": {
+                                "loss": 1.3613581423447512,
+                                "accuracy": 0.5502336448598131,
+                                "auc": 0.8351493332129378,
+                                "f1": 0.47645309337089625
+                            },
+                            "test": {
+                                "loss": 1.3759825980931617,
+                                "accuracy": 0.5428237357497807,
+                                "auc": 0.8262085000317764,
+                                "f1": 0.4670234336967263
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -2.6135826110884608e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -4.185765524877816e-05,
+                            "validation_accuracy": 3.364485981305343e-05,
+                            "validation_auc": 4.9333212937874293e-05,
+                            "validation_f1": -4.690662910372678e-05,
+                            "test_loss": -1.7401906838188097e-05,
+                            "test_accuracy": 2.3735749780762205e-05,
+                            "test_auc": 8.500031776326189e-06,
+                            "test_f1": 2.3433696726249398e-05,
+                            "generalization_gap": -2.3735749780762205e-05
+                        }
+                    }
+                }
+            ],
+            "quantum_reg": [
+                {
+                    "seed": 42,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_quantum_reg_bloodmnist_s42_20260802_150808",
+                    "pairing_sha256": "3c565f0a44d406033cd56b925a4cfe5ceeac8ab072e9c8aa018870c0c2c992e0",
+                    "artifact_sha256": {
+                        "best_model.pth": "c5d80b769f385587bbc3fbebdbc02f56628409902cfe755189078ed2c3f72f53",
+                        "config.json": "f5446b5e189e3ad7061176d7901558fe3fb1957cc690636d4f3a928ad77189fb",
+                        "final_model.pth": "e60f226ffe60afaaee57b7a63747910244926693969a1072ca84c3e346af5fd6",
+                        "latest_checkpoint.pth": "48611b075480dab3a976fc77916211e7c8c20a6b5a6b40697280eea77d83e6a4",
+                        "params.json": "53bfe78dbe03a99dbc7da0aff8bf2abc77675031e2136ba0ce93d0dd57045cf8",
+                        "results.json": "cb412e446d80ccb86ba8a37c07be3c09e4c3bbd4beb19a3eb8ee47ced4d5cee2",
+                        "run_manifest.json": "16e71e827961d04e0635a1386aa18cdb35e42063ae7b53ed822e1a318fb15c9f"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.4784,
+                            "train_accuracy": 1.0,
+                            "validation_loss": 1.7104,
+                            "validation_accuracy": 0.4328,
+                            "validation_auc": 0.7603,
+                            "validation_f1": 0.4084,
+                            "test_loss": 1.7697,
+                            "test_accuracy": 0.4054,
+                            "test_auc": 0.7466,
+                            "test_f1": 0.3806,
+                            "generalization_gap": 0.5946
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.4783933162689209,
+                                "accuracy": 1.0,
+                                "auc": 1.0,
+                                "f1": 1.0
+                            },
+                            "validation": {
+                                "loss": 1.7103544139416418,
+                                "accuracy": 0.4328271028037383,
+                                "auc": 0.7602944005392135,
+                                "f1": 0.4084197672816864
+                            },
+                            "test": {
+                                "loss": 1.7696649480444477,
+                                "accuracy": 0.40543700672318034,
+                                "auc": 0.7465705292102598,
+                                "f1": 0.3805990904873039
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -6.68373107909348e-06,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -4.5586058358138004e-05,
+                            "validation_accuracy": 2.7102803738299208e-05,
+                            "validation_auc": -5.59946078648732e-06,
+                            "validation_f1": 1.9767281686400295e-05,
+                            "test_loss": -3.505195555231211e-05,
+                            "test_accuracy": 3.700672318035503e-05,
+                            "test_auc": -2.947078974024908e-05,
+                            "test_f1": -9.095126961011779e-07,
+                            "generalization_gap": -3.700672318029952e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 137,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_quantum_reg_bloodmnist_s137_20260802_152602",
+                    "pairing_sha256": "5f71e623524d8750f0848fca3607821441e8ea72aac044372bf45c216cc92d0c",
+                    "artifact_sha256": {
+                        "best_model.pth": "c213bba468ea018ac10efbc715b5d4ad8a5df2d4139ce76bc1a7e40f7d281683",
+                        "config.json": "e59bd86d1825e161d8a012fe70f721bb5f87abeacf93cfe9084f0341ecb0d522",
+                        "final_model.pth": "48240068097d9ec3db245af7b098c7ed9a75da122a164027deed453712af59f9",
+                        "latest_checkpoint.pth": "15c08e165f051f6804903056fbb68942a85ed83f1d0fc797b79550bdae739691",
+                        "params.json": "53bfe78dbe03a99dbc7da0aff8bf2abc77675031e2136ba0ce93d0dd57045cf8",
+                        "results.json": "29577275ffe65aae18b1711ee61f570b029490168e061b5abd5ce3fd1d434420",
+                        "run_manifest.json": "7fcf575f4a81fcd344bc13fdbdabe02bbb8d58b1489f7654c3f49bfd7a226b26"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.1414,
+                            "train_accuracy": 1.0,
+                            "validation_loss": 2.2712,
+                            "validation_accuracy": 0.3843,
+                            "validation_auc": 0.6786,
+                            "validation_f1": 0.3129,
+                            "test_loss": 2.1978,
+                            "test_accuracy": 0.3861,
+                            "test_auc": 0.6931,
+                            "test_f1": 0.3173,
+                            "generalization_gap": 0.6139
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.1413661241531372,
+                                "accuracy": 1.0,
+                                "auc": 1.0,
+                                "f1": 1.0
+                            },
+                            "validation": {
+                                "loss": 2.2711621333505505,
+                                "accuracy": 0.38434579439252337,
+                                "auc": 0.6786248603509903,
+                                "f1": 0.3128615501308968
+                            },
+                            "test": {
+                                "loss": 2.197761084802734,
+                                "accuracy": 0.38614440222157265,
+                                "auc": 0.6930563246398503,
+                                "f1": 0.31727763721877383
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -3.387584686279088e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -3.7866649449380674e-05,
+                            "validation_accuracy": 4.579439252339057e-05,
+                            "validation_auc": 2.4860350990363322e-05,
+                            "validation_f1": -3.8449869103229783e-05,
+                            "test_loss": -3.891519726595405e-05,
+                            "test_accuracy": 4.440222157264806e-05,
+                            "test_auc": -4.367536014970863e-05,
+                            "test_f1": -2.236278122619284e-05,
+                            "generalization_gap": -4.440222157264806e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 256,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_quantum_reg_bloodmnist_s256_20260802_154336",
+                    "pairing_sha256": "8625d9724f11f049dccdfade3726e3b53299010b8c3706b8dac7efc2ecd9b6ef",
+                    "artifact_sha256": {
+                        "best_model.pth": "8921fba19aef3b2852c409d7b74f4c4cb178cf4a8c66fd038f1c1f01b65dc8cd",
+                        "config.json": "794e23bee4d5ccca6f227121e7acdf6fcf9e2cc980ff3f1ca1fe78f4f1746064",
+                        "final_model.pth": "5a318a5c43fbcbbb12a317df7aa021c718711ca43d625a772fcb43af120919e1",
+                        "latest_checkpoint.pth": "c9d390c4f82413795e745b8d8f27e83520b2a713c030c3419e6dbed9ec6daaea",
+                        "params.json": "53bfe78dbe03a99dbc7da0aff8bf2abc77675031e2136ba0ce93d0dd57045cf8",
+                        "results.json": "4310f8111bc8e7463284f0dc621daf4870d4731166383db932e7093e79400e2c",
+                        "run_manifest.json": "d33bd9e8428738f3c1ea81f4e9a0942cae910627a4782f3250e9d0a96a0c2eaa"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 1.202,
+                            "train_accuracy": 0.68,
+                            "validation_loss": 1.6265,
+                            "validation_accuracy": 0.4544,
+                            "validation_auc": 0.7693,
+                            "validation_f1": 0.3077,
+                            "test_loss": 1.609,
+                            "test_accuracy": 0.4557,
+                            "test_auc": 0.7671,
+                            "test_f1": 0.3101,
+                            "generalization_gap": 0.2243
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 1.2019920349121094,
+                                "accuracy": 0.68,
+                                "auc": 0.9340132614385899,
+                                "f1": 0.4498812507188694
+                            },
+                            "validation": {
+                                "loss": 1.6265474301632319,
+                                "accuracy": 0.4544392523364486,
+                                "auc": 0.7692605985193561,
+                                "f1": 0.3076841729451203
+                            },
+                            "test": {
+                                "loss": 1.6090163172981398,
+                                "accuracy": 0.45571470330312774,
+                                "auc": 0.7670654937430181,
+                                "f1": 0.3101056839585549
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -7.965087890582367e-06,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 4.743016323183191e-05,
+                            "validation_accuracy": 3.925233644858084e-05,
+                            "validation_auc": -3.9401480643852516e-05,
+                            "validation_f1": -1.582705487968017e-05,
+                            "test_loss": 1.6317298139778558e-05,
+                            "test_accuracy": 1.4703303127749923e-05,
+                            "test_auc": -3.450625698186993e-05,
+                            "test_f1": 5.683958554936197e-06,
+                            "generalization_gap": -1.4703303127694412e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 512,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_quantum_reg_bloodmnist_s512_20260802_160027",
+                    "pairing_sha256": "ff95f60cf08c5dfbfd9befda42e0652ef8b2407c9649353671b968e9d5bacf6b",
+                    "artifact_sha256": {
+                        "best_model.pth": "34fa89eb93e82ea4e48f7c0522fff03aaf9628d3bfc6751f77ff1bbc880feb16",
+                        "config.json": "451d3216a537cfeeb0197736251a35fa561672d5747af21c1e01128bc0c23db7",
+                        "final_model.pth": "a9bf86f7c31c94819ac95f38fdafd6d09ef13f0ff48751d29325dbeae6e6afdc",
+                        "latest_checkpoint.pth": "879f62890c07e938fa3cbf5d850f5f968018ee377bacfe440df4c2cc628cdad1",
+                        "params.json": "53bfe78dbe03a99dbc7da0aff8bf2abc77675031e2136ba0ce93d0dd57045cf8",
+                        "results.json": "ecb215b54ba13188a27d16c3fa7c31b4746bc1aff828cbe6a6cfecaf66ef2594",
+                        "run_manifest.json": "545b58f6e88615b1faa55d615c542edd421c0747797748115b2a6756bd791c87"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.2649,
+                            "train_accuracy": 1.0,
+                            "validation_loss": 1.6815,
+                            "validation_accuracy": 0.4749,
+                            "validation_auc": 0.7492,
+                            "validation_f1": 0.4186,
+                            "test_loss": 1.6833,
+                            "test_accuracy": 0.473,
+                            "test_auc": 0.7471,
+                            "test_f1": 0.4116,
+                            "generalization_gap": 0.527
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.2648865878582001,
+                                "accuracy": 1.0,
+                                "auc": 1.0,
+                                "f1": 1.0
+                            },
+                            "validation": {
+                                "loss": 1.681538687688168,
+                                "accuracy": 0.47488317757009346,
+                                "auc": 0.749191455776282,
+                                "f1": 0.4185743618883849
+                            },
+                            "test": {
+                                "loss": 1.6833196450520314,
+                                "accuracy": 0.47296112247880734,
+                                "auc": 0.7470983304230591,
+                                "f1": 0.41156084744141175
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -1.3412141799951094e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 3.8687688167948764e-05,
+                            "validation_accuracy": -1.6822429906526715e-05,
+                            "validation_auc": -8.544223717987798e-06,
+                            "validation_f1": -2.5638111615100545e-05,
+                            "test_loss": 1.9645052031336263e-05,
+                            "test_accuracy": -3.887752119263732e-05,
+                            "test_auc": -1.6695769409214023e-06,
+                            "test_f1": -3.915255858827349e-05,
+                            "generalization_gap": 3.887752119269283e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 1024,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_quantum_reg_bloodmnist_s1024_20260802_161727",
+                    "pairing_sha256": "65b71eaa6a17f036489b65be9408e4826740d7dc544b66f312915d432238956f",
+                    "artifact_sha256": {
+                        "best_model.pth": "b02723e1c8836fedcbe3fc57043e5078aa84c889a6fbb9fb836bdf91a64a825d",
+                        "config.json": "a7ff57f6475d11a7190ecca5f40d83b9309c00ad99f87db373076306a99e2180",
+                        "final_model.pth": "d66f833fe10bd52e1f02b5b472be6766a8671b9cfcf2a929f9e22f3697b71349",
+                        "latest_checkpoint.pth": "a533137da4bb882c5d83bfffe25eb76008c75bf165b6d9d93d9a8ef562c8f235",
+                        "params.json": "53bfe78dbe03a99dbc7da0aff8bf2abc77675031e2136ba0ce93d0dd57045cf8",
+                        "results.json": "987073b99466ef710e697268faff502afe235ca04dee8617fef26476ddd40d52",
+                        "run_manifest.json": "14ea8d1565e0f0b7c107360627a6737ff45ba264876c78e8f49940f8a6178983"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.7859,
+                            "train_accuracy": 0.9,
+                            "validation_loss": 1.698,
+                            "validation_accuracy": 0.4042,
+                            "validation_auc": 0.7545,
+                            "validation_f1": 0.3344,
+                            "test_loss": 1.748,
+                            "test_accuracy": 0.3835,
+                            "test_auc": 0.7398,
+                            "test_f1": 0.3182,
+                            "generalization_gap": 0.5165
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.7858622670173645,
+                                "accuracy": 0.9,
+                                "auc": 0.9811288896970768,
+                                "f1": 0.8619069655834362
+                            },
+                            "validation": {
+                                "loss": 1.6980402759302442,
+                                "accuracy": 0.40420560747663553,
+                                "auc": 0.754539794795597,
+                                "f1": 0.33436040087050833
+                            },
+                            "test": {
+                                "loss": 1.7479547079945474,
+                                "accuracy": 0.38351359251680794,
+                                "auc": 0.7398272160886107,
+                                "f1": 0.31823059640050333
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -3.7732982635541035e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 4.0275930244249025e-05,
+                            "validation_accuracy": 5.607476635527409e-06,
+                            "validation_auc": 3.97947955970146e-05,
+                            "validation_f1": -3.9599129491640905e-05,
+                            "test_loss": -4.5292005452557405e-05,
+                            "test_accuracy": 1.3592516807936494e-05,
+                            "test_auc": 2.721608861067093e-05,
+                            "test_f1": 3.0596400503346555e-05,
+                            "generalization_gap": -1.3592516807880983e-05
+                        }
+                    }
+                }
+            ]
+        },
+        "dermamnist": {
+            "vanilla": [
+                {
+                    "seed": 42,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_vanilla_dermamnist_s42_20260802_163429",
+                    "pairing_sha256": "0e0ad08743b43aba77a97a686982ea8391a9ad8cd8c3b6aaddee6a89428747bd",
+                    "artifact_sha256": {
+                        "best_model.pth": "295e79a83dd863ce70adf04f09d3a879a332b24932f9b52fe367e264ad06dacc",
+                        "config.json": "e4e34948f6af0587a5953af14e64b50484f8b6c6f5b7cf742d26aa225dad1ccc",
+                        "final_model.pth": "449798c91e6c9e9da8cf33743d36c13f8c0f480b5b2542464df1e725a8ce6975",
+                        "latest_checkpoint.pth": "68a37678973995855ba169eb8adc43917c6e745c0e51aab7fc1e2052a2b6e754",
+                        "params.json": "05624b1be4504d546804c748fe5389c100ede07aa01d50dfdb58bca6ce901fac",
+                        "results.json": "9e95dd4143a904841eff4d84168305ffc70d52466108882432db416dabf3eef3",
+                        "run_manifest.json": "8f61c4d03ca66c057f2c4cf7874745b19c77de6988c47eaa3d98550f8ceb7610"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 1.0863,
+                            "train_accuracy": 0.7,
+                            "validation_loss": 1.1913,
+                            "validation_accuracy": 0.6401,
+                            "validation_auc": 0.6426,
+                            "validation_f1": 0.1306,
+                            "test_loss": 1.1909,
+                            "test_accuracy": 0.6384,
+                            "test_auc": 0.6418,
+                            "test_f1": 0.1261,
+                            "generalization_gap": 0.0616
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 1.0863428115844727,
+                                "accuracy": 0.7,
+                                "auc": 0.7650040424664989,
+                                "f1": 0.169319901873793
+                            },
+                            "validation": {
+                                "loss": 1.1912555696957132,
+                                "accuracy": 0.6400797607178464,
+                                "auc": 0.6425949676020293,
+                                "f1": 0.13062105375917624
+                            },
+                            "test": {
+                                "loss": 1.1908504493218706,
+                                "accuracy": 0.6384039900249376,
+                                "auc": 0.6417919232308326,
+                                "f1": 0.12613519458219843
+                            }
+                        },
+                        "errors": {
+                            "train_loss": 4.281158447261291e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -4.443030428680217e-05,
+                            "validation_accuracy": -2.023928215355575e-05,
+                            "validation_auc": -5.032397970672342e-06,
+                            "validation_f1": 2.1053759176242748e-05,
+                            "test_loss": -4.955067812950631e-05,
+                            "test_accuracy": 3.99002493767231e-06,
+                            "test_auc": -8.076769167475462e-06,
+                            "test_f1": 3.519458219844451e-05,
+                            "generalization_gap": -3.990024937686187e-06
+                        }
+                    }
+                },
+                {
+                    "seed": 137,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_vanilla_dermamnist_s137_20260802_165015",
+                    "pairing_sha256": "3ced717eea33aa817412d7cea923dd8b6aa522f1a2fb33b7231787ff68be5ffd",
+                    "artifact_sha256": {
+                        "best_model.pth": "9c64a3cb88ac2e652ff381b3cdcc728cd7244a3ba12cef309c48c4147368d3a1",
+                        "config.json": "a5dedc8e6bb64c342175a6af05a26f729becd3f0321a491de00dd2da359355e7",
+                        "final_model.pth": "1fa0437847390ef103ca33ef78f0c6eab4211312e3690effd7a6e44268b764a7",
+                        "latest_checkpoint.pth": "5c2e831694e559a0b371310f8b24238ddc16f1ad0e9dcbf315d270f70b95c451",
+                        "params.json": "05624b1be4504d546804c748fe5389c100ede07aa01d50dfdb58bca6ce901fac",
+                        "results.json": "2736cff5442c63f854389b016874f9080d46bd618a606ac3037a1550de852e54",
+                        "run_manifest.json": "99fb92f71852db8f76e025d8fcbdbebbe4ec61951f66828c2db4af0e3d5c4669"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.7199,
+                            "train_accuracy": 0.84,
+                            "validation_loss": 1.405,
+                            "validation_accuracy": 0.6171,
+                            "validation_auc": 0.5296,
+                            "validation_f1": 0.1748,
+                            "test_loss": 1.3709,
+                            "test_accuracy": 0.6115,
+                            "test_auc": 0.607,
+                            "test_f1": 0.1778,
+                            "generalization_gap": 0.2285
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.7198546528816223,
+                                "accuracy": 0.84,
+                                "auc": 0.8727472799092196,
+                                "f1": 0.3449493975809765
+                            },
+                            "validation": {
+                                "loss": 1.4049906161347272,
+                                "accuracy": 0.617148554336989,
+                                "auc": 0.5295900734888993,
+                                "f1": 0.1747844794337739
+                            },
+                            "test": {
+                                "loss": 1.3709231469399317,
+                                "accuracy": 0.6114713216957606,
+                                "auc": 0.6069691925727186,
+                                "f1": 0.17782808391193908
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -4.5347118377669915e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -9.383865272827308e-06,
+                            "validation_accuracy": 4.8554336989026226e-05,
+                            "validation_auc": -9.926511100655233e-06,
+                            "validation_f1": -1.5520566226112642e-05,
+                            "test_loss": 2.3146939931661947e-05,
+                            "test_accuracy": -2.8678304239471153e-05,
+                            "test_auc": -3.0807427281343e-05,
+                            "test_f1": 2.808391193906412e-05,
+                            "generalization_gap": 2.8678304239387886e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 256,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_vanilla_dermamnist_s256_20260802_170555",
+                    "pairing_sha256": "acbe611d1f9f55732d6d9b829450a1a8a573a5e123be2201f45ac0345c4e9605",
+                    "artifact_sha256": {
+                        "best_model.pth": "f2ee9aae322859ea461c5bb4cc2a3c866939a2a403baabfc10e3a2de0eb1da00",
+                        "config.json": "5b1ea1ec42e368fad4d7c9d674908fe7fa0411b477b688bde947138a74d2b609",
+                        "final_model.pth": "1bbed92ce0b4d1d41f474578fc4afe5d926de9eb5dae6eab48ca93c8950b891b",
+                        "latest_checkpoint.pth": "0de4df6b30274e344632e8877dfe858e3dfcbcf0c8410be36ea9f8c805e059be",
+                        "params.json": "05624b1be4504d546804c748fe5389c100ede07aa01d50dfdb58bca6ce901fac",
+                        "results.json": "27aa3f2dd37cef1b4df96f7faa1b8bdc6b55f0168ca56cdcc174118006ff5bc3",
+                        "run_manifest.json": "4edf2cc52d696a2375f97edda08458d4ce19dd29a4efdcb4a0582b842051138a"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.9934,
+                            "train_accuracy": 0.68,
+                            "validation_loss": 1.126,
+                            "validation_accuracy": 0.665,
+                            "validation_auc": 0.6617,
+                            "validation_f1": 0.1191,
+                            "test_loss": 1.1122,
+                            "test_accuracy": 0.6628,
+                            "test_auc": 0.66,
+                            "test_f1": 0.1176,
+                            "generalization_gap": 0.0172
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.993350088596344,
+                                "accuracy": 0.68,
+                                "auc": 0.7951113166501912,
+                                "f1": 0.1391279403327596
+                            },
+                            "validation": {
+                                "loss": 1.1259898703214772,
+                                "accuracy": 0.6650049850448654,
+                                "auc": 0.661667151730325,
+                                "f1": 0.11905327374485573
+                            },
+                            "test": {
+                                "loss": 1.112229999223552,
+                                "accuracy": 0.6628428927680798,
+                                "auc": 0.6600443383997713,
+                                "f1": 0.11761958359673333
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -4.991140365595559e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -1.0129678522652341e-05,
+                            "validation_accuracy": 4.985044865346566e-06,
+                            "validation_auc": -3.284826967497878e-05,
+                            "validation_f1": -4.672625514426376e-05,
+                            "test_loss": 2.99992235519575e-05,
+                            "test_accuracy": 4.289276807989406e-05,
+                            "test_auc": 4.433839977124876e-05,
+                            "test_f1": 1.9583596733332986e-05,
+                            "generalization_gap": -4.289276807978998e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 512,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_vanilla_dermamnist_s512_20260802_172137",
+                    "pairing_sha256": "f3b8cc5dd5c88f562ff7beea45ca9b5955a21fb2c1f9dcc11e99ce4d3122eedc",
+                    "artifact_sha256": {
+                        "best_model.pth": "9d1469f0fb87367651145c6ea3a5f22771bf2a14bdfce478ec0ea799d9747fa8",
+                        "config.json": "b0d4af03ae9374f377a6652abcd6c921c2285b8d471888cda3fe19016eb4b02f",
+                        "final_model.pth": "ef463624e17ffb32292c8732b967cc8e36c6b5478f2957bafb0a68e7e6b41353",
+                        "latest_checkpoint.pth": "e6dec8a882ec484fe753e025468b44a3feed4684da3b9f524effcf94e8404932",
+                        "params.json": "05624b1be4504d546804c748fe5389c100ede07aa01d50dfdb58bca6ce901fac",
+                        "results.json": "d1f6450b5733bff1986197b8a44c785ca0f4a912d9174abff42aab177f4b59a3",
+                        "run_manifest.json": "ed1dce1b3a4dde0c132df013ff45186741509356ee206bd8022dfdbf54278f15"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.4365,
+                            "train_accuracy": 0.92,
+                            "validation_loss": 1.2575,
+                            "validation_accuracy": 0.6162,
+                            "validation_auc": 0.6584,
+                            "validation_f1": 0.2078,
+                            "test_loss": 1.2603,
+                            "test_accuracy": 0.609,
+                            "test_auc": 0.7034,
+                            "test_f1": 0.2185,
+                            "generalization_gap": 0.311
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.4365013539791107,
+                                "accuracy": 0.92,
+                                "auc": 0.9625947233580269,
+                                "f1": 0.6536429483500398
+                            },
+                            "validation": {
+                                "loss": 1.2575470953139802,
+                                "accuracy": 0.6161515453639083,
+                                "auc": 0.6583700190247274,
+                                "f1": 0.207830482516639
+                            },
+                            "test": {
+                                "loss": 1.2602685502045172,
+                                "accuracy": 0.6089775561097257,
+                                "auc": 0.7034081985294486,
+                                "f1": 0.2184948723751122
+                            }
+                        },
+                        "errors": {
+                            "train_loss": 1.3539791107186616e-06,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 4.709531398017219e-05,
+                            "validation_accuracy": -4.845463609171041e-05,
+                            "validation_auc": -2.9980975272625443e-05,
+                            "validation_f1": 3.048251663897994e-05,
+                            "test_loss": -3.144979548275195e-05,
+                            "test_accuracy": -2.244389027428184e-05,
+                            "test_auc": 8.19852944855537e-06,
+                            "test_f1": -5.127624887801829e-06,
+                            "generalization_gap": 2.2443890274337353e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 1024,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_vanilla_dermamnist_s1024_20260802_173733",
+                    "pairing_sha256": "6bd93cd47493ce793fa33997eb8903dc344fd02981dbe01a5ad6c2d0a1a841c8",
+                    "artifact_sha256": {
+                        "best_model.pth": "1b324088eaaf56458ee1ca49f9d96d78e536c27ef00d51a62d6af3fee02cbf37",
+                        "config.json": "52dda2187eb9a35137e4da06b6a4f5297d9d77dbe73f435edec2759ef0db5443",
+                        "final_model.pth": "9c1dc029a901e75c4da3ae36eb35483c68c9c96ba4d87e38c88cd7ba65dc03eb",
+                        "latest_checkpoint.pth": "3ed1be828b83bcedd59dc6d9014b5e7a517620cf302af908e8377394bc713b9a",
+                        "params.json": "05624b1be4504d546804c748fe5389c100ede07aa01d50dfdb58bca6ce901fac",
+                        "results.json": "9e3d227e3ea39dfe5d0533a31283471e119d190cca08fdfe8097d7be43e717e8",
+                        "run_manifest.json": "81dd3379283d4b770bb7d2ead629a4892a9df4ce3bae7d81d92c721919b649bb"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.9802,
+                            "train_accuracy": 0.72,
+                            "validation_loss": 1.1492,
+                            "validation_accuracy": 0.6421,
+                            "validation_auc": 0.7148,
+                            "validation_f1": 0.1508,
+                            "test_loss": 1.1378,
+                            "test_accuracy": 0.6459,
+                            "test_auc": 0.6909,
+                            "test_f1": 0.1521,
+                            "generalization_gap": 0.0741
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.9801627397537231,
+                                "accuracy": 0.72,
+                                "auc": 0.7772232500509227,
+                                "f1": 0.20138188608776847
+                            },
+                            "validation": {
+                                "loss": 1.1492047887499763,
+                                "accuracy": 0.6420737786640079,
+                                "auc": 0.714781041684197,
+                                "f1": 0.15083135018810426
+                            },
+                            "test": {
+                                "loss": 1.1378470010590969,
+                                "accuracy": 0.6458852867830424,
+                                "auc": 0.6909023718117694,
+                                "f1": 0.15209556406827301
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -3.726024627681568e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 4.788749976336604e-06,
+                            "validation_accuracy": -2.6221335992060446e-05,
+                            "validation_auc": -1.895831580300822e-05,
+                            "validation_f1": 3.135018810426771e-05,
+                            "test_loss": 4.700105909694052e-05,
+                            "test_accuracy": -1.471321695767358e-05,
+                            "test_auc": 2.3718117694304652e-06,
+                            "test_f1": -4.435931726998188e-06,
+                            "generalization_gap": 1.471321695761807e-05
+                        }
+                    }
+                }
+            ],
+            "bounded_mlp": [
+                {
+                    "seed": 42,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_bounded_mlp_dermamnist_s42_20260802_163431",
+                    "pairing_sha256": "0e0ad08743b43aba77a97a686982ea8391a9ad8cd8c3b6aaddee6a89428747bd",
+                    "artifact_sha256": {
+                        "best_model.pth": "6dfd91c3d7be7e48723e7d9d9559a1b5b808bc108fe762e50c0065a6a6d64e10",
+                        "config.json": "e4e34948f6af0587a5953af14e64b50484f8b6c6f5b7cf742d26aa225dad1ccc",
+                        "final_model.pth": "8c3ba70ae1c770b70a5a7e6af2e33894161a5524cea430c9399391f6945570db",
+                        "latest_checkpoint.pth": "6a8ffd35ef61b39025e65f165369aafa0fe12e97c7347405ef91998b5e4102b6",
+                        "params.json": "66b1fc133394506a73e92554dccf16e12c013ef4a65e910edc5ea258991e8cda",
+                        "results.json": "0930a1a5294b905f34933546c13b7b28a93446337cbc9352880acb98b332c51b",
+                        "run_manifest.json": "93011aaa880a9e0514eb15508ba1fa383fe33417974e877a6dde6c8f912dc86d"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 1.5212,
+                            "train_accuracy": 0.66,
+                            "validation_loss": 1.5208,
+                            "validation_accuracy": 0.666,
+                            "validation_auc": 0.4456,
+                            "validation_f1": 0.1174,
+                            "test_loss": 1.5233,
+                            "test_accuracy": 0.6623,
+                            "test_auc": 0.4448,
+                            "test_f1": 0.1193,
+                            "generalization_gap": -0.0023
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 1.5211594104766846,
+                                "accuracy": 0.66,
+                                "auc": 0.5489532866643453,
+                                "f1": 0.11568799298860648
+                            },
+                            "validation": {
+                                "loss": 1.5207768593091195,
+                                "accuracy": 0.6660019940179461,
+                                "auc": 0.44559363444380923,
+                                "f1": 0.11736507936507937
+                            },
+                            "test": {
+                                "loss": 1.523329984041818,
+                                "accuracy": 0.6623441396508728,
+                                "auc": 0.44484703774935885,
+                                "f1": 0.11932262533407989
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -4.0589523315537335e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -2.3140690880385506e-05,
+                            "validation_accuracy": 1.9940179460942176e-06,
+                            "validation_auc": -6.3655561907682845e-06,
+                            "validation_f1": -3.492063492063768e-05,
+                            "test_loss": 2.9984041817865403e-05,
+                            "test_accuracy": 4.41396508727987e-05,
+                            "test_auc": 4.7037749358880276e-05,
+                            "test_f1": 2.2625334079887094e-05,
+                            "generalization_gap": -4.413965087276747e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 137,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_bounded_mlp_dermamnist_s137_20260802_165016",
+                    "pairing_sha256": "3ced717eea33aa817412d7cea923dd8b6aa522f1a2fb33b7231787ff68be5ffd",
+                    "artifact_sha256": {
+                        "best_model.pth": "44219dc1ad5f446b5d97cd77eaaaf430ac0a1f945b468a74771cfee492fe9311",
+                        "config.json": "a5dedc8e6bb64c342175a6af05a26f729becd3f0321a491de00dd2da359355e7",
+                        "final_model.pth": "4f0376a3146bb82aa932f47e516964795209dd62cacf61f837a9a65004daab11",
+                        "latest_checkpoint.pth": "b4f1d839437a633def25c03edc5bfc1307b76e951ef60fe6f1f1305f1f44cc57",
+                        "params.json": "66b1fc133394506a73e92554dccf16e12c013ef4a65e910edc5ea258991e8cda",
+                        "results.json": "b00482116032cff4f352a109db0f2a75c9d4a51f8ba13666615216182c53f7f6",
+                        "run_manifest.json": "382de27f47983305b385072588e01a64789ffc1f85b91c077e460411656a5618"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.5842,
+                            "train_accuracy": 0.9,
+                            "validation_loss": 1.3614,
+                            "validation_accuracy": 0.6481,
+                            "validation_auc": 0.6072,
+                            "validation_f1": 0.1961,
+                            "test_loss": 1.3871,
+                            "test_accuracy": 0.6379,
+                            "test_auc": 0.6034,
+                            "test_f1": 0.1793,
+                            "generalization_gap": 0.2621
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.5841710567474365,
+                                "accuracy": 0.9,
+                                "auc": 0.9130824235026145,
+                                "f1": 0.5297619047619048
+                            },
+                            "validation": {
+                                "loss": 1.3613828896049964,
+                                "accuracy": 0.6480558325024925,
+                                "auc": 0.6072257999437092,
+                                "f1": 0.19605455080976247
+                            },
+                            "test": {
+                                "loss": 1.3870701644188745,
+                                "accuracy": 0.6379052369077307,
+                                "auc": 0.6034167159558285,
+                                "f1": 0.17929998205059042
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -2.8943252563529143e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -1.7110395003516743e-05,
+                            "validation_accuracy": -4.4167497507463516e-05,
+                            "validation_auc": 2.57999437092149e-05,
+                            "validation_f1": -4.544919023752314e-05,
+                            "test_loss": -2.9835581125459143e-05,
+                            "test_accuracy": 5.2369077306879674e-06,
+                            "test_auc": 1.6715955828416895e-05,
+                            "test_f1": -1.794940956978408e-08,
+                            "generalization_gap": -5.2369077306879674e-06
+                        }
+                    }
+                },
+                {
+                    "seed": 256,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_bounded_mlp_dermamnist_s256_20260802_170556",
+                    "pairing_sha256": "acbe611d1f9f55732d6d9b829450a1a8a573a5e123be2201f45ac0345c4e9605",
+                    "artifact_sha256": {
+                        "best_model.pth": "035ea2bc5430d620645d7034a5a6f518ece2b12da809199eb1252c21db330035",
+                        "config.json": "5b1ea1ec42e368fad4d7c9d674908fe7fa0411b477b688bde947138a74d2b609",
+                        "final_model.pth": "9e48dee7200a65c02ba0ea996c5e4e33108a8f9f03766f07d869648591ffc4c7",
+                        "latest_checkpoint.pth": "13faa4a881ece63f74a8cd647d362dacd95170b2c5fe8b5a533fbdfca0cd853f",
+                        "params.json": "66b1fc133394506a73e92554dccf16e12c013ef4a65e910edc5ea258991e8cda",
+                        "results.json": "70c5ee7b485cc4e9fe4fd18935cb7f23641330688a42b179ca8205a6af5929c2",
+                        "run_manifest.json": "68f32f0e4f0fa939cc3b0109d2dc19314656e241de06a7779f7498460066619f"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 1.2465,
+                            "train_accuracy": 0.67,
+                            "validation_loss": 1.2512,
+                            "validation_accuracy": 0.669,
+                            "validation_auc": 0.6604,
+                            "validation_f1": 0.1146,
+                            "test_loss": 1.2529,
+                            "test_accuracy": 0.6688,
+                            "test_auc": 0.6003,
+                            "test_f1": 0.1146,
+                            "generalization_gap": 0.0012
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 1.2465381622314453,
+                                "accuracy": 0.67,
+                                "auc": 0.6408743206678682,
+                                "f1": 0.1146278870829769
+                            },
+                            "validation": {
+                                "loss": 1.2511774250422256,
+                                "accuracy": 0.6689930209371885,
+                                "auc": 0.6603987384497432,
+                                "f1": 0.11459311758176073
+                            },
+                            "test": {
+                                "loss": 1.2529235917731116,
+                                "accuracy": 0.6688279301745635,
+                                "auc": 0.6003266109871472,
+                                "f1": 0.11461048673133627
+                            }
+                        },
+                        "errors": {
+                            "train_loss": 3.816223144537112e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -2.2574957774468274e-05,
+                            "validation_accuracy": -6.979062811551806e-06,
+                            "validation_auc": -1.2615502568147363e-06,
+                            "validation_f1": -6.882418239262389e-06,
+                            "test_loss": 2.3591773111730774e-05,
+                            "test_accuracy": 2.7930174563595145e-05,
+                            "test_auc": 2.661098714729082e-05,
+                            "test_f1": 1.0486731336273314e-05,
+                            "generalization_gap": -2.7930174563505156e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 512,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_bounded_mlp_dermamnist_s512_20260802_172139",
+                    "pairing_sha256": "f3b8cc5dd5c88f562ff7beea45ca9b5955a21fb2c1f9dcc11e99ce4d3122eedc",
+                    "artifact_sha256": {
+                        "best_model.pth": "14f35b6af4a70f3583bf2788771d6f7470b57026423642c1212939ed741ce201",
+                        "config.json": "b0d4af03ae9374f377a6652abcd6c921c2285b8d471888cda3fe19016eb4b02f",
+                        "final_model.pth": "c8589a4069221c216e64f69ef301187e1ee7fe45a7b8c620c2b62c5370ef7df2",
+                        "latest_checkpoint.pth": "fd1d6a268960e715019917b06b3e8a24c444d9cd4caf185afb5f05ec1a2cc04d",
+                        "params.json": "66b1fc133394506a73e92554dccf16e12c013ef4a65e910edc5ea258991e8cda",
+                        "results.json": "9954867476503b80ff6cc88c7e040fa250dc2799cc0affd0d8429a99e819d393",
+                        "run_manifest.json": "ece83f8e5a6939fdce0ac30369b28afcca032cefeefb1732653b6cc7d173a3e4"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.9025,
+                            "train_accuracy": 0.78,
+                            "validation_loss": 1.2127,
+                            "validation_accuracy": 0.6301,
+                            "validation_auc": 0.6345,
+                            "validation_f1": 0.1722,
+                            "test_loss": 1.2257,
+                            "test_accuracy": 0.6299,
+                            "test_auc": 0.6423,
+                            "test_f1": 0.1689,
+                            "generalization_gap": 0.1501
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.9025145173072815,
+                                "accuracy": 0.78,
+                                "auc": 0.8061524144035863,
+                                "f1": 0.37151702786377705
+                            },
+                            "validation": {
+                                "loss": 1.2126709258449397,
+                                "accuracy": 0.6301096709870389,
+                                "auc": 0.6345436601823324,
+                                "f1": 0.17222685355841216
+                            },
+                            "test": {
+                                "loss": 1.2257467300220024,
+                                "accuracy": 0.629925187032419,
+                                "auc": 0.6423177637770906,
+                                "f1": 0.168881837873282
+                            }
+                        },
+                        "errors": {
+                            "train_loss": 1.4517307281525227e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -2.907415506014921e-05,
+                            "validation_accuracy": 9.670987038856715e-06,
+                            "validation_auc": 4.3660182332483366e-05,
+                            "validation_f1": 2.6853558412170964e-05,
+                            "test_loss": 4.673002200239473e-05,
+                            "test_accuracy": 2.5187032418938493e-05,
+                            "test_auc": 1.776377709061805e-05,
+                            "test_f1": -1.816212671798545e-05,
+                            "generalization_gap": -2.5187032418938493e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 1024,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_bounded_mlp_dermamnist_s1024_20260802_173734",
+                    "pairing_sha256": "6bd93cd47493ce793fa33997eb8903dc344fd02981dbe01a5ad6c2d0a1a841c8",
+                    "artifact_sha256": {
+                        "best_model.pth": "bf7b0cd4a4e653ae471d24da4d352104fad98a78b1f0ccc3a5c2d45007ddd836",
+                        "config.json": "52dda2187eb9a35137e4da06b6a4f5297d9d77dbe73f435edec2759ef0db5443",
+                        "final_model.pth": "a8f1af5c33f3f2d2743585f5b81aa650c517b099299158945423a5671363be94",
+                        "latest_checkpoint.pth": "717e736a0c4042298c52494d10cb841059169ff1438b0e82474c3fb85d0255fb",
+                        "params.json": "66b1fc133394506a73e92554dccf16e12c013ef4a65e910edc5ea258991e8cda",
+                        "results.json": "039e9d9dfb2930cc362b1a3c7098c249fcc3bd033fdab9726c8b0ddd4d901ac0",
+                        "run_manifest.json": "20d1e1de38fa823c4fb7716c43db4b07596bd43b22c6192806055cc9cae5c8b6"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.6545,
+                            "train_accuracy": 0.84,
+                            "validation_loss": 1.1209,
+                            "validation_accuracy": 0.671,
+                            "validation_auc": 0.7461,
+                            "validation_f1": 0.2524,
+                            "test_loss": 1.1559,
+                            "test_accuracy": 0.6519,
+                            "test_auc": 0.7056,
+                            "test_f1": 0.213,
+                            "generalization_gap": 0.1881
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.6544873714447021,
+                                "accuracy": 0.84,
+                                "auc": 0.9450883905194425,
+                                "f1": 0.6027210884353742
+                            },
+                            "validation": {
+                                "loss": 1.1208750387488429,
+                                "accuracy": 0.67098703888335,
+                                "auc": 0.7461132978575373,
+                                "f1": 0.2524058402230696
+                            },
+                            "test": {
+                                "loss": 1.1559111812762786,
+                                "accuracy": 0.6518703241895262,
+                                "auc": 0.7056262088124042,
+                                "f1": 0.2129822401900641
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -1.2628555297822253e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -2.496125115714065e-05,
+                            "validation_accuracy": -1.2961116650056503e-05,
+                            "validation_auc": 1.329785753734214e-05,
+                            "validation_f1": 5.840223069597528e-06,
+                            "test_loss": 1.1181276278637853e-05,
+                            "test_accuracy": -2.9675810473861475e-05,
+                            "test_auc": 2.620881240422701e-05,
+                            "test_f1": -1.7759809935902204e-05,
+                            "generalization_gap": 2.9675810473805964e-05
+                        }
+                    }
+                }
+            ],
+            "quantum_reg": [
+                {
+                    "seed": 42,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_quantum_reg_dermamnist_s42_20260802_163432",
+                    "pairing_sha256": "0e0ad08743b43aba77a97a686982ea8391a9ad8cd8c3b6aaddee6a89428747bd",
+                    "artifact_sha256": {
+                        "best_model.pth": "be2e16ddb162601e62d0adbf721cc75f804c1fb140f11c6e7b436b7192cfd278",
+                        "config.json": "e4e34948f6af0587a5953af14e64b50484f8b6c6f5b7cf742d26aa225dad1ccc",
+                        "final_model.pth": "944b6c548cf18f5463b0aa4e2a83554227e30670fe71e99dc0ad7d1db5148aaa",
+                        "latest_checkpoint.pth": "e13d84304b44e849c8c7bef9f3e0e17bf57857b8b337a95148e050c685998819",
+                        "params.json": "54f6d4f0ca9fe18250a20e3c231a370b988ed30140b2b763a12e778f7cba1acb",
+                        "results.json": "01904e8a35c280485b1cd7c22bdea4a49dc497da08d63d77266ba8e9a324dee5",
+                        "run_manifest.json": "fca1114528bf7c91cd7b26cb218ac0b88fb572bc7f2057fd56a0d16944a0bc36"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.7887,
+                            "train_accuracy": 0.8,
+                            "validation_loss": 1.1256,
+                            "validation_accuracy": 0.662,
+                            "validation_auc": 0.5934,
+                            "validation_f1": 0.1371,
+                            "test_loss": 1.1117,
+                            "test_accuracy": 0.6748,
+                            "test_auc": 0.6223,
+                            "test_f1": 0.1503,
+                            "generalization_gap": 0.1252
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.7886715531349182,
+                                "accuracy": 0.8,
+                                "auc": 0.8727703742934417,
+                                "f1": 0.5026315789473684
+                            },
+                            "validation": {
+                                "loss": 1.125567380357478,
+                                "accuracy": 0.6620139581256231,
+                                "auc": 0.5933559396533826,
+                                "f1": 0.13707148216571355
+                            },
+                            "test": {
+                                "loss": 1.1117007234744598,
+                                "accuracy": 0.6748129675810474,
+                                "auc": 0.6222810772936178,
+                                "f1": 0.15026188029954293
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -2.8446865081743766e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -3.2619642521991565e-05,
+                            "validation_accuracy": 1.3958125623103612e-05,
+                            "validation_auc": -4.406034661741387e-05,
+                            "validation_f1": -2.851783428645116e-05,
+                            "test_loss": 7.234744598960674e-07,
+                            "test_accuracy": 1.296758104740725e-05,
+                            "test_auc": -1.8922706382151766e-05,
+                            "test_f1": -3.811970045705659e-05,
+                            "generalization_gap": -1.2967581047323984e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 137,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_quantum_reg_dermamnist_s137_20260802_165017",
+                    "pairing_sha256": "3ced717eea33aa817412d7cea923dd8b6aa522f1a2fb33b7231787ff68be5ffd",
+                    "artifact_sha256": {
+                        "best_model.pth": "8cbb9681cc7e08b202c6d18cb181dedbac4303b0005992ea1737fa4dec600cf0",
+                        "config.json": "a5dedc8e6bb64c342175a6af05a26f729becd3f0321a491de00dd2da359355e7",
+                        "final_model.pth": "e960597fe5a58b1469519ebdca5d9461a5d90f502129e27ed082ca2cc055a9ba",
+                        "latest_checkpoint.pth": "f4fee63f99798c876581e3b7b41e6c75db03ba2adb989155a330a51bed933111",
+                        "params.json": "54f6d4f0ca9fe18250a20e3c231a370b988ed30140b2b763a12e778f7cba1acb",
+                        "results.json": "d065c7ecc80e1aa9659d177e4e027a76c70ad8d3570247f8184159a822ea092e",
+                        "run_manifest.json": "11700b7c7585e885d13a18851a9b9b5416dbbca917ae50792e206e0f2812de6b"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.3696,
+                            "train_accuracy": 0.95,
+                            "validation_loss": 1.4994,
+                            "validation_accuracy": 0.5842,
+                            "validation_auc": 0.5954,
+                            "validation_f1": 0.187,
+                            "test_loss": 1.5189,
+                            "test_accuracy": 0.5786,
+                            "test_auc": 0.5863,
+                            "test_f1": 0.1824,
+                            "generalization_gap": 0.3714
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.36959320306777954,
+                                "accuracy": 0.95,
+                                "auc": 0.9906565009720596,
+                                "f1": 0.6377183967112025
+                            },
+                            "validation": {
+                                "loss": 1.499420333716829,
+                                "accuracy": 0.584247258225324,
+                                "auc": 0.5954236136959198,
+                                "f1": 0.18699109675949593
+                            },
+                            "test": {
+                                "loss": 1.5188840934463272,
+                                "accuracy": 0.5785536159600998,
+                                "auc": 0.5862525435868967,
+                                "f1": 0.18242266169308133
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -6.796932220443086e-06,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 2.0333716828968562e-05,
+                            "validation_accuracy": 4.7258225323920655e-05,
+                            "validation_auc": 2.361369591974416e-05,
+                            "validation_f1": -8.903240504065657e-06,
+                            "test_loss": -1.590655367267324e-05,
+                            "test_accuracy": -4.6384039900204677e-05,
+                            "test_auc": -4.74564131033306e-05,
+                            "test_f1": 2.266169308132171e-05,
+                            "generalization_gap": 4.6384039900149165e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 256,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_quantum_reg_dermamnist_s256_20260802_170558",
+                    "pairing_sha256": "acbe611d1f9f55732d6d9b829450a1a8a573a5e123be2201f45ac0345c4e9605",
+                    "artifact_sha256": {
+                        "best_model.pth": "3488a59eb3b97f9c60b29a83186e79a7eaa6018abec0543cafa90a55b37ec691",
+                        "config.json": "5b1ea1ec42e368fad4d7c9d674908fe7fa0411b477b688bde947138a74d2b609",
+                        "final_model.pth": "c7f3482978db04a7a63325f983a1ab0dbcf4ceaa7be4567be2e62ff2b7145aba",
+                        "latest_checkpoint.pth": "c36200eddb91ca83397c484b8f7928b20ebafd8c63d00670559b066473d9eadc",
+                        "params.json": "54f6d4f0ca9fe18250a20e3c231a370b988ed30140b2b763a12e778f7cba1acb",
+                        "results.json": "d7b073b4db2b1e0834d64dfc097a9f0f687a4ed6cfa3942a09bf90789462afa3",
+                        "run_manifest.json": "1aefeaa26ca27b21fe57b130ef312b44a6c06be422c15bab216432770d9b0469"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.8991,
+                            "train_accuracy": 0.76,
+                            "validation_loss": 1.1909,
+                            "validation_accuracy": 0.6122,
+                            "validation_auc": 0.6872,
+                            "validation_f1": 0.1491,
+                            "test_loss": 1.1831,
+                            "test_accuracy": 0.6095,
+                            "test_auc": 0.6608,
+                            "test_f1": 0.1517,
+                            "generalization_gap": 0.1505
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.8990508913993835,
+                                "accuracy": 0.76,
+                                "auc": 0.7898175929162364,
+                                "f1": 0.27642803153007234
+                            },
+                            "validation": {
+                                "loss": 1.1909485991193671,
+                                "accuracy": 0.6121635094715853,
+                                "auc": 0.6871839782702198,
+                                "f1": 0.14914479460860094
+                            },
+                            "test": {
+                                "loss": 1.1831336597552027,
+                                "accuracy": 0.6094763092269326,
+                                "auc": 0.6607923258039687,
+                                "f1": 0.15171488515009304
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -4.910860061646538e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 4.85991193670543e-05,
+                            "validation_accuracy": -3.649052841470102e-05,
+                            "validation_auc": -1.6021729780213434e-05,
+                            "validation_f1": 4.4794608600934316e-05,
+                            "test_loss": 3.365975520264186e-05,
+                            "test_accuracy": -2.369077306740852e-05,
+                            "test_auc": -7.674196031315361e-06,
+                            "test_f1": 1.4885150093041366e-05,
+                            "generalization_gap": 2.3690773067380766e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 512,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_quantum_reg_dermamnist_s512_20260802_172140",
+                    "pairing_sha256": "f3b8cc5dd5c88f562ff7beea45ca9b5955a21fb2c1f9dcc11e99ce4d3122eedc",
+                    "artifact_sha256": {
+                        "best_model.pth": "81df15ead379d54bed1a306f7c158ccdbaae65b07562cfba921bca39dc98cab3",
+                        "config.json": "b0d4af03ae9374f377a6652abcd6c921c2285b8d471888cda3fe19016eb4b02f",
+                        "final_model.pth": "5edc046eee3aac48f5d68dd74ea6412e39b765a7dd1f87ad21c5e800f2293cec",
+                        "latest_checkpoint.pth": "f7c8a0ce19a0015d17684025e4ed19e7c5ab4f167b464d2ea8bc3a9b82e564f7",
+                        "params.json": "54f6d4f0ca9fe18250a20e3c231a370b988ed30140b2b763a12e778f7cba1acb",
+                        "results.json": "a292b589d80a96d75cb7a3285059332580ade8402e8feb907af68e9a61c92d9e",
+                        "run_manifest.json": "87b63d3f3bbfd832aa7ff42871462470f48b794f2f1830a5ab3f9cbbdb58f445"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 0.471,
+                            "train_accuracy": 0.94,
+                            "validation_loss": 1.3316,
+                            "validation_accuracy": 0.6112,
+                            "validation_auc": 0.6241,
+                            "validation_f1": 0.1904,
+                            "test_loss": 1.3238,
+                            "test_accuracy": 0.6105,
+                            "test_auc": 0.5895,
+                            "test_f1": 0.177,
+                            "generalization_gap": 0.3295
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 0.4709787666797638,
+                                "accuracy": 0.94,
+                                "auc": 0.9878741670951527,
+                                "f1": 0.7702827267910605
+                            },
+                            "validation": {
+                                "loss": 1.331603775233595,
+                                "accuracy": 0.6111665004985045,
+                                "auc": 0.6241366513850691,
+                                "f1": 0.19041871853680936
+                            },
+                            "test": {
+                                "loss": 1.3237604516997301,
+                                "accuracy": 0.6104738154613466,
+                                "auc": 0.5895461189567145,
+                                "f1": 0.17703155958916325
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -2.1233320236180298e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": 3.77523359507137e-06,
+                            "validation_accuracy": -3.349950149544867e-05,
+                            "validation_auc": 3.6651385069141895e-05,
+                            "validation_f1": 1.8718536809347874e-05,
+                            "test_loss": -3.954830026997591e-05,
+                            "test_accuracy": -2.6184538653439837e-05,
+                            "test_auc": 4.6118956714469306e-05,
+                            "test_f1": 3.155958916326029e-05,
+                            "generalization_gap": 2.6184538653328815e-05
+                        }
+                    }
+                },
+                {
+                    "seed": 1024,
+                    "run_dir": "experiments/thesis_regularization_n100_steps400_quantum_reg_dermamnist_s1024_20260802_173736",
+                    "pairing_sha256": "6bd93cd47493ce793fa33997eb8903dc344fd02981dbe01a5ad6c2d0a1a841c8",
+                    "artifact_sha256": {
+                        "best_model.pth": "7f25f2ab1d6b7d3538e2195720ffad1c007914950e8c2c2b3c9a5828a501b4f9",
+                        "config.json": "52dda2187eb9a35137e4da06b6a4f5297d9d77dbe73f435edec2759ef0db5443",
+                        "final_model.pth": "cfc93863755c445283542366cc6ffbdf3df707091567f3720dc40ca013332166",
+                        "latest_checkpoint.pth": "8a61e6ed0c7b41469c03f427f85532792484651600ae8bbe2440df2465429878",
+                        "params.json": "54f6d4f0ca9fe18250a20e3c231a370b988ed30140b2b763a12e778f7cba1acb",
+                        "results.json": "f83d4a0876320b82c0436df104167fc1827e739d350f39338934a97b8b5362c0",
+                        "run_manifest.json": "866b106e4460ba2700c0335a139a70c0d91434ebd294da6ddc0db94d6a0b2117"
+                    },
+                    "manifest_verified": true,
+                    "history_verified": true,
+                    "checkpoint_validation": {
+                        "expected": {
+                            "train_loss": 1.019,
+                            "train_accuracy": 0.71,
+                            "validation_loss": 1.1533,
+                            "validation_accuracy": 0.669,
+                            "validation_auc": 0.5658,
+                            "validation_f1": 0.1471,
+                            "test_loss": 1.1617,
+                            "test_accuracy": 0.6643,
+                            "test_auc": 0.5748,
+                            "test_f1": 0.1307,
+                            "generalization_gap": 0.0457
+                        },
+                        "recomputed": {
+                            "train": {
+                                "loss": 1.0189852714538574,
+                                "accuracy": 0.71,
+                                "auc": 0.6281960600544872,
+                                "f1": 0.24442496835134872
+                            },
+                            "validation": {
+                                "loss": 1.1532585500838868,
+                                "accuracy": 0.6689930209371885,
+                                "auc": 0.5658381712172487,
+                                "f1": 0.1470534629404617
+                            },
+                            "test": {
+                                "loss": 1.1616902965559923,
+                                "accuracy": 0.6643391521197007,
+                                "auc": 0.5748012207244931,
+                                "f1": 0.13072970195272354
+                            }
+                        },
+                        "errors": {
+                            "train_loss": -1.4728546142483978e-05,
+                            "train_accuracy": 0.0,
+                            "validation_loss": -4.1449916113212026e-05,
+                            "validation_accuracy": -6.979062811551806e-06,
+                            "validation_auc": 3.8171217248694767e-05,
+                            "validation_f1": -4.6537059538304115e-05,
+                            "test_loss": -9.703444007636008e-06,
+                            "test_accuracy": 3.9152119700736066e-05,
+                            "test_auc": 1.2207244931561334e-06,
+                            "test_f1": 2.9701952723532044e-05,
+                            "generalization_gap": -3.915211970077076e-05
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "status": "valid"
+}
