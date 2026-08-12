@@ -1,0 +1,227 @@
+% ===========================================================================
+%  preambolo.tex — pacchetti, stile, macro e notazione
+%  Motore previsto: pdfLaTeX + Biber.
+% ===========================================================================
+
+% --- Lingua e codifica -----------------------------------------------------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+% english è caricato perché il sommario contiene un abstract in inglese
+% (\begin{otherlanguage}{english}); main=italian resta la lingua del documento.
+\usepackage[english, main=italian]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{csquotes}          % richiesto da babel + biblatex
+
+% --- Geometria di pagina ---------------------------------------------------
+\usepackage[
+  a4paper,
+  inner=3.0cm, outer=2.5cm,
+  top=2.8cm, bottom=2.8cm,
+  headheight=15pt
+]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+
+% --- Matematica ------------------------------------------------------------
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{bm}
+\usepackage{braket}            % \ket, \bra, \braket — notazione di Dirac
+
+% --- Tabelle e figure ------------------------------------------------------
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{rotating}
+\usepackage{float}
+\usepackage[font=small,labelfont=bf,width=0.92\textwidth]{caption}
+\usepackage{subcaption}
+\usepackage{siunitx}
+\sisetup{
+  output-decimal-marker = {,},
+  group-separator = {\,},
+  group-minimum-digits = 4,
+  detect-weight = true,
+  table-align-text-post = false
+}
+
+% --- Elenchi, note, intestazioni ------------------------------------------
+\usepackage{enumitem}
+\setlist{itemsep=2pt, topsep=4pt}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\nouppercase{\small\leftmark}}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\small\thepage}%
+  \renewcommand{\headrulewidth}{0pt}}
+
+% --- Codice sorgente -------------------------------------------------------
+\usepackage{xcolor}
+\definecolor{codebg}{gray}{0.96}
+\definecolor{codekw}{RGB}{0,90,160}
+\definecolor{codestr}{RGB}{160,60,20}
+\definecolor{codecom}{RGB}{110,110,110}
+
+\usepackage{listings}
+\lstdefinestyle{python}{
+  language=Python,
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{codekw}\bfseries,
+  stringstyle=\color{codestr},
+  commentstyle=\color{codecom}\itshape,
+  backgroundcolor=\color{codebg},
+  numbers=left, numberstyle=\tiny\color{codecom}, numbersep=8pt,
+  frame=single, framerule=0pt, rulecolor=\color{codebg},
+  showstringspaces=false,
+  breaklines=true, breakatwhitespace=true,
+  columns=fullflexible,
+  captionpos=b,
+  literate={à}{{\`a}}1 {è}{{\`e}}1 {é}{{\'e}}1 {ì}{{\`\i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+           {π}{{$\pi$}}1 {→}{{$\rightarrow$}}1 {·}{{$\cdot$}}1 {⟨}{{$\langle$}}1 {⟩}{{$\rangle$}}1
+}
+\lstdefinestyle{shell}{
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{codebg},
+  frame=single, framerule=0pt, rulecolor=\color{codebg},
+  breaklines=true, breakatwhitespace=false,
+  columns=fullflexible,
+  literate={à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`\i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+}
+\lstset{style=python}
+
+% --- Annotazioni di lavorazione -------------------------------------------
+% Disattivate per la consegna. Per riattivarle in fase di revisione togliere
+% l'opzione [disable].
+\usepackage[disable, textwidth=2.6cm, textsize=footnotesize, shadow]{todonotes}
+\newcommand{\DA}[1]{\todo[color=orange!35]{#1}}          % dato da aggiornare
+\newcommand{\VER}[1]{\todo[color=cyan!25]{#1}}           % da verificare sul codice
+\newcommand{\SCR}[1]{\todo[inline, color=yellow!30]{#1}} % blocco da scrivere
+
+% --- Bibliografia ----------------------------------------------------------
+\usepackage[
+  backend=biber,
+  style=authoryear-comp,
+  sorting=nyt,
+  maxcitenames=2,
+  maxbibnames=99,
+  giveninits=true,
+  uniquename=init,
+  natbib=true,
+  backref=false
+]{biblatex}
+\addbibresource{bibliografia.bib}
+
+% --- Collegamenti ----------------------------------------------------------
+\usepackage[hidelinks, pdfusetitle]{hyperref}
+\hypersetup{
+  pdftitle={\TitoloTesi},
+  pdfauthor={\Candidato},
+  pdfsubject={\TipoLaurea{} --- \CorsoDiLaurea},
+  pdfkeywords={\ParoleChiave},
+  bookmarksnumbered=true,
+  linktoc=all
+}
+\usepackage[italian, nameinlink, capitalise]{cleveref}
+\crefname{table}{tabella}{tabelle}
+\Crefname{table}{Tabella}{Tabelle}
+\crefname{figure}{figura}{figure}
+\Crefname{figure}{Figura}{Figure}
+\crefname{equation}{equazione}{equazioni}
+\Crefname{equation}{Equazione}{Equazioni}
+
+% ===========================================================================
+%  AMBIENTI PER LA REGOLA REDAZIONALE
+%
+%  La regola del README impone che resti distinguibile cosa è definizione
+%  teorica, cosa comportamento implementato, cosa dato osservato e cosa
+%  interpretazione. La distinzione è resa nel testo in forma lessicale; gli
+%  ambienti sotto sono riservati ai casi in cui deve saltare all'occhio.
+%
+%  Uso: `definizione` e `ipotesi` sono numerati e citabili, quindi si usano
+%  liberamente. `limite` marca le limitazioni che circoscrivono le conclusioni
+%  ed è l'unico ambiente non numerato ancora in uso corrente.
+%  `implementazione`, `osservazione` e `interpretazione` restano definiti per
+%  compatibilità, ma il testo li rende in prosa: non introdurne di nuovi senza
+%  motivo, perché la loro accumulazione spezza la leggibilità del capitolo.
+% ===========================================================================
+\theoremstyle{definition}
+\newtheorem{definizione}{Definizione}[chapter]
+\newtheorem{ipotesi}{Ipotesi}[chapter]
+
+\theoremstyle{remark}
+\newtheorem*{implementazione}{Comportamento implementato}
+\newtheorem*{osservazione}{Dato osservato}
+\newtheorem*{interpretazione}{Interpretazione}
+\newtheorem*{limite}{Limite}
+
+% ===========================================================================
+%  MACRO DI NOTAZIONE
+%  Definite una volta sola: la coerenza notazionale fra i capitoli 3, 4, 5 e 7
+%  dipende esclusivamente da queste definizioni.
+% ===========================================================================
+
+% Riferimenti a entità del codice ------------------------------------------
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\file}[1]{\texttt{\small #1}}
+\newcommand{\classe}[1]{\texttt{#1}}
+
+% Insiemi e operatori -------------------------------------------------------
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Hilb}{\mathcal{H}}
+\newcommand{\E}{\mathbb{E}}
+\DeclareMathOperator{\softmax}{softmax}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\arctanh}{arctanh}
+\newcommand{\expval}[1]{\langle #1 \rangle}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\abs}[1]{\lvert #1 \rvert}
+
+% Forme tensoriali ----------------------------------------------------------
+% \shape{B,T,C} produce (B, T, C) in stile matematico uniforme.
+\newcommand{\shape}[1]{\ensuremath{(#1)}}
+
+% Transformer (capitolo 3) --------------------------------------------------
+\newcommand{\dbatch}{B}          % batch
+\newcommand{\dseq}{T}            % lunghezza di sequenza (block_size)
+\newcommand{\demb}{C}            % dimensione di embedding (n_embd)
+\newcommand{\nhead}{H}           % numero di teste
+\newcommand{\dhead}{d_h}         % dimensione per testa (head_size)
+\newcommand{\dvoc}{V}            % dimensione del vocabolario
+
+% Vision Transformer (capitolo 4) ------------------------------------------
+\newcommand{\npatch}{N}          % numero di patch
+\newcommand{\dpatch}{d_{\mathrm{p}}}  % dimensione della patch appiattita
+\newcommand{\dvit}{d}            % dimensione di embedding del ViT (embed_dim)
+\newcommand{\nch}{C_{\mathrm{ch}}}
+
+% Circuito quantistico ------------------------------------------------------
+\newcommand{\nq}{n_q}            % numero di qubit
+\newcommand{\nqlayers}{L}        % profondità di StronglyEntanglingLayers
+\newcommand{\Uenc}{U}
+
+% Metriche e statistica -----------------------------------------------------
+\newcommand{\gap}{G}                       % gap di generalizzazione
+\newcommand{\acctr}{a_{\mathrm{train}}}
+\newcommand{\accte}{a_{\mathrm{test}}}
+\newcommand{\PPL}{\mathrm{PPL}}
+\newcommand{\dz}{d_z}                      % dimensione dell'effetto appaiata
+\newcommand{\dmean}{\bar{d}}
+\newcommand{\sd}{s_d}
+\newcommand{\IC}{\text{IC}_{95\%}}
+
+% Convenzione di segno, richiamata nelle didascalie del capitolo 8 ----------
+\newcommand{\convsegno}{%
+  Convenzione di segno: le differenze sono calcolate come
+  \emph{quantistico $-$ classico} (\code{direction: "quantum\_minus\_classical"}).}
+
+% Etichette di esito delle ipotesi -----------------------------------------
+\newcommand{\rifiutata}{\textbf{rifiutata}}
+\newcommand{\nonrifiutata}{\textbf{non rifiutata}}
+\newcommand{\rifiutataopposta}{\textbf{rifiutata in direzione opposta}}

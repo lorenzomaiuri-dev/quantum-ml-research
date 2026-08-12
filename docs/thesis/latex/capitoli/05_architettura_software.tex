@@ -1,0 +1,286 @@
+% ===========================================================================
+%  Capitolo 5 — Architettura software
+%  Criterio: descrivere solo l'implementazione che incide sul confronto.
+%  Le procedure operative complete stanno nell'appendice B.
+% ===========================================================================
+\chapter{Architettura software}
+\label{cap:software}
+
+Le procedure operative, con i comandi eseguiti e i controlli che li accompagnano,
+sono raccolte nell'\cref{app:riproduzione}. Qui interessa la parte
+dell'implementazione che incide sul confronto: la libreria condivisa fra i quattro
+esperimenti, il layer variazionale e le scelte che rendono appaiate le varianti.
+
+\section{Repository e libreria condivisa}
+\label{sec:repository}
+
+Il repository raccoglie sotto una radice comune la libreria condivisa
+\code{quantum\_framework}, le quattro directory di esperimento, la suite di test e
+la documentazione; la struttura completa è nell'\cref{app:riproduzione}.
+
+Il file \file{run.py} è un dispatcher: risolve la directory dell'esperimento
+richiesto, vi si sposta e inoltra gli argomenti residui al rispettivo
+\file{main.py}. Lo spostamento serve perché i percorsi verso \file{data/} e
+\file{experiments/} sono relativi. Nessuna logica sperimentale passa di qui, tanto
+che \code{python run.py 02 train --epochs 50} e l'invocazione diretta di
+\file{main.py} dalla directory dell'esperimento restano equivalenti.
+
+I quattro esperimenti sono nati come repository separati e sono stati unificati
+come refactoring. Il criterio di estrazione è semplice: nella libreria va
+l'infrastruttura, cioè caricamento dei dati, ciclo di addestramento, metriche,
+riproducibilità e statistica; resta locale all'esperimento tutto ciò che
+costituisce oggetto di ricerca, cioè architetture, varianti di ablazione e
+circuiti specifici. \classe{QuantumLinear} è identico in due esperimenti e sta
+quindi nella libreria. \classe{QuantumRegPatchEmbedding}, che è l'ipotesi
+sperimentale dell'esperimento~03, resta dov'è. Dopo l'estrazione i file interni
+degli esperimenti non duplicano più infrastruttura: la importano e, dove serve, la
+specializzano per ereditarietà.
+
+La \cref{tab:deleghe} elenca, file per file, verso quale modulo della libreria
+ciascun esperimento delega. I file \file{main.py} restano l'eccezione: contengono
+la CLI e l'orchestrazione specifica di ciascun esperimento e sono rimasti
+invariati durante la rifattorizzazione.
+
+Le dipendenze sono gestite da un unico \file{pyproject.toml} risolto con
+\code{uv}, e l'ambiente pinnato in \file{uv.lock} è la fonte autoritativa. Il
+requisito minimo è Python 3.12. Le librerie principali sono PennyLane per la
+simulazione \parencite{bergholm2018pennylane}, PyTorch e torchvision per la parte
+classica \parencite{paszke2019pytorch}, \code{medmnist} per i dataset,
+\code{scikit-learn} e \code{scipy} per metriche e test statistici. Le campagne
+definitive 01--03 usano il backend \code{default.qubit}; 01 e 02 forzano la CPU,
+mentre nel 03 il corpo PyTorch gira su CUDA e il QNode resta sul simulatore.
+
+\section{Il layer variazionale}
+\label{sec:quantum-linear}
+
+\classe{QuantumLinear} è il layer condiviso da tutti gli esperimenti con
+addestramento, e incapsula il circuito dietro un'interfaccia PyTorch ordinaria.
+Non contiene alcun collo di bottiglia classico, per cui l'ultima dimensione
+dell'ingresso deve coincidere con \code{n\_qubits}; negli esperimenti 02 e 03 la
+coincidenza è garantita per costruzione, perché $\dvit = \nq$
+(\cref{sec:base-config}). La pipeline, con le forme:
+\begin{equation}
+  \shape{\ldots, \nq}
+  \;\xrightarrow{\text{reshape}}\; \shape{M, \nq}
+  \;\xrightarrow{\tanh \cdot \pi}\; [-\pi, \pi]^{\nq}
+  \;\to\; \texttt{AngleEmbedding}
+  \;\to\; \texttt{StronglyEntanglingLayers}
+  \;\to\; \big(\expval{Z_i}\big)_i \in [-1,1]^{\nq}
+  \;\xrightarrow{\text{reshape}}\; \shape{\ldots, \nq}.
+  \label{eq:pipeline-vqc}
+\end{equation}
+
+Due passaggi di questa catena vanno giustificati, perché ricompaiono
+nell'interpretazione dei risultati.
+
+Il primo è la $\tanh$. La codifica angolare della \cref{eq:angle-embedding} è
+periodica di periodo $2\pi$, quindi un ingresso non limitato produrrebbe
+avvolgimento dell'angolo, e con esso una mappa non iniettiva in cui attivazioni
+molto diverse finiscono nello stesso stato. Serve dunque una funzione di
+schiacciamento. La scelta è caduta sulla $\tanh$ perché è monotona, limitata e
+dispari, e conserva quindi il segno dell'attivazione; ha inoltre derivata massima
+nell'origine, dove tiene vivo il gradiente proprio nel regime in cui le
+attivazioni si trovano all'inizio dell'addestramento.
+
+Il secondo è il fattore $\pi$. Da sola la $\tanh$ mappa in $(-1,1)$, cioè in un
+intorno del polo della sfera di Bloch, e la codifica userebbe una frazione ridotta
+degli stati raggiungibili; moltiplicando per $\pi$ il codominio si estende a
+$(-\pi,\pi)$ e sfrutta l'intero intervallo utile prima che la periodicità
+introduca ambiguità.
+
+La scelta ha un prezzo. La $\tanh$ satura: per $\abs{x}$ grande si ha
+$\tanh'(x) \to 0$, e il gradiente che risale verso lo strato di compressione viene
+attenuato. È il meccanismo che gli \emph{hook} diagnostici della
+\cref{ssec:hook} sono progettati per rilevare, ed è la prima spiegazione che il
+\cref{cap:discussione} mette alla prova.
+
+I pesi variazionali hanno forma $\shape{\nqlayers, \nq, 3}$ e sono registrati
+attraverso \code{qml.qnn.TorchLayer}, che li espone come normali parametri
+PyTorch: compaiono in \code{model.parameters()}, l'ottimizzatore li aggiorna,
+ricevono \emph{weight decay} al pari degli altri pesi ed entrano nel conteggio del
+\cref{cap:risultati}.
+
+\subsection{Il ponte fra PyTorch e PennyLane}
+\label{sec:integrazione}
+
+Il collegamento poggia su due elementi. Il decoratore
+\code{@qml.qnode(dev, interface="torch", diff\_method="backprop")} trasforma la
+funzione che descrive il circuito in un oggetto callable che accetta e restituisce
+tensori PyTorch conservando il grafo di autograd; \code{qml.qnn.TorchLayer}
+incapsula poi il QNode in un \code{nn.Module}. Un singolo \emph{forward} percorre
+quindi la catena tensore PyTorch, QNode, simulazione del vettore di stato, valori
+di aspettazione, tensore PyTorch, e nel \emph{backward} il gradiente ripercorre in
+senso inverso l'intera sequenza di porte simulate, raggiungendo tanto i pesi
+variazionali quanto lo strato classico a monte.
+
+Due dettagli pratici accompagnano il ponte. I simulatori a vettore di stato
+lavorano su CPU, quindi spostare il resto del modello su GPU con \code{.to()}
+romperebbe il circuito al primo gate: \classe{PinnedTorchLayer} intercetta lo
+spostamento, ancora i pesi del circuito al device del simulatore e restituisce il
+risultato su quello del chiamante senza rompere il grafo di autograd. Il metodo
+\code{forward} appiattisce inoltre tutte le dimensioni precedenti l'ultima e le
+ripristina dopo il circuito, così lo stesso layer accetta indifferentemente
+$\shape{\dbatch, \dseq, \nq}$ e $\shape{\dbatch, \npatch, \nq}$. I due esperimenti
+impiegano dunque letteralmente lo stesso circuito.
+
+\begin{limite}
+Il QNode viene valutato riga per riga, senza una vera parallelizzazione sulla
+dimensione di batch: è la causa principale del rallentamento misurato nel
+\cref{cap:risultati}, ed è una proprietà dell'implementazione della simulazione
+piuttosto che dei circuiti. Su un dispositivo reale, poi, \code{backprop} sarebbe
+precluso, perché il vettore di stato non è accessibile e il gradiente andrebbe
+ricostruito con la regola di \emph{parameter-shift}, al prezzo di $2P$ esecuzioni
+di circuito per $P$ parametri. È la ragione tecnica per cui nessuna misura di
+tempo di questa tesi si estrapola all'hardware, in nessuna delle due direzioni.
+\end{limite}
+
+\section{L'adapter e la sua ambiguità}
+\label{sec:adapter}
+
+\classe{QuantumLinearWithAdapter}, che l'esperimento~01 importa con l'alias
+\classe{QuantumLayerAdapter}, aggiunge una \code{nn.Linear(n\_in, n\_qubits)}
+prima del circuito e riusa internamente \classe{QuantumLinear}. La necessità è
+dimensionale: nell'esperimento~01 la dimensione di embedding è $\demb = 32$ mentre
+si simulano $\nq = 4$ qubit, e senza compressione il modello non sarebbe nemmeno
+costruibile. Negli esperimenti 02 e 03 l'adapter non serve, perché $\dvit = \nq$ è
+imposto per costruzione.
+
+\begin{limite}
+L'adapter è uno strato classico addestrabile posto immediatamente prima del
+circuito. Qualunque effetto misurato nell'esperimento~01 è perciò l'effetto della
+\emph{composizione} adapter${}+{}$VQC, e le due componenti non sono separabili
+sulla base dei dati raccolti. La stessa confusione affligge l'esperimento~02, dove
+\code{classical\_pre\_process} in \classe{QuantumPatchEmbedding} svolge il
+medesimo ruolo.
+\end{limite}
+
+L'esperimento~03 è immune da questa ambiguità, ed è la ragione principale per cui
+è il meglio disegnato dei quattro: le tre varianti condividono la \emph{stessa}
+\code{nn.Linear(147, 10)} di compressione, quindi lo strato classico a monte è una
+costante del confronto e non una variabile.
+
+\section{Configurazioni e ciclo di addestramento}
+\label{sec:base-config}
+
+\classe{BaseViTConfig} è una \code{dataclass} che raccoglie i campi comuni agli
+esperimenti 02 e 03, ordinati in quattro famiglie: dataset, architettura, circuito
+e addestramento. Le sottoclassi aggiungono poco. \classe{QViTConfig} introduce
+\code{use\_quantum} e \code{eval\_interval} e porta \code{embed\_dim} a 8;
+\classe{AblationConfig} aggiunge \code{mlp\_hidden}, \code{train\_subset},
+\code{seeds}, \code{datasets} e i due flag di diagnostica, e porta
+\code{embed\_dim} a 10. \classe{GPTConfig} resta indipendente, perché il dominio è
+un altro. I valori completi di ciascuna campagna sono
+nell'\cref{app:configurazioni}.
+
+Un dettaglio minore ha conseguenze sul confronto.
+\code{n\_qubits} non è un campo ma una proprietà calcolata, e restituisce
+semplicemente \code{embed\_dim}: diventa così impossibile per costruzione che
+$\dvit$ e $\nq$ divergano. Lo stesso vale per \code{GPTConfig}, dove
+$\nq = \demb/\nhead$ è calcolato e non dichiarato. Il metodo \code{to\_dict()}
+restituisce \code{asdict()} arricchito con le proprietà calcolate, per cui il
+\file{config.json} salvato da ogni run è autodescrittivo e resta interpretabile
+senza reistanziare il codice che lo ha prodotto. Le invarianti di configurazione e
+gli errori che sollevano sono elencati nell'\cref{app:riproduzione}.
+
+\subsection{\texorpdfstring{\classe{BaseTrainer}}{BaseTrainer}}
+\label{sec:base-trainer}
+
+\classe{BaseTrainer} incapsula il ciclo comune agli esperimenti 02 e 03:
+ottimizzazione, valutazione, checkpointing, logging su TensorBoard, diagnostica e
+salvataggio dei risultati. L'ottimizzatore è \code{AdamW} con
+\code{learning\_rate} e \code{weight\_decay} presi dalla configurazione, lo
+scheduler è \code{CosineAnnealingLR} con \code{T\_max = max\_epochs}, e il
+\emph{gradient clipping} agisce a norma $1{,}0$. Il seed è impostato nel
+costruttore, prima che l'ottimizzatore sia costruito. Al termine di ogni epoca il
+modello è valutato sul \emph{validation set} e, se l'accuracy supera il massimo
+corrente, lo stato finisce in \file{best\_model.pth}; concluso l'addestramento
+quel checkpoint viene ricaricato e usato per la valutazione sul test set, mentre
+lo stato dell'ultima epoca è conservato a parte in \file{final\_model.pth}.
+
+\begin{limite}
+Tutte le metriche di test del \cref{cap:risultati}, inclusa l'accuracy di training
+che entra nel gap di generalizzazione, si riferiscono al checkpoint selezionato
+sulla validation e non all'ultima epoca. La scelta ha conseguenze
+sull'interpretazione del gap e va tenuta presente leggendo la tabella principale
+dell'ablazione.
+\end{limite}
+
+\subsection{Hook diagnostici}
+\label{ssec:hook}
+
+Gli \emph{hook} sono attivati dall'esperimento~03 e agganciati al modulo indicato
+da \code{monitor\_module\_name}, che nell'ablazione vale
+\code{"patch\_embed.compression"}, cioè lo strato lineare di compressione. Quel
+modulo è identico nelle tre varianti, ed è questa identità a rendere confrontabili
+le tracce.
+
+L'hook all'indietro, registrato con \code{register\_full\_backward\_hook},
+memorizza a ogni passo la norma $L^2$ del gradiente in uscita dal modulo di
+compressione, e serve a rilevare l'attenuazione attraverso il ramo $\tanh$. Quello
+in avanti, registrato con \code{register\_forward\_hook}, memorizza media,
+deviazione standard, massimo assoluto e \code{saturation\_frac} delle attivazioni
+prodotte. La frazione di saturazione è la frazione di valori con
+\begin{equation}
+  \abs{x} \;>\; \arctanh(0{,}95) \;\approx\; 1{,}83 ,
+  \label{eq:saturazione}
+\end{equation}
+cioè quelli per cui $\abs{\tanh(x)} > 0{,}95$; il modulo osservato produce
+l'attivazione \emph{prima} della $\tanh$, da cui la forma della soglia. La soglia
+$0{,}95$ è arbitraria, ed è dichiarata qui perché il valore di
+\code{saturation\_frac} non sarebbe interpretabile senza di essa.
+
+\section{Metriche, statistica e riproducibilità}
+\label{sec:analisi-statistica}
+
+La funzione \code{compute\_classification\_metrics(labels, preds, probs)}
+restituisce accuracy, macro-AUC \emph{one-vs-rest} e macro-F1, gestendo a parte il
+caso binario attraverso la probabilità della classe positiva; se una partizione
+contiene una sola classe l'AUC non è calcolabile e la funzione restituisce
+$0{,}0$. La media \emph{macro} è preferita alla \emph{micro} per via dello
+sbilanciamento delle classi nei dataset MedMNIST: la micro pesa ogni campione allo
+stesso modo e finisce per premiare la classe maggioritaria, mentre la macro pesa
+ogni classe allo stesso modo e rende visibile il fallimento sulle classi rare.
+\code{generalization\_gap} restituisce la differenza con segno
+$\acctr - \accte$, che è la metrica primaria dell'esperimento~03.
+
+Il confronto appaiato è affidato a \code{paired\_comparison()}, che calcola
+differenze per seed, media e deviazione standard campionaria, intervallo $t$ al
+\SI{95}{\percent}, paired $t$-test, intervallo bootstrap percentile su
+\num{10000} ricampionamenti a seed fisso, test di Wilcoxon dei ranghi con segno e
+dimensione dell'effetto $\dz = \dmean/\sd$. I casi limite sono gestiti senza
+silenzi: con $n < 2$ nessun test viene calcolato, con $\sd = 0$ l'intervallo
+degenera nel punto $\dmean$, e se tutte le differenze sono nulle l'eccezione che
+\code{scipy} solleva sul Wilcoxon viene intercettata lasciando il campo a
+\code{None}. La giustificazione metodologica di questa batteria è nella
+\cref{sec:statistica}.
+
+\subsection{Provenienza e schema dei risultati}
+\label{sec:riproducibilita}
+
+\code{set\_seed(seed)} imposta i generatori di \code{random}, \code{numpy} e
+\code{torch} e, quando una GPU è disponibile, anche quelli CUDA, attivando
+\code{cudnn.deterministic}. Il determinismo completo su GPU non è comunque
+garantito, perché le riduzioni in virgola mobile non sono associative: due
+esecuzioni della stessa run sullo stesso hardware possono differire nell'ultima
+cifra significativa. Le differenze che contano per questa tesi sono di ordini di
+grandezza superiori, ma la limitazione va detta.
+
+Ogni run raccoglie poi, tramite \code{collect\_run\_metadata()}, il commit Git con
+il flag \emph{dirty} dell'albero di lavoro, la riga di comando, il timestamp, le
+versioni delle librerie e la descrizione dell'hardware. Il flag \emph{dirty} è la
+parte meno ovvia e la più utile: un identificatore di commit non identifica una
+run se l'albero di lavoro contiene modifiche non committate, e registrarlo permette
+di distinguere le run riproducibili da quelle che documentano uno stato intermedio
+non ricostruibile. Sul versante dei risultati, \code{RESULT\_SCHEMA\_VERSION}
+versiona lo schema dei file prodotti e \code{save\_json} scrive con
+\code{allow\_nan=False}, così un valore NaN fa fallire il salvataggio invece di
+entrare in silenzio nelle tabelle. Il versionamento impedisce una classe di errore
+precisa: il repository contiene run prodotte in fasi diverse del lavoro, alcune
+prive dei campi \code{test\_accuracy} o \code{dataset}, e mescolarle nella stessa
+tabella produrrebbe confronti privi di significato. Il criterio con cui i due
+insiemi sono tenuti separati è enunciato nella \cref{sec:minacce}.
+
+La suite in \file{tests/} copre la validazione delle configurazioni, le metriche e
+la statistica. Non copre il ciclo di addestramento, i layer quantistici né i
+modelli, la cui verifica è affidata allo \emph{smoke test} a poche epoche previsto
+dal protocollo (\cref{app:riproduzione}).

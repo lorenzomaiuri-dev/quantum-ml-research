@@ -1,0 +1,126 @@
+% ===========================================================================
+%  Notazione e convenzioni
+%  Fissata qui una volta sola e non modificata nei capitoli successivi.
+%  Le macro corrispondenti sono definite in preambolo.tex.
+% ===========================================================================
+\chapter*{Notazione e convenzioni}
+\addcontentsline{toc}{chapter}{Notazione e convenzioni}
+\markboth{Notazione e convenzioni}{Notazione e convenzioni}
+
+I simboli seguenti hanno lo stesso significato in tutta la tesi. Dove un simbolo
+corrisponde a un campo di configurazione del codice, il nome del campo è riportato
+in carattere \code{monospaziato}: è quel nome, e non il simbolo, a comparire nei
+file \file{config.json} salvati da ogni esecuzione.
+
+\section*{Forme tensoriali}
+
+Ogni tensore è indicato con la sua forma fra parentesi tonde, dalla dimensione più
+esterna alla più interna: $\shape{\dbatch, \dseq, \demb}$ denota un tensore di
+$\dbatch$ elementi di batch, ciascuno una sequenza di $\dseq$ posizioni, ciascuna
+un vettore di $\demb$ componenti. Le trasformazioni sono scritte come catene di
+forme; una catena incompleta è un errore, non un'abbreviazione.
+
+\section*{Transformer autoregressivo (capitolo 3)}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\toprule
+\textbf{Simbolo} & \textbf{Campo} & \textbf{Significato} \\
+\midrule
+$\dbatch$   & \code{batch\_size} & Numero di sequenze per batch \\
+$\dseq$     & \code{block\_size} & Lunghezza di contesto \\
+$\demb$     & \code{n\_embd}     & Dimensione di embedding del modello \\
+$\nhead$    & \code{n\_head}     & Numero di teste di attenzione \\
+$\dhead$    & \code{head\_size}  & Dimensione per testa, $\dhead = \demb/\nhead$ \\
+$\dvoc$     & \code{vocab\_size} & Cardinalità del vocabolario del tokenizer \\
+$\mathcal{L}$ & ---              & Cross-entropy media per token \\
+$\PPL$      & ---                & Perplexity, $\PPL = \exp(\mathcal{L})$ \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section*{Vision Transformer (capitoli 4 e 7)}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\toprule
+\textbf{Simbolo} & \textbf{Campo} & \textbf{Significato} \\
+\midrule
+$\nch$      & \code{n\_channels} & Canali dell'immagine di ingresso \\
+$H, W$      & \code{image\_size} & Altezza e larghezza dell'immagine \\
+$p$         & \code{patch\_size} & Lato della patch quadrata \\
+$\npatch$   & \code{n\_patches}  & Numero di patch, $\npatch = (H/p)^2$ \\
+$\dpatch$   & \code{patch\_dim}  & Patch appiattita, $\dpatch = p^2\nch$ \\
+$\dvit$     & \code{embed\_dim}  & Dimensione dei token del ViT \\
+--- & \code{seq\_len} & Lunghezza di sequenza, $\npatch + 1$ (token \code{[CLS]}) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section*{Circuito quantistico variazionale}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\toprule
+\textbf{Simbolo} & \textbf{Campo} & \textbf{Significato} \\
+\midrule
+$\nq$ & \code{n\_qubits}  & Numero di qubit simulati \\
+$\nqlayers$ & \code{n\_qlayers} & Profondità di \code{StronglyEntanglingLayers} \\
+$\ket{\psi}$ & --- & Stato di $\nq$ qubit, vettore in $\C^{2^{\nq}}$ \\
+$\Uenc(x)$ & --- & Unitaria di codifica dei dati \\
+$\expval{Z_i}$ & --- & Valore di aspettazione di Pauli-$Z$ sul qubit $i$, in $[-1,1]$ \\
+$W$ & \code{weights} & Pesi variazionali, forma $\shape{\nqlayers, \nq, 3}$ \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section*{Metriche e statistica (capitoli 6 e 8)}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+\toprule
+\textbf{Simbolo} & \textbf{Significato} \\
+\midrule
+$\acctr, \accte$ & Accuracy su training set e su test set \\
+$\gap$ & Gap di generalizzazione, $\gap = \acctr - \accte$ \\
+$d_s$ & Differenza appaiata sul seed $s$: $d_s = m_{q,s} - m_{c,s}$ \\
+$\dmean, \sd$ & Media e deviazione standard campionaria delle differenze \\
+$\dz$ & Dimensione dell'effetto appaiata, $\dz = \dmean / \sd$ \\
+$\IC$ & Intervallo di confidenza al \SI{95}{\percent} \\
+$\alpha$ & Livello di significatività, fissato a $0{,}05$ \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section*{Convenzione di segno}
+
+\convsegno{} Il pedice $q$ indica la variante quantistica, il pedice $c$ la
+baseline classica appaiata. La convenzione è ripetuta nella didascalia di ogni
+tabella del capitolo~8 perché è la principale fonte di errore in lettura: una
+differenza negativa sull'\emph{accuracy} significa che il modello quantistico è
+peggiore, mentre una differenza negativa sul \emph{gap} significa che generalizza
+meglio.
+
+\section*{Registri del testo}
+
+Per la regola redazionale adottata, i quattro registri del discorso sono
+tipograficamente distinti dove il rischio di confusione è concreto:
+
+\begin{definizione}[Esempio]
+Enunciato teorico, valido indipendentemente da questa implementazione.
+\end{definizione}
+
+\begin{implementazione}
+Ciò che il codice fa realmente, con riferimento a classe, funzione e file.
+\end{implementazione}
+
+\begin{osservazione}
+Un valore misurato, con l'indicazione della run da cui proviene.
+\end{osservazione}
+
+\begin{interpretazione}
+Una spiegazione proposta, con l'indicazione esplicita di quanto sia sostenuta
+dai dati e quanto resti congetturale.
+\end{interpretazione}
+
+\cleardoublepage

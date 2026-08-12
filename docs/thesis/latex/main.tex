@@ -1,0 +1,70 @@
+% ===========================================================================
+%  Tesi di Laurea Triennale — Lorenzo Maiuri
+%  Circuiti quantistici variazionali in architetture Transformer
+%
+%  Compilazione:   latexmk -pdf main.tex
+%  Pulizia:        latexmk -C
+%  Motore:         pdfLaTeX + Biber (biblatex, style=authoryear-comp)
+%
+%  Struttura dei sorgenti:
+%    metadati.tex     dati di frontespizio (unico file da compilare a mano)
+%    preambolo.tex    pacchetti, stile, macro di notazione
+%    parti/           frontespizio, sommario, ringraziamenti, notazione
+%    capitoli/        un file per capitolo, numerazione = numerazione dell'indice
+%    appendici/       appendici A–E
+%    bibliografia.bib
+% ===========================================================================
+
+\documentclass[12pt, a4paper, oneside, openany]{book}
+% Per la stampa fronte/retro sostituire con:
+%   \documentclass[12pt, a4paper, twoside, openright]{book}
+
+\input{metadati}
+\input{preambolo}
+
+\begin{document}
+
+% ---------------------------------------------------------------- FRONTE ---
+\frontmatter
+\pagestyle{empty}
+
+\include{parti/frontespizio}
+\include{parti/sommario}
+\include{parti/ringraziamenti}
+
+\pagestyle{fancy}
+\tableofcontents
+% Elenco di figure e tabelle disattivati per contenere la foliazione.
+% Per riattivarli togliere il commento alle due righe seguenti.
+% \listoffigures
+% \listoftables
+
+\include{parti/notazione}
+
+% ----------------------------------------------------------------- CORPO ---
+\mainmatter
+
+\include{capitoli/01_introduzione}
+\include{capitoli/02_fondamenti_quantistici}
+\include{capitoli/03_transformer}
+\include{capitoli/04_vision_transformer}
+\include{capitoli/05_architettura_software}
+\include{capitoli/06_metodologia}
+\include{capitoli/07_esperimenti}
+\include{capitoli/08_risultati}
+\include{capitoli/09_discussione}
+\include{capitoli/10_conclusioni}
+
+% ------------------------------------------------------------- APPENDICI ---
+\appendix
+\include{appendici/A_configurazioni}
+\include{appendici/B_riproduzione}
+\include{appendici/C_tabelle_complete}
+\include{appendici/D_dettagli_circuitali}
+\include{appendici/E_inventario_run}
+
+% ----------------------------------------------------------- BIBLIOGRAFIA ---
+\backmatter
+\printbibliography[heading=bibintoc, title={Bibliografia}]
+
+\end{document}

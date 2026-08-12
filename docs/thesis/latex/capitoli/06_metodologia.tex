@@ -1,0 +1,382 @@
+% ===========================================================================
+%  Capitolo 6 — Metodologia sperimentale
+%  È il capitolo che rende difendibili i risultati negativi.
+% ===========================================================================
+\chapter{Metodologia sperimentale}
+\label{cap:metodologia}
+
+Se il confronto è mal costruito, l'assenza di differenza non dice nulla: potrebbe
+derivare da una baseline sbagliata, da un iperparametro non tarato o da una
+variabilità non controllata. Questo capitolo espone il protocollo comune ai
+quattro esperimenti e, nella \cref{sec:minacce}, dichiara ciò che il protocollo
+\emph{non} controlla.
+
+\section{Domande e criteri di falsificazione}
+\label{sec:falsificazione}
+
+Le quattro ipotesi della \cref{sec:ipotesi} sono formalizzate come test su una
+popolazione di differenze appaiate. Per ogni seed $s$ si dispone di due misure
+della stessa metrica, $m_{q,s}$ per la variante quantistica e $m_{c,s}$ per la
+baseline classica, e si definisce
+\begin{equation}
+  d_s \;=\; m_{q,s} - m_{c,s}.
+  \label{eq:differenza-appaiata}
+\end{equation}
+Il test è
+\begin{equation}
+  H_0 : \mu_d = 0
+  \qquad\text{contro}\qquad
+  H_1 : \mu_d \neq 0 ,
+  \label{eq:test}
+\end{equation}
+con livello di significatività $\alpha = 0{,}05$.
+
+La direzione attesa è nota per ciascuna ipotesi, e un test unilaterale avrebbe
+potenza maggiore. È stato scelto comunque il test bilaterale, perché un effetto
+nella direzione opposta è informativo e un test unilaterale lo renderebbe
+invisibile, registrando «nessun effetto» dove il dato dice «effetto contrario».
+Nell'ablazione dell'esperimento~03 non si tratta di un'eventualità teorica ma
+della situazione osservata, e l'esito \rifiutataopposta{} introdotto nella
+\cref{sec:ipotesi} esiste proprio per poterla riportare.
+
+Con quattro ipotesi e più metriche per ipotesi, la probabilità di almeno un falso
+positivo supera $\alpha$. La scelta adottata è di non applicare una correzione
+formale, per due ragioni. Le quattro ipotesi riguardano esperimenti distinti e
+sono trattate come famiglie separate anziché come un'unica famiglia di test; e una
+correzione ridurrebbe ulteriormente una potenza già bassa (\cref{ssec:potenza}) in
+un lavoro il cui esito è prevalentemente di non rifiuto, dove il rischio dominante
+è il falso negativo. La scelta è dichiarata qui, le metriche primarie sono fissate
+prima dell'osservazione dei dati e le secondarie sono riportate come tali.
+
+Fa eccezione l'ipotesi H3, che viene testata sulla stessa metrica in tre dataset e
+costituisce quindi una famiglia interna. Lì i tre valori $p$ sono riportati grezzi
+nel \cref{cap:risultati}, e la correzione di Holm è applicata come analisi di
+sensibilità in sede di conclusione (\cref{sec:risposte}), dove serve a stabilire
+se il solo dataset con intervallo interamente positivo regga il confronto
+multiplo.
+
+Un principio interpretativo vale per l'intera tesi, e viene richiamato nella
+\cref{sec:verifica-ipotesi} e nella \cref{sec:limiti-statistici}:
+
+\begin{quote}
+Il mancato rifiuto di $H_0$ \textbf{non} dimostra equivalenza. Dimostra che i
+dati raccolti non bastano a distinguere l'effetto da zero. Per concludere
+l'equivalenza servirebbe un test dedicato con una soglia $\delta$ fissata prima
+dell'esperimento; nessuna soglia è stata fissata, quindi nessuna conclusione di
+equivalenza è tratta.
+\end{quote}
+
+\section{Baseline}
+\label{sec:baseline}
+
+Il repository \code{XanaduAI/qml-benchmarks} documenta un'impostazione affine,
+basata sul confronto di modelli QML near-term e baseline classiche entro pipeline
+comuni \parencite{xanaduQMLBenchmarks}. La presente tesi sviluppa un protocollo
+specifico per confronti appaiati e per le quattro architetture in esame; il
+repository esterno è citato come riferimento metodologico e non come fonte del
+codice.
+
+\begin{definizione}[Baseline appaiata]
+Una baseline è \emph{appaiata} se il modello classico e quello quantistico
+condividono ogni componente tranne quello in esame, e se sono valutati sugli
+stessi seed, sugli stessi dati e con gli stessi iperparametri.
+\end{definizione}
+
+\begin{table}[htbp]
+\centering
+\caption[Cosa varia e cosa è tenuto costante in ciascun esperimento]{%
+Struttura del confronto appaiato nei quattro esperimenti.}
+\label{tab:baseline}
+\small
+\begin{tabularx}{\textwidth}{@{}l X X@{}}
+\toprule
+\textbf{Esp.} & \textbf{Cosa varia} & \textbf{Cosa è tenuto costante} \\
+\midrule
+01 & \code{use\_quantum}, che commuta \code{Head.\_get\_layer} fra
+     \code{nn.Linear} e \classe{QuantumLayerAdapter}
+   & corpus, tokenizer, preset, seed, numero di iterazioni, ottimizzatore \\
+\addlinespace
+02 & \emph{patch embedding}: \code{nn.Linear} contro \classe{QuantumPatchEmbedding}
+   & encoder, testa, dataset, seed, iperparametri di addestramento \\
+\addlinespace
+03 & post-elaborazione della compressione: nulla / MLP limitata / VQC
+   & strato di compressione, encoder, testa, dataset, seed, iperparametri \\
+\addlinespace
+04 & funzione di similarità: coseno contro kernel di fedeltà
+   & campioni selezionati, PCA, riscalatura, indici di sottocampionamento \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Un principio governa la costruzione delle baseline: dove è possibile scegliere, il
+termine di confronto è quello che rende più difficile, e non più facile, ottenere
+un esito favorevole all'ipotesi quantistica. Nell'ablazione dell'esperimento~03
+questo porta a confrontare \code{quantum\_reg} con \code{bounded\_mlp} anziché con
+\code{vanilla}, e produce una baseline classica con più parametri della
+controparte quantistica nel componente in esame; il disegno delle tre varianti e
+le ragioni della scelta sono nella \cref{sec:esp-ablazione}. Nell'esperimento~04
+la baseline preregistrata è la similarità coseno, affiancata in controvalidazione
+da un kernel RBF con larghezza di banda determinata per euristica della mediana
+senza uso delle etichette (\cref{sec:esp-kernel}).
+
+\section{Dataset}
+\label{sec:dataset}
+
+Gli esperimenti 02, 03 e 04 usano MedMNIST v2 \parencite{yang2023medmnist}, una
+collezione di dataset biomedici standardizzati a $28\times28$ pixel con partizioni
+ufficiali predefinite. Il caricamento è gestito da \code{load\_medmnist()}, che
+scarica i dati alla prima esecuzione, applica \code{ToTensor()} e
+\code{Normalize(mean=0.5, std=0.5)} per canale, e imposta \code{n\_channels} e
+\code{n\_classes} a partire dai metadati del dataset.
+
+\begin{table}[htbp]
+\centering
+\caption[Dataset MedMNIST impiegati]{%
+Dataset MedMNIST v2 impiegati nella tesi. Le numerosità sono quelle delle
+partizioni ufficiali.}
+\label{tab:dataset}
+\small
+\begin{tabular}{@{}l l r r r r c@{}}
+\toprule
+\textbf{Dataset} & \textbf{Dominio} & \textbf{Classi} & \textbf{Train} & \textbf{Val} & \textbf{Test} & \textbf{Esp.} \\
+\midrule
+PathMNIST   & Istologia colorettale       & 9 & \num{89996} & \num{10004} & \num{7180} & 02, 03 \\
+BloodMNIST  & Cellule del sangue          & 8 & \num{11959} & \num{1712}  & \num{3421} & 03 \\
+DermaMNIST  & Lesioni dermatoscopiche     & 7 & \num{7007}  & \num{1003}  & \num{2005} & 03 \\
+BreastMNIST & Ecografia mammaria          & 2 & \num{546}   & \num{78}    & \num{156}  & 04 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La scelta risponde a quattro requisiti insieme: la risoluzione bassa mantiene
+trattabile il costo di simulazione, le partizioni standardizzate rendono i
+risultati confrontabili con la letteratura, il dominio non è un giocattolo come
+MNIST, e la disponibilità di più dataset omogenei rende possibile la ripetizione
+multi-dataset a costo ragionevole. Le classi sono sbilanciate in tutti e quattro,
+il che motiva l'uso di medie \emph{macro} per F1 e AUC.
+
+\paragraph{Regime a dati scarsi.} L'esperimento~03 espone il campo
+\code{train\_subset}, che seleziona un sottocampione stratificato di $N$ esempi di
+addestramento, con $0$ a indicare il dataset completo. Se la regolarizzazione
+implicita ha un effetto, è nel regime a dati scarsi che dovrebbe emergere con
+maggiore evidenza, perché è lì che la capacità non vincolata produce il
+sovradattamento maggiore. La campagna definitiva usa \code{train\_subset=100}, e
+il regime è stato scelto con uno screening basato soltanto sulla variante
+\code{bounded\_mlp} e sulla validation, prima di eseguire le run quantistiche e
+senza consultare il test.
+
+\paragraph{Campionamento dell'esperimento 04.} Il confronto fra kernel usa 100
+campioni di BreastMNIST compressi con PCA, e la numerosità ridotta è imposta dal
+costo quadratico del kernel. La procedura di selezione e i tre regimi di
+composizione delle classi sono descritti nella \cref{sec:esp-kernel}.
+
+\section{Metriche}
+\label{sec:metriche}
+
+Accuracy, macro-F1, macro-AUC e cross-entropy sono registrate per ogni run.
+L'accuracy è la metrica più immediata ma è insensibile alla distribuzione degli
+errori fra le classi; la macro-F1 penalizza il fallimento sulle classi rare; la
+macro-AUC misura la qualità dell'ordinamento indipendentemente dalla soglia di
+decisione ed è quindi la meno sensibile allo sbilanciamento; la cross-entropy è la
+quantità effettivamente ottimizzata e può migliorare mentre l'accuracy peggiora.
+
+\begin{definizione}[Gap di generalizzazione]
+\begin{equation}
+  \gap \;=\; \acctr - \accte ,
+  \label{eq:gap}
+\end{equation}
+dove entrambe le accuracy sono calcolate sul checkpoint selezionato sulla
+validation (\cref{sec:base-trainer}). Un valore positivo indica sovradattamento.
+\end{definizione}
+
+\begin{limite}
+Il gap va interpretato insieme all'accuracy di training. Un modello che non impara
+può avere gap piccolo pur essendo peggiore sotto ogni altro aspetto, e una
+riduzione del gap accompagnata da minore accuracy di training può derivare da
+perdita di capacità anziché da migliore regolarizzazione. Il \cref{cap:risultati}
+riporta $\acctr$ e $\accte$ accanto a $\gap$ per rendere la distinzione
+verificabile.
+\end{limite}
+
+Per la modellazione del linguaggio si usano la loss media per token e la
+perplexity $\PPL = \exp(\mathcal{L})$, con le avvertenze sulla non
+confrontabilità fra tokenizer diversi già poste nella \cref{ssec:tokenizer}.
+
+\begin{definizione}[Metriche di separazione]
+Data una matrice di similarità $S$ e la partizione dei campioni in due classi, si
+definiscono la similarità media intra-classe (escludendo la diagonale e prendendo
+il triangolo superiore di ciascun blocco), la similarità media inter-classe, il
+loro rapporto
+\begin{equation}
+  \rho = \frac{(\mu_{\text{intra},0} + \mu_{\text{intra},1})/2}{\mu_{\text{inter}}},
+  \label{eq:ratio}
+\end{equation}
+e il criterio di Fisher
+\begin{equation}
+  F \;=\; \frac{\big(\mu_{\text{intra}} - \mu_{\text{inter}}\big)^2}
+                {\sigma^2_{\text{intra}} + \sigma^2_{\text{inter}}} .
+  \label{eq:fisher}
+\end{equation}
+\end{definizione}
+
+Entrambe sono calcolate da \code{analyze\_separation()}, che prende i valori
+intra-classe dai triangoli superiori dei blocchi diagonali e quelli inter-classe
+dal blocco rettangolare completo.
+
+Le due metriche non hanno però lo stesso statuto. Il kernel di fedeltà assume
+valori in $[0,1]$, la similarità coseno in $[-1,1]$, e il rapporto $\rho$ della
+\cref{eq:ratio} non è confrontabile fra scale diverse, perché dipende dal valore
+assoluto del denominatore. Il criterio di Fisher normalizza per la varianza, è
+meno sensibile alla scala ed è per questo adottato come metrica primaria di H4;
+$\rho$ resta secondario e descrittivo.
+
+Sul versante del costo si registrano parametri addestrabili totali e per
+componente, tempo di addestramento, tempo per epoca, tempo di valutazione, tempo
+totale di \emph{wall clock} e device. Tutti questi valori si riferiscono a
+esecuzioni su simulatore classico.
+
+\section{Protocollo multi-seed}
+\label{sec:multiseed}
+
+Gli esperimenti~02 e 03 impiegano i seed $\{42,\ 137,\ 256,\ 512,\ 1024\}$;
+l'esperimento~01 estende la stessa sequenza a dieci seed, mentre l'esperimento~04
+usa venti ripetizioni del campionamento stratificato. Il seed è impostato da
+\code{set\_seed()} prima della costruzione del modello e governa
+l'inizializzazione dei pesi, il mescolamento dei DataLoader e, tramite la
+derivazione descritta nella \cref{ssec:rumore}, le corruzioni di rumore.
+
+La struttura appaiata segue da qui: a parità di seed tutte le varianti ricevono lo
+stesso ordine di esempi e le stesse corruzioni. Negli esperimenti~01 e 02 i
+tensori del corpo condiviso vengono inoltre copiati dalla variante classica a
+quella quantistica e il loro hash è registrato nell'aggregato, perché il solo
+reset del seed non basterebbe: la costruzione del circuito consuma estrazioni
+casuali aggiuntive. Le differenze $d_s$ della \cref{eq:differenza-appaiata}
+confrontano dunque condizioni controllate, e la varianza fra seed si cancella
+nella differenza invece di sommarsi.
+
+L'ablazione dell'esperimento~03 prevede 3 modelli $\times$ 5 seed $\times$ 3
+dataset, cioè 45 run. Il file \file{ablation\_progress.json} è aggiornato dopo ogni
+run completata e consente di riprendere la campagna dopo un'interruzione.
+
+\subsection{Analisi di potenza}
+\label{ssec:potenza}
+
+Per gli esperimenti~02 e 03 la scelta di $n = 5$ è un compromesso fra potenza
+statistica e costo, dato che una singola run quantistica completa su PathMNIST
+richiede da decine di minuti a diverse ore di simulazione (\cref{sec:costo}). Il
+prezzo di quel compromesso va quantificato. Per un paired $t$-test bilaterale con
+$\alpha = 0{,}05$ e potenza $0{,}8$, la dimensione dell'effetto minima rilevabile
+è
+
+\begin{center}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+$n$ & 3 & 5 & 10 & 20 \\
+\midrule
+$\dz$ minimo & $3{,}26$ & $\mathbf{1{,}68}$ & $1{,}00$ & $0{,}66$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Con $n = 5$ solo effetti con $\dz \ge 1{,}68$ sono rilevabili con probabilità
+$0{,}8$, un valore che le convenzioni di \textcite{cohen1988statistical}
+collocano ben oltre la soglia di «effetto grande» ($0{,}8$).
+
+\begin{limite}
+Questo è il limite principale della parte statistica del lavoro. Un effetto reale
+ma moderato ($\dz \approx 0{,}5$) sarebbe stato quasi certamente non rilevato, e i
+risultati del \cref{cap:risultati} vanno letti come «non si osserva un effetto
+grande» anziché come «non esiste alcun effetto».
+\end{limite}
+
+\section{Analisi statistica}
+\label{sec:statistica}
+
+L'analisi è eseguita da \code{paired\_comparison()}, i cui output sono elencati
+nella \cref{sec:analisi-statistica}. Qui interessa perché siano tre e non uno.
+
+Il motivo è che con $n = 5$ la normalità
+delle differenze non è verificabile: a quella numerosità qualunque test di
+normalità ha potenza trascurabile. L'intervallo $t$, fissato come criterio
+operazionale primario, è perciò affiancato dal bootstrap percentile e dal Wilcoxon
+come analisi di sensibilità. Nessuno dei due elimina il limite della piccola
+numerosità. Il bootstrap approssima la distribuzione a partire da soli cinque
+valori osservati, e con cinque differenze non nulle il più piccolo $p$ bilaterale
+esatto del Wilcoxon è $0{,}0625$: quel test può controllare direzione e
+ordinamento, ma in questa campagna non può raggiungere la soglia $0{,}05$. Quando
+stime, intervalli e ranghi divergono, la divergenza viene riportata come tale e
+non risolta scegliendo il risultato preferito.
+
+Ogni confronto è riportato con quattro elementi insieme: differenza media,
+intervallo di confidenza al \SI{95}{\percent}, valore $p$ e $\dz$. Il valore $p$
+da solo non è un risultato, perché non dice quanto grande sia l'effetto né quanto
+precisa la stima, e a $n = 5$ è particolarmente instabile.
+
+\paragraph{Convenzione di segno.} \convsegno{} La convenzione è ripetuta nella
+didascalia di ogni tabella del \cref{cap:risultati} perché è la fonte di errore di
+lettura più probabile: sul \emph{gap} una differenza negativa è favorevole alla
+variante quantistica, sull'\emph{accuracy} è sfavorevole.
+
+\section{Costo computazionale}
+\label{sec:costo}
+
+Tempi di addestramento, valutazione, epoca e \emph{wall clock} sono registrati in
+\file{results.json}; hardware e versioni delle librerie provengono dal
+\file{run\_manifest.json} di ciascuna run. I rapporti misurati sono nella
+\cref{sec:overhead}, l'inventario completo nell'\cref{app:inventario}.
+
+\begin{limite}
+Il rapporto fra i tempi misura il costo di \emph{simulare} un circuito, non quello
+di \emph{eseguirlo}. Su hardware reale la struttura del costo è qualitativamente
+diversa, fra latenza di sottomissione dei job, rumore di campionamento su un
+numero finito di \emph{shot} e gradiente per parameter-shift con $2P$ circuiti, e
+non è deducibile da queste misure in nessuna delle due direzioni. Nessuna
+affermazione di questa tesi sul costo si estende oltre la simulazione.
+\end{limite}
+
+\section{Minacce alla validità}
+\label{sec:minacce}
+
+Le minacce sono raccolte qui in forma di elenco, con il rimando alla sezione che
+le discute per esteso. Circoscrivono le conclusioni ammesse dai dati.
+
+\paragraph{Validità interna.} L'effetto misurato negli esperimenti 01 e 02 è
+quello della composizione fra uno strato classico addestrabile e il circuito, non
+del circuito isolato (\cref{sec:adapter}); l'esperimento~03 non ha questo
+problema. Le scale di inizializzazione di \code{[CLS]} ed embedding posizionale
+differiscono fra gli esperimenti 02 e 03 (\cref{sec:cls}), per cui i confronti
+restano validi solo all'interno di ciascun esperimento. Le run pilota
+dell'esperimento~01, con fattore di scala $1/\sqrt{\demb}$ e inizializzazioni non
+appaiate, sono escluse dalla campagna definitiva (\cref{sec:self-attention}).
+Learning rate, weight decay, epoche e scheduler sono infine comuni a tutte le
+varianti e scelti sulla baseline classica: è il contro-argomento più solido contro
+le conclusioni della tesi, affrontato nella \cref{sec:equita-baseline}.
+
+\paragraph{Validità esterna.} Modelli molto piccoli, circa \num{4500} parametri
+nell'esperimento~03; da 4 a 10 qubit con 2 strati variazionali; solo MedMNIST a
+$28\times28$ per la parte di visione e un solo corpus principale per
+l'esperimento~01; nessun risultato su hardware quantistico reale.
+
+\paragraph{Validità statistica.} Gli esperimenti 02 e 03 usano $n = 5$ seed,
+l'esperimento 01 ne usa 10 e il 04 usa 20 sottocampioni parzialmente sovrapposti
+(\cref{ssec:potenza}); nessuna soglia di equivalenza è definita a priori; i
+confronti multipli non sono corretti, con la motivazione data sopra.
+
+\begin{limite}[Validità di costrutto]
+Gli esperimenti impiegano un solo ansatz variazionale
+(\code{StronglyEntanglingLayers}) e una sola codifica dei dati (angle embedding),
+in due sole posizioni architetturali. Il risultato falsifica \emph{questa}
+famiglia di circuiti in \emph{queste} posizioni, non il quantum machine learning
+in generale. È il limite più importante del lavoro e va enunciato senza
+attenuazioni ogni volta che se ne riassumono le conclusioni.
+\end{limite}
+
+\paragraph{Stato delle evidenze.} Il repository contiene run prodotte in fasi
+diverse del lavoro, con schemi di \file{results.json} differenti: alcune run
+storiche sono prive dei campi \code{test\_accuracy} o \code{dataset}, e quelle
+dell'esperimento~02 anteriori all'unificazione non sono appaiate. Il campo
+\code{schema\_version} distingue i due insiemi. La regola adottata è che nessuna
+run storica compaia nella stessa tabella di una run della campagna definitiva
+senza essere marcata come tale, e che nessuna conclusione principale poggi su run
+non appaiate. L'inventario completo, con schema, commit e flag \emph{dirty} di
+ogni run utilizzata, è nell'\cref{app:inventario}.

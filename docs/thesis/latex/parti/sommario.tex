@@ -1,0 +1,53 @@
+% ===========================================================================
+%  Sommario / Abstract
+%  Regola: il sommario contiene già l'esito, non la sola promessa.
+% ===========================================================================
+\chapter*{Sommario}
+\addcontentsline{toc}{chapter}{Sommario}
+\markboth{Sommario}{Sommario}
+
+Il \emph{quantum machine learning} ibrido propone di sostituire strati parametrici
+classici con circuiti quantistici variazionali (VQC) all'interno di reti addestrate
+per retropropagazione. La letteratura attribuisce a questa sostituzione quattro
+benefici distinti: uno speedup computazionale, una
+maggiore espressività a parità di parametri, una regolarizzazione implicita
+indotta da unitarietà e limitatezza dell'osservabile misurato, e una migliore
+separabilità delle classi in spazi di feature ad alta dimensione.
+
+Questa tesi verifica sperimentalmente i tre benefici che non richiedono hardware
+quantistico, lasciando esplicitamente fuori portata lo speedup. Tutti gli
+esperimenti girano su un simulatore classico di vettore di stato, il cui costo
+cresce esponenzialmente con il numero di qubit. Le misure riguardano circuiti
+piccoli simulati e non confrontano complessità o tempi con hardware quantistico.
+Non possono quindi dimostrare alcun vantaggio computazionale.
+
+Sono formulate quattro ipotesi operative, ciascuna con metrica primaria,
+direzione attesa e criterio di falsificazione dichiarati a priori, e verificate
+con quattro esperimenti indipendenti: proiezioni $Q,K,V$ quantistiche in un
+Transformer autoregressivo; \emph{patch embedding} quantistico in un Vision
+Transformer; uno studio di ablazione a tre varianti sulla regolarizzazione
+implicita; un confronto fra kernel di fedeltà quantistica e similarità coseno.
+Il metodo sperimentale usato impiega baseline classiche appaiate, contabilizza gli squilibri
+di parametri e, nell'ablazione sulla regolarizzazione, usa un controllo classico
+più capiente del blocco quantistico; adotta inoltre un disegno multi-seed e
+multi-dataset, e un'analisi statistica basata su differenze appaiate, intervalli
+di confidenza parametrici e bootstrap, test di Wilcoxon e dimensione dell'effetto.
+
+Nelle condizioni testate nessuna delle quattro ipotesi è confermata nella
+direzione attesa. La perplexity aumenta di $0{,}067$ (IC 95\%
+$[-0{,}141;0{,}275]$); nel Vision Transformer l'accuracy diminuisce di $0{,}024$
+(IC $[-0{,}054;0{,}006]$) e la macro-AUC di $0{,}010$ con IC interamente
+negativo. Nell'ablazione il gap quantistico meno controllo limitato è positivo
+su tutti i dataset ($+0{,}148$, $+0{,}100$, $+0{,}085$), mentre il kernel IQP ha
+un criterio di Fisher inferiore sia al coseno sia all'RBF.
+Il costo di simulazione misurato è di uno-due ordini di grandezza superiore a
+quello delle baseline classiche
+
+Oltre ai risultati sperimentali, il lavoro produce
+\code{quantum\_framework}, una libreria che rende ripetibile il confronto
+quantistico/classico appaiato, layer variazionali, caricamento dati, ciclo di
+addestramento con diagnostica su gradienti e saturazione, metriche, test
+statistici e manifest di provenienza e un protocollo sperimentale documentato
+che consente a terzi di replicare o confutare ogni affermazione qui riportata.
+
+\cleardoublepage

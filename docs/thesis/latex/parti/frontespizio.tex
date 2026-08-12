@@ -1,0 +1,50 @@
+% ===========================================================================
+%  Frontespizio
+%  Tutti i valori provengono da metadati.tex. Se l'ateneo impone un modello
+%  ufficiale, sostituire l'intero contenuto di questo file mantenendo i comandi.
+% ===========================================================================
+\begin{titlepage}
+\centering
+
+\IfFileExists{\LogoAteneo.pdf}{\includegraphics[height=3cm]{\LogoAteneo}\par\vspace{0.8cm}}{%
+\IfFileExists{\LogoAteneo.png}{\includegraphics[height=3cm]{\LogoAteneo}\par\vspace{0.8cm}}{}}
+
+{\Large\scshape \Ateneo \par}
+\vspace{0.3cm}
+{\large \Dipartimento \par}
+\vspace{0.2cm}
+{\large \CorsoDiLaurea \par}
+
+\vspace{2.2cm}
+{\large \TipoLaurea \par}
+\vspace{1.0cm}
+
+\rule{\textwidth}{0.6pt}\par
+\vspace{0.6cm}
+{\LARGE\bfseries \TitoloTesi \par}
+\vspace{0.5cm}
+{\large\itshape \SottotitoloTesi \par}
+\vspace{0.6cm}
+\rule{\textwidth}{0.6pt}\par
+
+\vfill
+
+\begin{minipage}[t]{0.45\textwidth}
+  \raggedright
+  \textbf{Relatore}\par
+  \Relatore \par
+  \vspace{0.4cm}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.45\textwidth}
+  \raggedleft
+  \textbf{Candidato}\par
+  \Candidato \par
+  Matricola \MatricolaCandidato
+\end{minipage}
+
+\vspace{1.6cm}
+{\large Anno Accademico \AnnoAccademico \par}
+
+\end{titlepage}
+\cleardoublepage

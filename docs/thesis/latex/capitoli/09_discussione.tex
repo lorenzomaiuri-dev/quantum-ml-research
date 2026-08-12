@@ -1,0 +1,292 @@
+% ===========================================================================
+%  Capitolo 9 — Discussione
+%  Regola: ogni sezione lega un'osservazione del capitolo 8 a un meccanismo, e
+%  dichiara se il meccanismo è dimostrato dai dati o resta congetturale.
+% ===========================================================================
+\chapter{Discussione}
+\label{cap:discussione}
+
+Il \cref{cap:risultati} ha riportato i valori misurati; questo capitolo ne
+discute i meccanismi. Alcune delle spiegazioni possibili si lasciano controllare
+con i dati già raccolti, altre restano congetture da mettere alla prova in
+esperimenti non svolti. Ogni volta che la distinzione conta, viene segnalata.
+
+\section{Compressione dimensionale}
+\label{sec:compressione}
+
+In tutti e tre gli esperimenti che lavorano su dati ad alta dimensione il
+circuito quantistico opera \emph{dopo} una compressione severa, e la compressione
+è realizzata da una trasformazione classica:
+
+\begin{center}
+\begin{tabular}{@{}l l r@{}}
+\toprule
+\textbf{Esperimento} & \textbf{Compressione} & \textbf{Fattore} \\
+\midrule
+01 & $\demb = 8 \to \nq = 4$ per testa, \code{nn.Linear} addestrabile & $2\times$ \\
+03 & $\dpatch = 147 \to \dvit = 10$, \code{nn.Linear} addestrabile & $14{,}7\times$ \\
+04 & $784 \to 8$, PCA non addestrabile & $98\times$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Se la compressione a monte distrugge l'informazione discriminante, nessuna
+trasformazione a valle può recuperarla, quale che sia la sua natura. Gli
+esperimenti sono perciò test del VQC \emph{condizionati} a un collo di bottiglia
+stretto, e un'assenza di differenza in queste condizioni resta compatibile con due
+letture diverse: che il VQC non aggiunga nulla, oppure che a valle di una
+compressione così severa non aggiunga nulla nessuno. I dati raccolti non
+permettono di separarle.
+
+Per l'esperimento~01 l'ambiguità è quantitativamente circoscritta, ma non
+eliminata. La variante quantistica non migliora la perplexity media, e nel suo
+estremo più favorevole l'intervallo di confidenza al 95\% ammette un beneficio di
+$0{,}141$ PPL, cioè circa l'$1{,}1\%$ della media classica. Il risultato respinge
+H1 secondo il criterio operazionale fissato, senza costituire un test di
+equivalenza e senza estendersi a dimensioni, ansatz o posizioni architetturali
+diverse.
+
+L'esperimento~04 è il caso più netto. La PCA è fissata, non addestrabile e
+identica per i due kernel, che operano quindi esattamente sulla stessa
+informazione residua. Se le otto componenti spiegassero
+una quota trascurabile della varianza, la separabilità di entrambi i kernel
+sarebbe limitata a monte e il confronto misurerebbe la differenza fra due funzioni
+applicate a un'informazione già degradata. Le otto componenti ne spiegano invece
+il $76{,}54\%$ in media: la compressione elimina circa un quarto della varianza,
+il che è molto ma non riduce i dati a una rappresentazione priva di contenuto. Il
+risultato negativo di H4 non si spiega semplicemente con una PCA troppo
+aggressiva.
+
+Per distinguere davvero le due letture servirebbe un esperimento non svolto in
+questo lavoro: variare in modo sistematico il rapporto di compressione, per esempio
+$\dvit \in \{4, 10, 16, 32\}$ con il corrispondente numero di qubit, e osservare
+se la differenza fra variante quantistica e classica dipende dall'ampiezza del
+collo di bottiglia. È il primo degli sviluppi indicati nella \cref{sec:sviluppi}.
+
+\section{Codifica angolare e saturazione}
+\label{sec:saturazione}
+
+La spiegazione più naturale, e quella attesa in partenza, è la saturazione. La
+codifica angolare richiede un ingresso limitato a $[-\pi,\pi]$ e il limite è
+imposto dalla $\tanh$ (\cref{sec:quantum-linear}); per $\abs{x}$
+grande $\tanh'(x)$ tende a zero, quindi il gradiente che risale dal circuito verso
+lo strato di compressione viene moltiplicato per un fattore prossimo a zero. Se le
+attivazioni della compressione si portassero nella regione di saturazione, quello
+strato smetterebbe di fatto di apprendere.
+
+Gli \emph{hook} dell'esperimento~03 registrano per ogni epoca proprio
+\code{saturation\_frac} e \code{grad\_norm\_mean}, riportate nella
+\cref{tab:diagnostica-03}, e il verdetto è negativo. Le frazioni medie di
+saturazione restano sotto $0{,}013$ in ogni combinazione di dataset e variante, e
+il gradiente medio del modulo di compressione della variante quantistica è
+addirittura maggiore di quello di \code{bounded\_mlp} su tutti e tre i dataset.
+Saturazione della $\tanh$ e gradiente banalmente evanescente non spiegano dunque
+l'esito di H3. La diagnostica non dimostra che il paesaggio di ottimizzazione sia
+favorevole, ma esclude il meccanismo più semplice fra quelli ipotizzati in
+partenza.
+
+Un secondo meccanismo, anticipato nella \cref{sec:residui}, agisce
+indipendentemente dalla saturazione. La connessione residua somma un ramo non
+limitato, l'identità, a un ramo limitato in $[-1,1]$, l'uscita del VQC. Man mano
+che la norma della rappresentazione residua cresce lungo la profondità, il
+contributo relativo del ramo limitato diminuisce, e l'effetto del circuito si
+attenua per una ragione puramente architetturale, indipendente da quanto il
+circuito sia espressivo. Il meccanismo è plausibile ma non è misurato: verificarlo
+richiederebbe di registrare la norma dei due rami in ingresso a ogni somma
+residua, cosa che gli \emph{hook} attuali non fanno.
+
+Resta da menzionare il fenomeno dei \emph{barren plateau}
+\parencite{mcclean2018barren}, che è la spiegazione più citata in letteratura per
+la difficoltà di ottimizzare i circuiti variazionali. Va però ridimensionato. Il
+regime in cui il fenomeno è descritto è asintotico nel numero di qubit e nella
+profondità, mentre qui $\nq$ sta fra 4 e 10 e $\nqlayers = 2$; attribuire a un
+fenomeno asintotico un comportamento osservato con dieci qubit significherebbe
+chiedere ai dati più di quanto mostrino. Il richiamo resta valido come possibile
+concausa da verificare se il lavoro venisse esteso a circuiti più grandi.
+
+\section{Capacità e sotto-adattamento}
+\label{sec:capacita}
+
+Un gap più alto accompagnato da un'accuracy di training più bassa non è il
+medesimo fenomeno di un gap più alto a parità di accuracy di training. Nel secondo
+caso si parla di peggiore generalizzazione; nel primo il modello si sta
+semplicemente adattando meno bene ai dati, e il gap riflette una combinazione di
+minore adattamento e minore trasferimento. Le due situazioni chiedono spiegazioni
+diverse, e conviene distinguerle prima di affermare qualsiasi cosa su H3.
+
+I numeri dicono che il circuito non ha un'incapacità sistematica di adattare i
+cento esempi di training. L'accuracy di training di \code{quantum\_reg} contro
+\code{bounded\_mlp} è $0{,}950$ contro $0{,}886$ su PathMNIST, $0{,}916$ contro
+$0{,}932$ su BloodMNIST e $0{,}832$ contro $0{,}770$ su DermaMNIST. Su PathMNIST e
+DermaMNIST la variante quantistica adatta il training più strettamente della
+baseline e trasferisce peggio al test; su BloodMNIST l'accuracy di training è
+simile e quella di test resta inferiore. Il quadro è quindi più coerente con una
+mancata generalizzazione che con un puro sotto-adattamento.
+
+Le due ipotesi che restano da distinguere sono la capacità effettiva ridotta,
+per cui la famiglia di funzioni realizzabile dal VQC con $\nqlayers = 2$ e
+$\nq = 10$ sarebbe più povera di quella della MLP limitata malgrado un conteggio
+di parametri confrontabile, e l'ottimizzazione ostacolata, per cui la famiglia
+sarebbe abbastanza ricca ma difficile da raggiungere. Nel primo caso le curve di
+training dovrebbero raggiungere un plateau più basso e restarvi; nel secondo ci si
+attenderebbero curve ancora in salita a fine addestramento, oppure norme di
+gradiente sistematicamente inferiori. Nessuna delle due firme emerge con
+chiarezza dai dati raccolti.
+
+Fra le conclusioni compatibili con i dati ce n'è una scomoda: che il VQC sia un
+regolarizzatore troppo forte, e vincoli la rappresentazione al punto da ostacolare
+l'adattamento ai dati di training senza migliorare in cambio il trasferimento al
+test. Un vincolo che riduce la capacità senza ridurre il gap resta un vincolo, e
+come regolarizzatore non serve a nulla.
+
+\section{Overhead di simulazione}
+\label{sec:overhead}
+
+Il rapporto fra i tempi della variante quantistica e di quella classica è
+$46{,}5\times$ nell'esperimento 01, $9{,}29\times$ nel 02 e compreso fra
+$60{,}7\times$ e $63{,}5\times$ nel 03; per il kernel dell'esperimento 04 il costo
+è dominato dal calcolo quadratico delle similarità IQP. Le cause sono tutte
+proprietà dell'implementazione della simulazione, non dei circuiti: la
+valutazione del QNode riga per riga (\cref{sec:integrazione}), il costo
+$O(2^{\nq})$ della simulazione dello stato, la retropropagazione attraverso
+l'intera catena di porte, e nell'esperimento~01 i
+$n_{\text{layer}} \times \nhead \times 3$ circuiti indipendenti valutati a ogni
+\emph{forward pass}.
+
+\begin{limite}
+L'overhead ha limitato il disegno sperimentale. Modelli piccoli, pochi qubit,
+poche epoche, cinque seed e, nell'esperimento~04, cento campioni sono tutte scelte
+imposte dal costo di simulazione. Non è possibile escludere che parte dei
+risultati negativi rifletta questa scala ridotta anziché una proprietà dei
+circuiti variazionali.
+\end{limite}
+
+Come già argomentato nella \cref{sec:costo}, questi rapporti misurano il costo di
+\emph{simulare} un circuito e non dicono nulla sul costo di eseguirlo su hardware,
+dove la struttura del costo è qualitativamente diversa.
+
+\section{Equità delle baseline}
+\label{sec:equita-baseline}
+
+L'obiezione più seria che si può muovere alle conclusioni di questa tesi è che le
+baseline fossero ingiustamente favorite. Sul conteggio dei parametri non regge: la
+baseline dell'esperimento~03 ha \num{1880} parametri di \emph{patch embedding}
+contro \num{1540} della variante quantistica e ne replica la limitatezza
+dell'output, e nell'esperimento~02 è semmai la variante quantistica ad averne 48
+in più. Se il VQC avesse posseduto un vantaggio strutturale dovuto a unitarietà,
+entanglement o geometria dello spazio di Hilbert, lo avrebbe mostrato malgrado un
+avversario più capiente.
+
+Sugli iperparametri l'obiezione è invece più solida.
+
+\begin{limite}
+Learning rate, weight decay, numero di epoche e scheduler sono comuni a tutte le
+varianti e sono stati fissati sulla baseline classica, senza alcuna ottimizzazione
+dedicata alla variante quantistica. È possibile che il percorso quantistico
+richieda un learning rate diverso, plausibilmente più alto dato che i gradienti
+attraversano una $\tanh$ saturante, oppure un numero maggiore di epoche. Un tuning
+separato potrebbe cambiare l'esito.
+\end{limite}
+
+La portata dell'obiezione è però limitata da una considerazione di metodo. Usare
+iperparametri comuni è la condizione stessa del confronto appaiato, e tararli per
+la sola variante quantistica introdurrebbe un vantaggio non disponibile alla
+baseline, a meno di tarare separatamente anche quella. Il che raddoppierebbe una
+campagna già al limite del budget computazionale. Il limite resta reale, ma
+rimuoverlo non è gratuito: richiede un esperimento diverso, indicato fra gli
+sviluppi della \cref{sec:sviluppi}.
+
+Due asimmetrie minori vanno aggiunte. Negli esperimenti 01 e 02 l'adapter classico
+addestrabile posto prima del circuito rende l'effetto misurato quello della
+composizione adapter${}+{}$VQC (\cref{sec:adapter}), ed è il motivo per cui la
+conclusione principale poggia sull'esperimento~03, che ne è immune.
+Nell'esperimento~04, poi, la baseline preregistrata è la similarità coseno, e la
+controvalidazione aggiunge un RBF con bandwidth mediana determinata senza
+etichette e una SVC il cui $C$ è tarato per cross-validation sul solo training.
+IQP risulta inferiore anche a questa baseline, sia su Fisher sia sulle metriche
+predittive fuori campione, ma la conclusione resta circoscritta al coseno e a
+questa specifica parametrizzazione dell'RBF, senza valere come graduatoria
+generale dei kernel classici.
+
+\section{Limiti statistici}
+\label{sec:limiti-statistici}
+
+Il limite principale è la numerosità. Con cinque seed negli esperimenti 02 e 03 la
+dimensione dell'effetto minima rilevabile con potenza $0{,}8$ è $\dz = 1{,}68$, e
+con i dieci seed dell'esperimento 01 scende a circa $1{,}00$
+(\cref{ssec:potenza}): un effetto reale ma moderato poteva sfuggire. I venti
+sottocampioni dell'esperimento~04 si sovrappongono fra loro e condividono lo
+stesso test ufficiale nella validazione SVC, quindi non vanno letti come venti
+dataset indipendenti.
+
+Nell'esperimento~04 le due metriche di separabilità divergono. IQP aumenta il
+rapporto $\rho$ rispetto al coseno ma riduce il criterio di Fisher preregistrato.
+Poiché $\rho$
+dipende direttamente dalla scala e dal livello medio delle similarità, il suo
+aumento descrive matrici più contrastate senza dimostrare una maggiore utilità
+discriminativa. La SVC fuori campione scioglie l'ambiguità nella stessa direzione
+di Fisher: balanced accuracy, AUC e macro-F1 sono inferiori per IQP in tutti e tre
+i regimi di campionamento.
+
+Due cautele del \cref{cap:metodologia} valgono anche qui. Nessuna soglia di
+equivalenza è stata definita a priori, quindi dai dati si ricava l'assenza di
+evidenza di differenza e non l'equivalenza fra le varianti. I confronti multipli
+su quattro ipotesi non sono poi corretti formalmente, per cui le sole conclusioni
+sostenute sono quelle sulle metriche primarie, dichiarate prima di osservare i
+dati.
+
+Un ultimo punto è di per sé un risultato. La
+variabilità fra seed non è trascurabile: nell'esperimento 01 la deviazione
+standard delle differenze di perplexity, $0{,}291$, supera di oltre quattro volte
+il delta medio, $0{,}067$; nell'esperimento 02 la deviazione delle differenze di
+accuracy, $0{,}0243$, è dello stesso ordine del delta, $0{,}0241$. Un confronto
+condotto su un seed singolo, come è prassi in buona parte della letteratura QML,
+avrebbe quindi una probabilità non trascurabile di produrre un risultato di segno
+arbitrario. L'osservazione dice qualcosa sulla fragilità dei confronti pubblicati,
+qualunque sia la conclusione su H1--H4.
+
+\section{Portata dei risultati negativi}
+\label{sec:portata}
+
+Le condizioni testate sono quelle riassunte nella \cref{sec:minacce}: codifica
+angolare e ansatz \code{StronglyEntanglingLayers}, da 4 a 10 qubit e 2 strati
+variazionali, in due sole posizioni architetturali, su MedMNIST a $28\times28$ e
+su un corpus a livello di caratteri, con baseline appaiate e cinque o dieci seed.
+
+In queste condizioni i dati sostengono che l'inserimento del circuito non migliora
+la perplexity (H1), non migliora l'accuracy di classificazione e peggiora la
+macro-AUC (H2), non riduce il gap di generalizzazione e anzi lo aumenta in media
+su tre dataset (H3), e che il kernel di fedeltà IQP a 8 qubit separa le classi
+peggio della similarità coseno e di un RBF con bandwidth mediana, sia sul criterio
+di Fisher sia nella classificazione fuori campione (H4).
+
+\begin{limite}
+Non è sostenuta invece alcuna affermazione riguardo ad altri ansatz variazionali,
+altre codifiche dei dati come amplitude embedding, \emph{data re-uploading} o
+codifiche apprese, numeri di qubit sostanzialmente maggiori, profondità
+variazionali maggiori, altri domini applicativi, esecuzione su hardware
+quantistico reale e vantaggi di natura computazionale. In particolare, nulla di
+quanto è stato misurato riguarda l'affermazione (a) della
+\cref{ssec:quattro-promesse}.
+\end{limite}
+
+Restano due osservazioni di metodo.
+
+La prima riguarda il valore di un esito negativo. La letteratura sul quantum
+machine learning pubblica prevalentemente risultati positivi, e una parte non
+trascurabile di essi poggia su baseline deboli, seed singolo e assenza di test
+statistici, cioè su condizioni in cui una differenza di qualche punto percentuale
+non è distinguibile dalla variabilità di inizializzazione. Un risultato negativo
+ottenuto con baseline appaiate, protocollo multi-seed e analisi statistica
+completa contribuisce quindi a calibrare le aspettative del campo, e offre un
+riferimento metodologico rispetto al quale i risultati positivi possono essere
+valutati.
+
+La seconda riguarda dove sia stata la difficoltà. Implementare i circuiti ha
+richiesto poco: PennyLane riduce un VQC a poche righe, e integrarlo in un modello
+PyTorch è un'operazione quasi meccanica. Il lavoro è stato costruire
+l'infrastruttura che rende credibile un confronto — appaiamento dei seed, identità
+verificabile dei componenti non in esame, corruzioni deterministiche, manifest di
+provenienza, schema dei risultati versionato, separazione fra esecuzione e
+analisi. È lì che sta il contributo riutilizzabile, e il suo valore non dipende
+dal segno del risultato.

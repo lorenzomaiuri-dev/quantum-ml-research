@@ -1,0 +1,195 @@
+% ===========================================================================
+%  Appendice B — Ambiente e comandi di riproduzione
+%  Fonte: docs/runbook.md. Mantenere allineati i due documenti.
+% ===========================================================================
+\chapter{Ambiente e comandi di riproduzione}
+\label{app:riproduzione}
+
+\section{Struttura del repository}
+
+\begin{lstlisting}[style=shell, numbers=none]
+quantum-ml-research/
+|-- run.py                      # entry point comune ai quattro esperimenti
+|-- pyproject.toml              # manifest unico delle dipendenze (uv)
+|-- uv.lock                     # ambiente pinnato, autoritativo
+|
+|-- quantum_framework/          # libreria condivisa, installata come package
+|   |-- layers/quantum_linear.py
+|   |-- data/medmnist_loader.py
+|   |-- training/trainer.py
+|   |-- evaluation/{metrics.py, statistics.py}
+|   `-- utils/{config.py, experiment.py}
+|
+|-- experiments/
+|   |-- 01_quantum_gpt/         # proiezioni Q,K,V quantistiche
+|   |-- 02_quantum_vit/         # patch embedding quantistico
+|   |-- 03_quantum_reg/         # ablazione sulla regolarizzazione
+|   `-- 04_quantum_kernel/      # kernel di fedelta vs similarita coseno
+|
+|-- tests/                      # test_config.py, test_metrics.py, test_statistics.py
+`-- docs/
+\end{lstlisting}
+
+\begin{table}[htbp]
+\centering
+\caption[Deleghe dei file di esperimento verso la libreria condivisa]{%
+Deleghe dei file di esperimento verso \code{quantum\_framework}
+(\cref{sec:repository}).}
+\label{tab:deleghe}
+\small
+\begin{tabularx}{\textwidth}{@{}X X@{}}
+\toprule
+\textbf{File dell'esperimento} & \textbf{Delega a} \\
+\midrule
+\file{0X/src/quantum\_layers.py} & \code{quantum\_framework.layers} \\
+\file{02/src/dataset.py}, \file{03/src/data/loaders.py} & \code{quantum\_framework.data.load\_medmnist} \\
+\file{02/src/config.py}, \file{03/src/config.py} & \code{quantum\_framework.utils.BaseViTConfig} \\
+\file{02/src/trainer.py}, \file{03/src/engine/trainer.py} & \code{quantum\_framework.training.BaseTrainer} \\
+\file{02/src/engine/metrics.py} & \code{quantum\_framework.evaluation.compute\_classification\_metrics} \\
+\file{03/src/models/patch\_embeddings.py} & \code{quantum\_framework.layers.QuantumLinear} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Installazione}
+
+\begin{lstlisting}[style=shell, numbers=none]
+git clone <url-del-repository>
+cd quantum-ml-research
+uv sync               # dipendenze principali (esperimenti 02, 03, 04)
+uv sync --extra gpt   # aggiunge torchinfo, torchviz, datasets, transformers (esp. 01)
+uv sync --extra gpu   # aggiunge pennylane-lightning[gpu]
+\end{lstlisting}
+
+L'ambiente pinnato è \file{uv.lock} ed è la fonte autoritativa;
+\file{requirements.txt} è un riassunto leggibile e non va usato per installare.
+Per la simulazione accelerata su GPU, oltre all'extra \code{gpu}, occorre
+impostare \code{q\_device = "lightning.qubit"} nella configurazione al posto di
+\code{default.qubit}.
+
+\section{Controlli preliminari}
+
+Le campagne vanno eseguite da un commit identificabile e con albero di lavoro
+pulito, perché il flag \emph{dirty} registrato nel manifest
+(\cref{sec:riproducibilita}) altrimenti segnala una run non ricostruibile.
+
+\begin{lstlisting}[style=shell, numbers=none]
+git status --porcelain                                  # deve essere vuoto
+uv run python -m unittest discover -s tests -v
+uv run pre-commit run --all-files                       # ruff: lint e formattazione
+\end{lstlisting}
+
+Prima di avviare una campagna costosa va eseguito uno \emph{smoke test} con un
+numero ridotto di epoche, verificando forma dei tensori, creazione dei checkpoint
+e schema delle metriche. È il controllo che sostituisce i test automatici sul
+ciclo di addestramento e sui layer quantistici, che la suite non copre.
+
+\section{Invarianti di configurazione}
+\label{app:invarianti}
+
+Il metodo \code{\_\_post\_init\_\_} di \classe{BaseViTConfig}
+(\cref{sec:base-config}) verifica tre invarianti all'istanziazione: la
+divisibilità $H \bmod p = 0$, la divisibilità $\dvit \bmod \nhead = 0$ e la
+positività di dimensioni e profondità. Quando una di esse è violata solleva
+\code{ValueError}. Il vantaggio è pratico: una configurazione incoerente fallisce
+in millisecondi anziché dopo mezz'ora di addestramento, e fallisce con un
+messaggio che nomina l'invariante, invece che con un errore di forma tensoriale in
+un punto arbitrario del \emph{forward}.
+
+\section{Valutazione di robustezza al rumore}
+\label{ssec:rumore}
+
+Il metodo \code{\_test\_noise\_robustness()} di \classe{BaseTrainer} valuta il
+modello addestrato su due tipi di corruzione, rumore gaussiano e \emph{sale e
+pepe}, a cinque intensità $\{0{,}05,\ 0{,}1,\ 0{,}2,\ 0{,}3,\ 0{,}5\}$, riportando
+loss, accuracy, AUC e F1 per ogni combinazione. Il seed delle corruzioni è
+derivato in modo deterministico da quello della run, secondo
+\code{seed + 10000 + indice\_tipo·100 + indice\_intensità}.
+
+La derivazione deterministica ha una conseguenza che va oltre la pulizia formale:
+varianti diverse che condividono lo stesso seed di run ricevono corruzioni
+\emph{identiche}, e non semplicemente equidistribuite, quindi il confronto resta
+appaiato anche sotto rumore. La campagna definitiva dell'esperimento~03 non usa
+questa valutazione, per non ampliare a posteriori la famiglia di endpoint.
+
+\section{Esperimento 01 --- Quantum GPT}
+
+\begin{lstlisting}[style=shell, numbers=none]
+uv run python run.py 01 --mode compare --config thesis \
+  --dataset data/input.txt \
+  --seeds 42,137,256,512,1024,2048,4096,8192,16384,32768 \
+  --name thesis_shakespeare --force_cpu --resume
+\end{lstlisting}
+
+Corpus, preset e seed devono restare invariati fra le due varianti. L'aggregato
+è scritto in \file{experiments/comparison\_thesis\_shakespeare.json}; la copia
+congelata è \file{docs/checkpoints/experiment\_01\_quantum\_gpt\_n10.json}.
+
+\section{Esperimento 02 --- Quantum ViT}
+
+\begin{lstlisting}[style=shell, numbers=none]
+uv run python run.py 02 compare --dataset pathmnist --epochs 50 \
+  --seeds 42 137 256 512 1024 --name thesis_pathmnist \
+  --q-device default.qubit --force-cpu
+\end{lstlisting}
+
+In caso di interruzione si ripete lo stesso comando aggiungendo \code{--resume}:
+il checkpoint atomico conserva modello, ottimizzatore, scheduler, storico, RNG e
+stato del generatore del DataLoader. PathMNIST è il test primario; le eventuali
+repliche su altri dataset sono analisi secondarie e mantengono invariati gli
+iperparametri fra le varianti.
+
+\section{Esperimento 03 --- Ablazione sulla regolarizzazione}
+
+\begin{lstlisting}[style=shell, numbers=none]
+uv run python run.py 03 ablation --epochs 400 --train-subset 100 \
+  --seeds 42 137 256 512 1024 \
+  --datasets pathmnist bloodmnist dermamnist
+\end{lstlisting}
+
+La campagna comprende $3 \times 5 \times 3 = 45$ run e salva
+\file{ablation\_progress.json} dopo ciascuna. In caso di interruzione:
+
+\begin{lstlisting}[style=shell, numbers=none]
+uv run python run.py 03 ablation --epochs 400 --train-subset 100 \
+  --resume experiments/ablation_progress.json
+\end{lstlisting}
+
+\section{Esperimento 04 --- Kernel quantistico}
+
+\begin{lstlisting}[style=shell, numbers=none]
+uv run python run.py 04 --seed 42 --repeats 20 \
+  --n-class0 80 --n-class1 20 --n-qubits 8 \
+  --feature-map iqp --iqp-repeats 2 --kernel-method pairwise
+\end{lstlisting}
+
+Ogni ripetizione usa il seed $\code{seed} + r$, e quindi un sottocampione
+distinto, e salva indici selezionati, varianza spiegata dalla PCA e matrici dei
+kernel.
+
+\section{Output di una run}
+
+Ogni esecuzione scrive nella propria directory, creata con suffisso temporale
+\code{\%Y\%m\%d\_\%H\%M\%S}:
+
+\begin{itemize}
+  \item \file{config.json} --- snapshot completo della configurazione, comprensivo
+    delle proprietà calcolate;
+  \item \file{run\_manifest.json} --- provenienza: commit, flag \emph{dirty},
+    riga di comando, timestamp, versioni di librerie e hardware;
+  \item \file{params.json} --- conteggio dei parametri per componente
+    (esperimenti 02 e 03);
+  \item \file{best\_model.pth} e \file{final\_model.pth} --- checkpoint
+    selezionato sulla validation e stato dell'ultima epoca;
+  \item \file{results.json} --- metriche, gap, storia per epoca ed eventuale
+    robustezza al rumore;
+  \item \file{events.out.tfevents.*} --- log TensorBoard.
+\end{itemize}
+
+\section{Controlli prima dell'analisi}
+
+Prima di aggregare i risultati va verificato che: tutte le coppie condividano
+seed e configurazione; non manchi alcuna run prevista dal disegno; nessun
+manifest riporti un commit inatteso o il flag \emph{dirty} attivo; tutti i valori
+in \file{results.json} siano finiti. Le tabelle della tesi sono derivate dai JSON
+aggregati senza modificare i risultati delle singole run.

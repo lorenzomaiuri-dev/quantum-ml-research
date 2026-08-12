@@ -1,0 +1,82 @@
+% ===========================================================================
+%  Appendice D — Dettagli circuitali
+% ===========================================================================
+\chapter{Dettagli circuitali}
+\label{app:circuiti}
+
+I diagrammi di questa appendice sono generati con \code{qml.draw} sui circuiti
+effettivamente istanziati dal codice, non ridisegnati a mano: sono quindi una
+rappresentazione verificabile di ciò che viene simulato.
+
+\section{Corrispondenza fra teoria e implementazione}
+
+\begin{table}[htbp]
+\centering
+\caption[Corrispondenza fra formulazione teorica e implementazione]{%
+Corrispondenza fra gli elementi teorici del \cref{cap:transformer} e le classi che
+li implementano. Salvo diversa indicazione, il file è
+\file{experiments/01\_quantum\_gpt/src/model.py}.}
+\label{tab:corrispondenza-gpt}
+\small
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\toprule
+\textbf{Elemento teorico} & \textbf{Classe / metodo} & \textbf{File} \\
+\midrule
+Embedding di token e posizione & \code{QuantumGPT.\_\_init\_\_} & \file{src/model.py} \\
+Attenzione a testa singola & \classe{Head} & idem \\
+Maschera causale & \code{Head.tril} (buffer) & idem \\
+Attenzione multi-testa & \classe{MultiHeadAttention} & idem \\
+Rete feed-forward & \classe{FeedForward} & idem \\
+Blocco pre-norm & \classe{Block} & idem \\
+Obiettivo autoregressivo & \code{QuantumGPT.forward} & idem \\
+Generazione & \code{QuantumGPT.generate} & idem \\
+Proiezione $Q,K,V$ quantistica & \classe{QuantumLayerAdapter} & \file{src/quantum\_layers.py} \\
+\quad (alias di) & \classe{QuantumLinearWithAdapter} & \file{quantum\_framework/layers/quantum\_linear.py} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Circuito variazionale degli esperimenti 01--03}
+
+Il circuito è \code{AngleEmbedding} seguito da \code{StronglyEntanglingLayers}
+con $\nqlayers = 2$, con misura di $\expval{Z_i}$ su ogni qubit
+(\cref{sec:quantum-linear}).
+
+I tre casi differiscono soltanto per il numero di fili. Il comando seguente
+genera diagramma e specifiche direttamente dalla versione installata di
+PennyLane, evitando di fissare nel testo una decomposizione che dipende dal
+livello di espansione delle operazioni composite:
+
+\begin{lstlisting}[style=python, numbers=none]
+import pennylane as qml
+from quantum_framework.layers import QuantumLinear
+
+layer = QuantumLinear(n_qubits=10, n_qlayers=2)
+print(qml.draw(layer.qlayer.qnode)(inputs, weights))
+print(qml.specs(layer.qlayer.qnode)(inputs, weights))
+\end{lstlisting}
+
+\section{Circuito di kernel IQP dell'esperimento 04}
+
+Il circuito \code{kernel\_circuit} realizza
+$K(x,y) = \abs{\bra{0}\Uenc^{\dagger}(y)\Uenc(x)\ket{0}}^2$ della
+\cref{eq:fidelity-kernel} con $\nq = 8$.
+
+Il calcolo applica prima $\Uenc(x)$ e poi $\Uenc^{\dagger}(y)$; la probabilità
+di ritrovare $\ket{0}^{\otimes8}$ è la fedeltà. Il controllo state-vector
+costruisce esplicitamente i due stati e riproduce le metriche entro
+$2{,}22\times10^{-16}$.
+
+\section{Costo in porte}
+
+\begin{center}
+\begin{tabular}{@{}l r r r@{}}\toprule
+\textbf{Esperimento}&\textbf{Qubit}&\textbf{Pesi VQC}&\textbf{Ampiezze}\\\midrule
+01&4&24 per circuito&16\\
+02&8&48&256\\
+03&10&60&1024\\
+04&8&0 addestrabili&256\\\bottomrule
+\end{tabular}
+\end{center}
+Per 01 il modello contiene più istanze del circuito nelle proiezioni $Q,K,V$;
+il valore in tabella è riferito a una singola istanza.

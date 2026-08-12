@@ -1,0 +1,203 @@
+% ===========================================================================
+%  Capitolo 1 — Introduzione
+%  È l'unica parte che molti leggeranno per intero: contiene già il risultato.
+% ===========================================================================
+\chapter{Introduzione}
+\label{cap:introduzione}
+
+\section{Problema di ricerca}
+\label{sec:problema}
+
+Nel \emph{quantum machine learning} ibrido un circuito parametrizzato opera come
+componente di una pipeline classica, e i suoi parametri vengono ottimizzati
+insieme a quelli della rete \parencite{biamonte2017qml,cerezo2021variational}. In
+questa tesi il circuito, indicato come \emph{Variational Quantum Circuit} (VQC),
+riceve un vettore di attivazioni classiche, lo codifica nello stato di un registro
+di qubit, lo trasforma con una sequenza di porte i cui angoli sono parametri
+addestrabili e restituisce alla rete i valori misurati. L'interfaccia di
+autodifferenziazione lo presenta all'ottimizzatore come un modulo qualsiasi, con
+pesi, output e gradiente \parencite{bergholm2018pennylane}.
+
+È proprio questa trasparenza a rendere la proposta attraente e, insieme,
+difficile da valutare. Se un VQC può prendere il posto di uno strato lineare senza
+che nulla intorno debba cambiare, allora sorge spontanea la domanda: conviene? La
+domanda è per sua natura empirica, e il modo di risponderle è altrettanto diretto:
+si sostituisce lo strato, si tiene fermo tutto il resto, si misura.
+
+\subsection{Quattro promesse distinte}
+\label{ssec:quattro-promesse}
+
+In questo lavoro l'espressione «vantaggio quantistico» viene scomposta in quattro
+proposizioni verificabili separatamente. La distinzione evita di trasferire
+all'accuratezza conclusioni che riguardano, per esempio, la complessità
+computazionale o la geometria del kernel:
+
+\begin{enumerate}[label=(\alph*)]
+  \item \textbf{Speedup computazionale.} Il calcolo eseguito dal circuito è
+    intrattabile classicamente, o comunque asintoticamente più costoso da
+    simulare che da eseguire su hardware quantistico.
+  \item \textbf{Espressività.} A parità di numero di parametri addestrabili, la
+    famiglia di funzioni realizzabile da un VQC è più ricca di quella di uno
+    strato classico di pari dimensione, e questo si traduce in un errore di
+    approssimazione inferiore.
+  \item \textbf{Regolarizzazione implicita.} L'unitarietà dell'evoluzione e la
+    limitatezza dei valori di aspettazione vincolano la rappresentazione prodotta
+    dal circuito; il vincolo agisce come un regolarizzatore che non compare nella
+    funzione di costo e riduce l'\emph{overfitting}.
+  \item \textbf{Separabilità.} La mappa di codifica proietta i dati in uno spazio
+    di Hilbert di dimensione $2^{\nq}$; il prodotto interno fra stati codificati
+    definisce un kernel che potrebbe separare le classi meglio di un kernel
+    classico \parencite{schuld2019quantum,havlicek2019supervised}.
+\end{enumerate}
+
+Questa tesi affronta soltanto le affermazioni (b), (c) e (d). L'affermazione (a)
+resta fuori portata per costruzione, e non per omissione: tutti gli esperimenti
+qui descritti girano sul simulatore di vettore di stato \code{default.qubit} della
+libreria PennyLane \parencite{bergholm2018pennylane}, che rappresenta in memoria
+le $2^{\nq}$ ampiezze e le fa evolvere con prodotti matrice-vettore. Con i valori
+di $\nq$ impiegati in questo lavoro, fra 4 e 10 qubit, la simulazione è esatta e
+il suo costo è del tutto ordinario. Nessuna misura di tempo riportata nel
+\cref{cap:risultati} può quindi essere letta come evidenza a favore o contro uno
+speedup.
+
+\subsection{La domanda specifica}
+\label{ssec:domanda}
+
+Ristretta alle tre affermazioni verificabili in simulazione, la domanda di ricerca
+è la seguente:
+
+\begin{quote}
+\itshape
+Negli esperimenti considerati, l'inserimento di un circuito quantistico
+variazionale in un Transformer testuale o visivo, oppure l'uso di un kernel di
+fedeltà su immagini mediche, produce un miglioramento misurabile della qualità
+predittiva, del gap di generalizzazione o della separabilità rispetto a controlli
+classici appaiati?
+\end{quote}
+
+Il Transformer \parencite{vaswani2017attention} offre punti di intervento
+circoscritti, e il Vision Transformer trasferisce la stessa struttura alle
+sequenze di patch di immagine \parencite{dosovitskiy2020image}. In entrambe le
+architetture esistono punti di sostituzione ben identificati: le tre proiezioni
+$Q$, $K$, $V$ di ogni testa di attenzione e la proiezione delle patch. Sono state
+proposte architetture quantistiche che intervengono sull'attenzione o su altri
+blocchi del ViT \parencite{cherrat2024quantumvision,comajoan2024qvt}, e questa
+tesi non tenta di riprodurle integralmente: adotta sostituzioni più piccole per
+poter appaiare inizializzazione, dati e metriche di addestramento e misurare la
+variabilità fra più seed. Il contributo consiste anzitutto nel costruire il
+confronto in modo che la risposta sia difendibile a prescindere dal suo esito.
+
+\section{Ipotesi}
+\label{sec:ipotesi}
+
+Il lavoro è organizzato attorno a quattro ipotesi operative. Ciascuna è enunciata
+con una metrica primaria, una direzione attesa e un criterio esplicito che ne
+determina il rifiuto.
+
+\begin{table}[htbp]
+\centering
+\caption[Le quattro ipotesi e i loro criteri di rifiuto]{%
+Le quattro ipotesi operative. Ogni riga trova risposta in una riga della tabella
+riassuntiva della \cref{sec:verifica-ipotesi}. I pedici $q$ e $c$ indicano
+rispettivamente la variante quantistica e la baseline classica appaiata.}
+\label{tab:ipotesi}
+\small
+\begin{tabularx}{\textwidth}{@{}c X l l@{}}
+\toprule
+\textbf{\#} & \textbf{Enunciato} & \textbf{Metrica primaria} & \textbf{Direzione attesa} \\
+\midrule
+H1 & Le proiezioni $Q,K,V$ quantistiche migliorano la modellazione del linguaggio
+   & validation loss, $\PPL$ & $\PPL_q < \PPL_c$ \\[4pt]
+H2 & Il \emph{patch embedding} quantistico migliora la classificazione di immagini
+   & test accuracy & $\accte^{\,q} > \accte^{\,c}$ \\[4pt]
+H3 & Il VQC agisce da regolarizzatore implicito
+   & gap $\gap = \acctr - \accte$ & $\gap_{\text{quantum}} < \gap_{\text{bounded}}$ \\[4pt]
+H4 & Il kernel di fedeltà quantistica separa le classi meglio di un kernel classico
+   & criterio di Fisher & $\text{Fisher}_q > \text{Fisher}_c$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Il criterio di rifiuto è comune a tutte e quattro ed è formulato sulle differenze
+appaiate $d_s = m_{q,s} - m_{c,s}$ calcolate sullo stesso seed $s$:
+
+\begin{quote}
+Un'ipotesi è \rifiutata{} se l'intervallo di confidenza al \SI{95}{\percent} della
+differenza media $\dmean$ contiene lo zero, oppure se è interamente collocato nella
+direzione opposta a quella attesa. Nel secondo caso l'esito è registrato come
+\rifiutataopposta, perché il dato in quel caso è informativo nel verso contrario.
+\end{quote}
+
+Su H3 va precisato subito il termine di confronto. L'ablazione del
+\cref{cap:esperimenti} costruisce tre varianti di \emph{patch embedding}: una
+lineare non vincolata (\code{vanilla}), una classica con output limitato in
+$[-1,1]$ (\code{bounded\_mlp}) e una quantistica (\code{quantum\_reg}). Il
+confronto primario è con \code{bounded\_mlp}, perché è l'unico che isola
+unitarietà ed entanglement a parità di limitatezza dell'output; le ragioni della
+scelta sono nella \cref{sec:esp-ablazione}.
+
+\paragraph{L'esito è anticipato qui.} Nessuna delle quattro ipotesi operative,
+così come definite per gli esperimenti di questa tesi, risulta confermata nella
+direzione attesa. L'anticipazione è deliberata, perché l'oggetto del lavoro è la
+qualità dell'evidenza con cui l'esito è ottenuto più che il verdetto in sé, e
+perché nulla di quanto segue dipende dall'effetto sorpresa. Il risultato non
+costituisce un giudizio sulla letteratura richiamata nella
+\cref{ssec:quattro-promesse}.
+
+\section{Contributi e divisione del lavoro}
+\label{sec:contributi}
+
+\paragraph{Contributi sperimentali.} Quattro esperimenti indipendenti, uno per
+ipotesi, ciascuno con baseline classica appaiata e protocollo multi-seed; per
+l'esperimento sulla regolarizzazione, anche multi-dataset. L'analisi impiega
+differenze appaiate, intervalli di confidenza parametrici e bootstrap, test di
+Wilcoxon dei ranghi con segno e dimensione dell'effetto $\dz$, riportati sempre
+insieme e mai ridotti al solo valore $p$.
+
+\paragraph{Contributi software.} La libreria \code{quantum\_framework}, descritta
+nel \cref{cap:software}, è stata estratta per rifattorizzazione dai quattro
+esperimenti, originariamente sviluppati come repository separati. Contiene i due
+layer variazionali riutilizzabili, il caricamento dei dati MedMNIST con
+generazione deterministica di corruzioni, un ciclo di addestramento con
+\emph{hook} diagnostici su gradienti e saturazione delle attivazioni, le metriche
+di classificazione, le funzioni di confronto statistico e la raccolta dei metadati
+di provenienza. A corredo: un entry point unico (\code{run.py}), uno schema comune
+dei risultati versionato e, per la campagna più costosa, la possibilità di
+interrompere e riprendere l'esecuzione.
+
+\paragraph{Contributo metodologico.} Il disegno adotta baseline appaiate e
+costruite in modo da rendere difficile, e non facile, ottenere un esito
+favorevole all'ipotesi quantistica. La baseline classica dell'ablazione ha
+deliberatamente più parametri della controparte quantistica nel componente in
+esame (\num{1880} contro \num{1540} parametri di \emph{patch embedding}), così che
+un eventuale vantaggio quantistico non sia attribuibile a un maggiore conteggio di
+parametri e un'eventuale assenza di vantaggio non sia attribuibile a uno
+svantaggio di capacità. Negli esperimenti 01 e 02 è invece la variante quantistica
+ad avere rispettivamente 336 e 48 parametri in più; lo squilibrio è riportato in
+modo aperto e impedisce di sostenere un confronto a parità di capacità
+parametrica.
+
+L'uso di una libreria di simulazione quantistica non è considerato un contributo.
+Il contributo sta nell'infrastruttura che rende ripetibile il confronto appaiato.
+
+\paragraph{Divisione del lavoro.} Il \cref{cap:fondamenti-quantistici}, dedicato
+ai fondamenti quantistici e ai circuiti variazionali, è redatto da \Coautore.
+Tutti gli altri capitoli, il codice degli esperimenti, la libreria
+\code{quantum\_framework} e l'esecuzione delle campagne sono opera del candidato.
+
+\section{Struttura della tesi}
+\label{sec:struttura}
+
+I \cref{cap:fondamenti-quantistici,cap:transformer,cap:vit} forniscono il
+vocabolario necessario, quantistico e classico, derivando Transformer e Vision
+Transformer fino al punto esatto in cui il circuito si innesta. Il
+\cref{cap:software} descrive l'infrastruttura e il \cref{cap:metodologia} il
+protocollo sperimentale con le minacce alla validità.
+
+I tre capitoli centrali sono tenuti separati di proposito: il
+\cref{cap:esperimenti} descrive il disegno dei quattro esperimenti senza
+riportarne i risultati, il \cref{cap:risultati} riporta i risultati senza
+interpretarli, il \cref{cap:discussione} propone le spiegazioni. Il
+\cref{cap:conclusioni} risponde alle quattro ipotesi e indica gli sviluppi
+successivi. Le appendici raccolgono configurazioni, comandi di riproduzione,
+tabelle per singolo seed, diagrammi dei circuiti e l'inventario delle esecuzioni.
