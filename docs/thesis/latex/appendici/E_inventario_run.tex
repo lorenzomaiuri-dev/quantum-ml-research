@@ -1,35 +1,25 @@
-% ===========================================================================
-%  Appendice E — Inventario delle run
-% ===========================================================================
 \chapter{Inventario delle run}
 \label{app:inventario}
 
-Questa appendice elenca ogni esecuzione utilizzata nella tesi. Serve a rendere
-verificabile l'affermazione, posta nella \cref{sec:minacce}, che nessuna run
-storica a schema diverso sia stata mescolata alle run della campagna definitiva.
+L'inventario distingue gli aggregati definitivi dalle esecuzioni storiche escluse
+dall'analisi.
 
 \begin{center}\small
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}l l l l@{}}\toprule
 \textbf{Esp.}&\textbf{Unità appaiate}&\textbf{Artefatto canonico}&\textbf{Stato}\\\midrule
 01&10 seed, 20 run&\code{experiment\_01\_quantum\_gpt\_n10.json}&completo\\
 02&5 seed, 10 run&\code{experiment\_02\_quantum\_vit\_n5.json}&completo\\
 03&3 dataset, 5 seed, 45 run&\code{experiment\_03\_quantum\_reg\_n100\_steps400.json}&completo\\
 04&20 sottocampioni&\code{experiment\_04\_quantum\_kernel\_frozen.json}&completo\\\bottomrule
-\end{tabular}\end{center}
+\end{tabular}%
+}\end{center}
 
-Gli artefatti sono in \file{docs/checkpoints}; l'elenco degli hash SHA-256 è
-in \file{docs/HANDOFF.md}. I manifest originali registrano il commit
-\code{b91c318ce87e697d7da459cd209a4c11a742fb11} e \code{dirty=true}. I percorsi
-delle singole run, seed, tempi, configurazioni e versioni di schema sono
-preservati negli aggregati, evitando una seconda trascrizione manuale.
+Gli artefatti sono in \file{docs/checkpoints}. Gli aggregati conservano percorsi
+delle run, seed, tempi, configurazioni e versioni dello schema.
 
 \section{Run storiche}
 
-\begin{limite}
-Le run precedenti all'unificazione dello schema vanno marcate esplicitamente in
-questa tabella e nelle sezioni in cui compaiono. In particolare: le run
-dell'esperimento~02 anteriori alla campagna definitiva non sono appaiate (dataset
-diversi fra la variante classica e quella quantistica) e usano uno schema privo
-dei campi \code{test\_accuracy} e \code{dataset}; non sostengono alcuna
-conclusione principale.
-\end{limite}
+Le run dell'esperimento~02 anteriori al protocollo definitivo non sono appaiate:
+usano dataset diversi fra le varianti e uno schema privo dei campi
+\code{test\_accuracy} e \code{dataset}. Sono escluse dai risultati.

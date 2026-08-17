@@ -13,9 +13,9 @@ Un qubit puro è un vettore unitario in $\C^2$,
 $\ket{\psi}=\alpha\ket{0}+\beta\ket{1}$, con
 $|\alpha|^2+|\beta|^2=1$. Un registro di $\nq$ qubit appartiene allo spazio di
 Hilbert $\C^{2^{\nq}}$ e ha base computazionale
-$\{\ket{0},\ket{1}\}^{\otimes\nq}$. Registri indipendenti si compongono tramite
-prodotto tensoriale. La crescita esponenziale della dimensione è alla base sia
-dell'argomento di espressività sia del costo della simulazione classica.
+$\{\ket{b}:b\in\{0,1\}^{\nq}\}$. Registri indipendenti si compongono tramite
+prodotto tensoriale. La crescita esponenziale della dimensione motiva alcune
+ipotesi di espressività e determina il costo della simulazione classica.
 
 \section{Porte a uno e due qubit}
 \label{sec:porte}
@@ -23,9 +23,10 @@ dell'argomento di espressività sia del costo della simulazione classica.
 Le porte quantistiche sono operatori unitari. Gli esperimenti impiegano le
 rotazioni $R_X(\theta)$, $R_Y(\theta)$ e $R_Z(\theta)$, la porta di Hadamard
 $H$ e la CNOT. Le rotazioni agiscono su un singolo qubit e sono periodiche negli
-angoli; Hadamard crea sovrapposizione, mentre CNOT correla due qubit e può
-generare entanglement quando il controllo è in sovrapposizione. Un circuito è
-la composizione ordinata di queste unità.
+angoli. Applicata agli stati della base computazionale, Hadamard produce
+sovrapposizioni; CNOT introduce un'interazione controllata e, per opportuni
+stati in ingresso, può generare entanglement. Un circuito è la composizione
+ordinata di queste unità.
 
 \section{Codifica angolare dei dati}
 \label{sec:angle-embedding}
@@ -36,7 +37,7 @@ qubit:
   \ket{\psi(x)}=\bigotimes_{i=1}^{\nq}R(x_i)\ket{0}.
   \label{eq:angle-embedding}
 \end{equation}
-La scelta dell'encoding determina quali frequenze della funzione dei dati sono
+La scelta della codifica determina quali frequenze della funzione dei dati sono
 accessibili al modello; ripetere le porte di encoding può ampliare questo
 spettro \parencite{schuld2021encoding}. Nel circuito qui studiato la mappa è
 applicata una sola volta, è periodica e non è iniettiva su un dominio
@@ -55,7 +56,7 @@ porte entangling. I pesi hanno forma
   W\in\R^{\nqlayers\times\nq\times3}.
   \label{eq:weight-shape}
 \end{equation}
-L'anello permette che l'output di un qubit dipenda dalle componenti codificate
+L'anello consente all'output di un qubit di dipendere dalle componenti codificate
 sugli altri. Nell'ablazione 03 esso e l'unitarietà distinguono strutturalmente
 il VQC dal controllo classico limitato.
 
@@ -68,9 +69,9 @@ L'uscita classica è il valore di aspettazione di Pauli-$Z$ sul qubit $i$:
   \label{eq:expval-z}
 \end{equation}
 La limitatezza è centrale per H3 ed è riprodotta dalla $\tanh$ finale della
-baseline \code{bounded\_mlp}. Il simulatore restituisce il valore esatto dello
-stato; su hardware lo stesso valore sarebbe stimato da un numero finito di
-\emph{shot} e avrebbe incertezza di campionamento.
+baseline \code{bounded\_mlp}. Il simulatore calcola il valore di aspettazione
+direttamente dallo statevector, senza rumore di campionamento; su hardware lo
+stesso valore sarebbe stimato da un numero finito di \emph{shot}.
 
 \section{Simulazione classica e differenziazione}
 \label{sec:simulazione}
@@ -89,19 +90,23 @@ su QPU.
 
 Nei \emph{barren plateau} la varianza del gradiente può decadere
 esponenzialmente con il numero di qubit, rendendo l'ottimizzazione impraticabile
-\parencite{mcclean2018barren}. Con $\nq\in[4,10]$ e $\nqlayers=2$ non si è nel
-regime asintotico tipico; inoltre la diagnostica dell'esperimento 03 non mostra
-gradienti quantistici sistematicamente più piccoli. Il fenomeno resta un limite
-potenziale di scala, non una spiegazione dimostrata dei risultati.
+\parencite{mcclean2018barren}. I risultati asintotici non si applicano
+direttamente ai circuiti piccoli e poco profondi qui studiati, con
+$\nq\in[4,10]$ e $\nqlayers=2$. Gli \emph{hook} dell'esperimento 03 misurano il
+gradiente sul modulo di compressione, non la varianza dei gradienti dei parametri
+quantistici, e non consentono quindi di diagnosticare un \emph{barren plateau}.
+Il fenomeno resta un limite potenziale di scala, non una spiegazione verificata
+dei risultati.
 
 \section{Algoritmi quantistici variazionali: quadro generale}
 \label{sec:vqa}
 
-I VQC appartengono alla famiglia degli algoritmi variazionali
+Gli algoritmi quantistici variazionali impiegano VQC
 \parencite{cerezo2021variational}: un circuito parametrico definisce una
-funzione differenziabile ottimizzata da un algoritmo classico. Nei quantum
-kernel, invece, la codifica definisce una mappa in uno spazio di Hilbert e la
-fedeltà tra due stati funge da similarità \parencite{schuld2019quantum}.
+funzione differenziabile ottimizzata da un algoritmo classico. Nel quantum
+kernel considerato, la codifica definisce invece una mappa in uno spazio di
+Hilbert e la fedeltà tra due stati funge da similarità
+\parencite{schuld2019quantum}.
 L'elevata dimensione dello spazio non garantisce da sola separabilità utile;
 inoltre alcuni quantum kernel possono concentrare i propri valori al crescere
 del sistema, riducendo l'informazione discriminativa disponibile

@@ -1,8 +1,9 @@
 # Experiment 01 — Quantum GPT
 
-A character-level language model (inspired by Karpathy's nanoGPT) where the
-Q/K/V projections in each attention head are replaced by Variational Quantum
-Circuits (VQC).
+A character-level language model based on the didactic Transformer from
+Karpathy's *Neural Networks: Zero to Hero* course, with nanoGPT as an additional
+design reference. The Q/K/V projections in each attention head are replaced by
+Variational Quantum Circuits (VQC).
 
 **Status: definitive campaign complete.** Ten paired runs with the preregistered
 `thesis` preset found no detectable validation-loss or perplexity advantage.

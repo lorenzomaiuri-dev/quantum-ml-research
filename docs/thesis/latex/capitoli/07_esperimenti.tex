@@ -1,37 +1,23 @@
-% ===========================================================================
-%  Capitolo 7 — Esperimenti
-%
-%  REGOLA: questo capitolo descrive il DISEGNO. I risultati stanno nel
-%  capitolo 8. Se una frase riporta un valore misurato di una metrica, è nel
-%  posto sbagliato.
-% ===========================================================================
 \chapter{Esperimenti}
 \label{cap:esperimenti}
 
-Questo capitolo descrive il disegno dei quattro esperimenti: per ciascuno,
-l'ipotesi, il punto esatto di intervento, la baseline, il protocollo di
-esecuzione e il conteggio dei parametri. Il criterio di rifiuto è comune a tutti
-ed è quello enunciato nella \cref{sec:falsificazione}: un'ipotesi è
-\rifiutata{} se l'intervallo di confidenza al \SI{95}{\percent} della differenza
-appaiata contiene lo zero oppure giace interamente nella direzione contraria a
-quella attesa. Le configurazioni complete sono nell'\cref{app:configurazioni}, i
-comandi nell'\cref{app:riproduzione} e i risultati nel \cref{cap:risultati}.
+Questo capitolo descrive il design dei quattro esperimenti: per ciascuno,
+l'ipotesi, il componente modificato, la baseline, il protocollo di
+esecuzione e il conteggio dei parametri. Criterio di decisione e appaiamento sono
+definiti nelle \cref{sec:falsificazione,sec:multiseed}. Le
+configurazioni complete sono nell'appendice~\ref{app:configurazioni}, i
+comandi nell'appendice~\ref{app:riproduzione} e i risultati nel \cref{cap:risultati}.
 
 \section{Esperimento 01 --- Proiezioni \texorpdfstring{$Q,K,V$}{Q,K,V} quantistiche}
 \label{sec:esp-gpt}
 
-\begin{ipotesi}[H1]
-Sostituendo le tre proiezioni lineari $Q$, $K$, $V$ di ogni testa di attenzione
-con circuiti quantistici variazionali, e mantenendo invariato ogni altro
-componente, la modellazione del linguaggio migliora: $\PPL_q < \PPL_c$.
-\end{ipotesi}
-
-La metrica primaria è la validation loss, con la perplexity che ne deriva.
+H1 confronta proiezioni $Q,K,V$ lineari e quantistiche. La metrica primaria è la
+validation loss, con direzione attesa $\mathcal{L}_q<\mathcal{L}_c$; la perplexity
+ne deriva per esponenziazione.
 
 L'intervento è confinato in \code{Head.\_get\_layer}
-(\cref{ssec:punto-sostituzione}): con \code{use\_quantum=False} il metodo
-restituisce \code{nn.Linear(n\_embd, head\_size, bias=False)}, con
-\code{use\_quantum=True} restituisce \classe{QuantumLayerAdapter}. La catena di
+(\cref{ssec:punto-sostituzione}). Il flag \code{use\_quantum} seleziona una
+proiezione lineare senza bias oppure \classe{QuantumLayerAdapter}. La catena di
 forme attraversata da una singola proiezione quantistica è
 \begin{equation}
   \shape{\dbatch, \dseq, \demb}
@@ -43,7 +29,8 @@ forme attraversata da una singola proiezione quantistica è
 \end{equation}
 
 A ogni \emph{forward pass} si valutano $n_{\text{layer}} \times \nhead \times 3$
-circuiti indipendenti. Il vincolo strutturale $\dhead = \nq$ della
+circuiti con parametri separati. Il vincolo strutturale $\dhead = \nq$
+dell'
 \cref{eq:nqubits-gpt} determina quali configurazioni siano ammissibili, e il
 metodo solleva \code{ValueError} quando non è soddisfatto: la coppia
 $(\demb, \nhead)$ non può quindi essere scelta liberamente, ma solo in modo che il
@@ -55,66 +42,43 @@ ottimizzatore, dimensione di batch e lunghezza di contesto.
 
 Il repository espone sei preset, confrontati nella \cref{tab:preset-gpt}; in tutti
 $\nqlayers = 2$ e \code{q\_device = "default.qubit"}. Il confronto principale usa
-\code{thesis}, fissato dopo un pilot e prima della campagna definitiva: tokenizer
+\code{thesis}, fissato dopo un pilot e prima della run definitiva: tokenizer
 a caratteri, $\demb = 8$, $\nhead = 2$, $\nq = 4$, batch 8, contesto 16, 1500
 iterazioni, valutazione ogni 100 iterazioni su 100 batch e dropout nullo. Il
-preset \code{big} non è utilizzabile nella variante quantistica, perché 64 qubit
-non sono simulabili.
-
-\begin{limite}
-Il preset \code{fast} ha \code{use\_quantum=True} come valore predefinito. In un
-confronto appaiato il campo va sovrascritto in modo esplicito per la variante
-classica. La modalità \code{compare} di \file{main.py} lo fa impostando il campo
-per ciascuna delle due varianti prima di costruire il modello, ma la cosa va
-segnalata perché un'esecuzione manuale delle due varianti con lo stesso comando
-produrrebbe due modelli quantistici.
-\end{limite}
+preset \code{big} non è utilizzabile nella variante quantistica, perché la
+simulazione di 64 qubit eccede le risorse disponibili.
 
 Il confronto principale usa esclusivamente \file{data/input.txt}, il corpus
 Shakespeare distribuito con il repository. Contiene \num{1115390} caratteri, e lo
 split deterministico 90/10 ne assegna \num{1003851} al training e \num{111539}
 alla validation; \classe{CharTokenizer} produce un vocabolario di 65 simboli.
-L'hash SHA-256 del corpus è
-\code{434c0554a8c4c53dc17e56a0abb0f30b88f83cbceb0289cb897db68c25e89eba}.
 
-La modalità \code{compare} esegue entrambe le varianti per ciascun seed, con
-l'appaiamento descritto nella \cref{sec:multiseed}, e scrive l'aggregato in
-\file{experiments/comparison\_<nome>.json}. Il file di progresso è aggiornato dopo
-ogni variante e \code{--resume} salta esclusivamente i run completi.
+La modalità \code{compare} esegue le due varianti per ciascun seed e supporta la
+ripresa delle esecuzioni interrotte.
 
-Quanto ai parametri, per il preset \code{thesis} la singola proiezione passa da 32
+Con il preset \code{thesis}, la singola proiezione passa da 32
 parametri classici a 60 quantistici (\cref{tab:parametri-proiezione}). Con
 $2\times2\times3 = 12$ proiezioni la differenza sul modello completo è di
 $12\times28=\num{336}$ parametri, cioè \num{2945} nella variante classica contro
 \num{3281} in quella quantistica ($+11{,}4\,\%$).
 
-Vengono registrati validation loss e perplexity per seed, conteggio dei parametri,
-tempi di addestramento e per iterazione, configurazione completa e manifest di
-provenienza. La generazione di testo è prodotta come materiale qualitativo:
-nessuna conclusione quantitativa è tratta dai campioni generati.
+La generazione di testo è conservata come materiale qualitativo e non entra nel
+confronto quantitativo.
 
 \section{Esperimento 02 --- \emph{Patch embedding} quantistico nel ViT}
 \label{sec:esp-vit}
 
-\begin{ipotesi}[H2]
-Sostituendo la proiezione lineare delle patch con un circuito quantistico
-variazionale, e mantenendo invariato l'encoder, la classificazione di immagini
-biomediche migliora: $\accte^{\,q} > \accte^{\,c}$.
-\end{ipotesi}
+H2 confronta il \emph{patch embedding} lineare con quello quantistico. La metrica
+primaria è la test accuracy, con direzione attesa
+$\accte^{\,q}>\accte^{\,c}$; macro-AUC e macro-F1 sono secondarie.
 
-Metrica primaria è la test accuracy; macro-AUC e macro-F1 sono secondarie.
-
-In \classe{HybridQCNNViT} il campo \code{use\_quantum} seleziona il \emph{patch
-embedding}: \code{nn.Linear(patch\_dim, embed\_dim)} nella variante classica,
+In \classe{HybridQCNNViT}, \code{use\_quantum} seleziona il \emph{patch
+embedding}: una proiezione lineare nella variante classica e
 \classe{QuantumPatchEmbedding} in quella quantistica. Il percorso quantistico
-segue la pipeline della \cref{eq:pipeline-vqc}, con \code{classical\_pre\_process}
-a comprimere $147 \to 8$ prima del circuito e $\nq = 8$ qubit. L'encoder è un
-\code{nn.TransformerEncoder} standard, identico nelle due varianti: l'attenzione
-non è quantizzata (\cref{ssec:precisazione-02}).
-
-L'appaiamento segue la \cref{sec:multiseed}. Una ripresa da checkpoint non
-reimposta l'RNG globale: ricarica dal checkpoint gli stati di PyTorch e del
-generatore del DataLoader.
+segue la pipeline dell'\cref{eq:pipeline-vqc}: il preprocessore classico comprime
+$147 \to 8$ prima del circuito a otto qubit. L'encoder Transformer è identico
+nelle due varianti e l'attenzione non è quantizzata
+(\cref{ssec:precisazione-02}).
 
 Da \file{params.json} risultano \num{3169} parametri totali nella variante
 classica e \num{3217} in quella quantistica. La differenza di 48 corrisponde
@@ -123,51 +87,24 @@ perché la compressione $147 \to 8$ è presente e identica in entrambe le varian
 come \code{nn.Linear} nella prima e come \code{classical\_pre\_process} nella
 seconda.
 
-A differenza dell'esperimento~03, il 02 non produce un conteggio per componente:
-\file{params.json} contiene solo \code{total} e \code{trainable}, e la
-scomposizione riportata sopra è ricostruita per calcolo anziché letta da un file.
-
-\begin{limite}
-Le run storiche dell'esperimento~02 non sono utilizzabili per il confronto
-principale. Alcune confrontano dataset o configurazioni differenti, mentre la
-precedente run quantistica su PathMNIST si interrompe dopo otto delle cinquanta
-epoche previste; inoltre il vecchio driver non garantiva né la stessa
-inizializzazione dei tensori condivisi né lo stesso ordine dei minibatch per ogni
-coppia. Le conclusioni su H2 poggiano esclusivamente sulle run della campagna
-definitiva.
-\end{limite}
-
-Il test primario è quindi limitato a PathMNIST e cinque seed appaiati, condizioni
-più ristrette di quelle di H3. Eventuali repliche su altri dataset restano analisi
-secondarie e non cambiano retroattivamente il criterio di decisione primario.
+Il confronto primario usa PathMNIST e cinque seed appaiati. Le esecuzioni
+storiche, svolte con configurazioni o procedure di appaiamento diverse, non sono
+incluse.
 
 \section{Esperimento 03 --- Ablazione sulla regolarizzazione}
 \label{sec:esp-ablazione}
 
-È l'unico dei quattro in cui il componente quantistico resta isolato, senza
-confusione con uno strato classico addestrabile a monte, e riceve per questo una
-descrizione più estesa.
-
-\begin{ipotesi}[H3]
-Il circuito quantistico variazionale agisce da regolarizzatore implicito: a parità
-di corpo del modello e di strato di compressione, il gap di generalizzazione della
-variante \code{quantum\_reg} è inferiore a quello della variante
-\code{bounded\_mlp}.
-\end{ipotesi}
-
-Metrica primaria è $\gap = \acctr - \accte$. Il confronto primario è
-\code{quantum\_reg} contro \code{bounded\_mlp}, per le ragioni esposte nella
-\cref{sec:baseline}; \code{vanilla} resta riferimento secondario.
-
-Tutte e tre le varianti condividono la \emph{stessa} \code{nn.Linear(147, 10)} di
-compressione e differiscono unicamente in ciò che avviene dopo di essa.
+H3 confronta il gap di generalizzazione di \code{quantum\_reg} e
+\code{bounded\_mlp}, con direzione attesa $\gap_q<\gap_c$; \code{vanilla} è il
+riferimento secondario. Le tre varianti condividono la stessa
+\code{nn.Linear(147, 10)} e differiscono nella post-elaborazione.
 
 \begin{table}[htbp]
 \centering
 \caption[Le tre varianti dell'ablazione]{%
 Le tre varianti dell'esperimento~03 e i rispettivi conteggi di parametri, letti
 da \file{params.json} (PathMNIST, 9 classi). Encoder \num{2660}, classificatore
-$99$ e altri parametri $200$ sono \emph{identici} nelle tre varianti.}
+$99$ e altri parametri $200$ sono identici nelle tre varianti.}
 \label{tab:varianti-ablazione}
 \small
 \begin{tabularx}{\textwidth}{@{}l X r r@{}}
@@ -181,65 +118,42 @@ $99$ e altri parametri $200$ sono \emph{identici} nelle tre varianti.}
 \end{tabularx}
 \end{table}
 
-Le tre varianti costituiscono i tre livelli di una scomposizione, ed è questo a
-rendere l'ablazione informativa. Il
-passaggio da \code{vanilla} a \code{bounded\_mlp} isola l'effetto del
-\textbf{bounding}, perché si aggiunge la limitatezza dell'output e si aggiunge
-capacità, ma non unitarietà né entanglement. Il passaggio da \code{bounded\_mlp} a
-\code{quantum\_reg} isola invece l'effetto di \textbf{unitarietà ed
-entanglement}: la limitatezza dell'output è la stessa, la capacità parametrica del
-blocco è addirittura inferiore, e la sola differenza strutturale è la natura
-quantistica della trasformazione.
-
-L'ipotesi H3 riguarda il secondo passaggio. Il primo funziona da effetto di
-controllo e serve a stabilire che l'esperimento sia sensibile: se nemmeno
-l'aggiunta del bounding producesse un effetto misurabile sul gap, l'esperimento
-non avrebbe la risoluzione necessaria per rilevare l'effetto cercato, e questo va
-constatato prima di interpretare il secondo confronto.
+Il confronto fra \code{vanilla} e \code{bounded\_mlp} misura l'effetto congiunto
+della MLP e della limitazione dell'output. Il confronto primario oppone invece
+due trasformazioni con output limitato, una MLP classica e un VQC. Parametri e
+famiglie funzionali rimangono diversi, quindi il confronto non isola unitarietà o
+entanglement.
 
 I flag \code{log\_gradients} e \code{log\_activations} sono attivi, e gli
 \emph{hook} descritti nella \cref{ssec:hook} sono agganciati a
-\code{patch\_embed.compression}, che è lo stesso modulo in tutte e tre le
-varianti: stessa classe, stessa forma, stessa posizione nel grafo. È questa
-identità a rendere confrontabili le tracce di norma del gradiente e di frazione di
-saturazione fra varianti, e non soltanto entro una variante. La campagna primaria
-non comprende invece la valutazione di robustezza al rumore, esclusa per non
-ampliare a posteriori la famiglia di endpoint.
+\code{patch\_embed.compression}, lo stesso modulo nelle tre varianti. Le tracce di
+norma del gradiente e frazione di saturazione sono quindi confrontabili. La
+valutazione di robustezza al rumore non fa parte del confronto primario.
 
-La campagna comprende $3 \times 5 \times 3 = 45$ run, tutte completate. Ogni run
-contiene 400 record di storia e 11 valutazioni di validation (epoca 1 e poi ogni
-40 step), e il test è valutato soltanto dopo la selezione del checkpoint sulla
-validation. Per ciascuna vengono registrati accuracy di training e di test, gap,
-macro-AUC, macro-F1, loss di test, conteggio dei parametri per componente, storia
-per epoca, tempi, configurazione e manifest.
+Il protocollo comprende $3 \times 5 \times 3 = 45$ esecuzioni da 400 epoche. La
+validation è calcolata alla prima epoca e poi ogni 40; il test è valutato dopo la
+selezione del checkpoint.
 
-Il file \file{main.py} non calcola alcun test statistico: l'aggregazione fra seed e
-i confronti appaiati avvengono in un passo separato che invoca
-\code{paired\_comparison()} sui \file{results.json} raccolti. La separazione fra
-esecuzione e analisi è deliberata, perché consente di rieseguire l'analisi senza
-rieseguire l'addestramento.
+\code{paired\_comparison()} aggrega i \file{results.json} e calcola i confronti
+appaiati fra seed senza rieseguire l'addestramento.
 
 \section{Esperimento 04 --- Kernel di fedeltà quantistica}
 \label{sec:esp-kernel}
 
-\begin{ipotesi}[H4]
-Il kernel di fedeltà quantistica separa le classi meglio della similarità coseno
-sullo stesso spazio di feature compresso: $F_q > F_c$.
-\end{ipotesi}
+H4 confronta il kernel di fedeltà con la similarità coseno sullo stesso spazio
+compresso. La metrica primaria è il criterio di Fisher, con direzione attesa
+$F_q>F_c$; il rapporto intra/inter $\rho$ è secondario.
 
-Metrica primaria è il criterio di Fisher della \cref{eq:fisher}; il rapporto
-intra/inter $\rho$ è secondario, con l'avvertenza sulla non confrontabilità delle
-scale posta nella \cref{sec:metriche}.
+Poiché il numeratore di $F$ è al quadrato, la metrica non distingue il verso di
+$\mu_{\mathrm{intra}}-\mu_{\mathrm{inter}}$. Le medie intra- e inter-classe sono
+quindi riportate insieme a $F$ per verificare che la similarità sia maggiore
+entro le classi.
 
-L'esperimento non addestra nulla: confronta due funzioni di similarità su dati
-fissati. È un pregio metodologico, perché nessuna delle conclusioni può essere
-attribuita a una scelta di iperparametri di ottimizzazione, a un'inizializzazione
-sfortunata o a un numero insufficiente di epoche, cioè alle spiegazioni
-alternative disponibili per gli altri tre esperimenti.
+L'esperimento non addestra parametri. Le fonti di variazione sono campionamento,
+PCA, riscalamento e configurazione del circuito.
 
-Da BreastMNIST si estraggono 80 campioni di classe 0 (\emph{malignant}) e 20 di
-classe 1 (\emph{normal/benign}), scelti con
-\code{np.random.default\_rng(seed).choice(..., replace=False)}. Le immagini sono
+Da BreastMNIST si estraggono senza reinserimento 80 campioni di classe 0
+(\emph{malignant}) e 20 di classe 1 (\emph{normal/benign}). Le immagini sono
 appiattite e divise per 255, standardizzate con \code{StandardScaler}, compresse
 con \code{PCA(n\_components=8, svd\_solver="full")} e riscalate in $[0,\pi]$ con
 \code{MinMaxScaler}. Il solver completo elimina la casualità implicita che
@@ -247,8 +161,8 @@ con \code{PCA(n\_components=8, svd\_solver="full")} e riscalate in $[0,\pi]$ con
 selezionati, solver e varianza spiegata sono salvati in \file{results.json}.
 
 La composizione 80/20 inverte la prevalenza del training set originale (147/399).
-Per separare il risultato dalla scelta di campionamento, la stessa analisi è
-ripetuta con composizione bilanciata 50/50 e con la prevalenza approssimata 27/73.
+La stessa analisi è ripetuta con composizione bilanciata 50/50 e con la
+prevalenza approssimata 27/73.
 La compressione è di $784 \to 8$ componenti, cioè un fattore 98, ed è identica per
 i due kernel: entrambi operano sulla stessa informazione residua, punto ripreso
 nella \cref{sec:compressione}.
@@ -267,33 +181,17 @@ $[0,1]$.
 Il circuito definitivo usa \code{qml.IQPEmbedding} con due ripetizioni ed
 entangler $ZZ$ fra qubit adiacenti; i termini di fase a due corpi codificano i
 prodotti $x_i x_j$ come nella famiglia proposta da
-\textcite{havlicek2019supervised}. Il valore del kernel è \code{probs[0]} e nessun
-parametro è addestrabile: il kernel è funzione dei soli dati. La baseline
-preregistrata è la similarità coseno fra i vettori riscalati in $[0,\pi]$ e
+\textcite{havlicek2019supervised}. \code{probs[0]} restituisce la probabilità
+associata allo stato $\ket{0\ldots0}$; il circuito non contiene parametri
+addestrabili. La baseline è la similarità coseno fra i vettori riscalati in
+$[0,\pi]$ e
 normalizzati a norma unitaria, $S = \hat{X}\hat{X}^{\top}$; la controvalidazione
-aggiunge un kernel RBF sulle componenti PCA centrate, con $\gamma=1/(2m)$ e $m$
-distanza quadratica mediana fra le coppie di training, scelta che non usa le
-etichette.
+aggiunge un kernel RBF sulle componenti PCA centrate, con $\gamma=1/(2m)$, dove
+$m$ è la distanza quadratica mediana fra le coppie di training. La scelta non usa
+le etichette.
 
-Una versione precedente del repository applicava Hadamard, $R_Z$, una cascata di
-CNOT e un secondo $R_Z$. Quel circuito produce un kernel di fedeltà valido, ma non
-è IQP, perché la cascata CNOT non è diagonale e mancano i termini $ZZ$ di prodotto
-fra feature. È conservato come \code{custom\_cnot\_rz} per auditabilità e non
-fornisce i risultati definitivi.
-
-La campagna usa 20 ripetizioni con seed 42--61; ciascuna impiega il seed
-$\code{seed} + r$ e quindi un sottocampione distinto. I sottocampioni possono
-sovrapporsi e non costituiscono 20 dataset indipendenti: l'unità di variazione è
-la selezione del training set, mentre il test ufficiale della controvalidazione
-predittiva rimane fisso. Il calcolo pairwise richiede $n(n+1)/2 = \num{5050}$
-valutazioni di circuito per 100 campioni, con crescita quadratica nella
-numerosità, e sulla CPU di riferimento una ripetizione richiede in media
-\SI{38,24}{\second}. Un controllo indipendente costruisce invece i 100 vettori di
-stato e ne calcola il Gram: sul simulatore fornisce la stessa matrice entro
-$2{,}0\times10^{-15}$, pur non rappresentando una procedura disponibile su
-hardware quantistico.
-
-Il verdetto \code{within\_10\_percent} prodotto dal codice è descrittivo e non è un
-test statistico: confronta i due valori di Fisher di una singola ripetizione con
-una soglia arbitraria del \SI{10}{\percent}. La conclusione statistica su H4
-proviene esclusivamente da \code{paired\_comparison()} applicata alle ripetizioni.
+Le venti ripetizioni usano i seed 42--61. I sottocampioni possono sovrapporsi;
+l'unità di variazione è quindi la selezione dei 100 esempi, non un dataset
+indipendente. Il calcolo pairwise richiede
+$n(n+1)/2=\num{5050}$ valutazioni di circuito. Un controllo separato costruisce i
+vettori di stato e calcola direttamente la matrice di Gram.

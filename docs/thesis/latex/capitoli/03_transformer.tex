@@ -1,8 +1,3 @@
-% ===========================================================================
-%  Capitolo 3 — Transformer autoregressivi
-%  Compresso: la teoria standard è ridotta all'essenziale. Si conserva ciò che
-%  serve a localizzare l'innesto del circuito e ciò che i cap. 9-10 richiamano.
-% ===========================================================================
 \chapter{Transformer autoregressivi}
 \label{cap:transformer}
 
@@ -12,6 +7,14 @@ limitandosi a quanto serve per localizzare il punto in cui l'esperimento~01
 sostituisce uno strato lineare con un circuito. La trattazione segue
 l'implementazione del repository e ne segnala le divergenze dalla formulazione
 canonica.
+
+L'implementazione classica di partenza riprende la struttura didattica costruita
+da Karpathy nel tutorial \emph{Let's build GPT: from scratch}, parte del corso
+\emph{Neural Networks: Zero to Hero} \parencite{karpathyZeroToHero}. Il
+repository nanoGPT dello stesso autore ha costituito un ulteriore riferimento
+progettuale \parencite{karpathyNanoGPT}; il modello impiegato qui non ne è però
+una replica, perché conserva teste di attenzione separate, tokenizzazione a
+caratteri e dimensioni molto più ridotte.
 
 \paragraph{Convenzione di notazione.} $\dbatch$ è la dimensione di batch, $\dseq$
 la lunghezza di sequenza (\code{block\_size}), $\demb$ la dimensione di embedding
@@ -31,16 +34,16 @@ quella delle posizioni:
   x \in \R^{\shape{\dbatch, \dseq, \demb}} .
   \label{eq:input-gpt}
 \end{equation}
-L'informazione posizionale va iniettata esplicitamente perché l'attenzione è
-equivariante rispetto alle permutazioni delle posizioni
-(\cref{sec:self-attention}). Nel codice entrambe le tabelle sono
+Le proiezioni e il calcolo dei punteggi non rappresentano da soli la posizione
+dei token, che viene quindi aggiunta esplicitamente. Nel codice entrambe le
+tabelle sono
 \code{nn.Embedding}, quindi l'embedding posizionale è appreso anziché sinusoidale;
 ha esattamente \code{block\_size} righe, per cui il modello non estrapola oltre la
 lunghezza di contesto con cui è stato addestrato e in generazione la finestra
 viene troncata.
 
-Il tokenizer della campagna definitiva è \classe{CharTokenizer}, che costruisce il
-vocabolario dai caratteri distinti del corpus. Il repository include anche
+Nelle run definitive si usa \classe{CharTokenizer}, che costruisce il vocabolario
+dai caratteri distinti del corpus. Il repository include anche
 \classe{BiCharTokenizer}, usato soltanto nei pilot storici. Nessuno dei due è un
 tokenizer a sottoparole addestrato.
 
@@ -63,14 +66,14 @@ $V = xW_V$, e l'uscita di una testa è $\softmax(S)\,V$ con
   \qquad S \in \R^{\shape{\dbatch, \dseq, \dseq}} .
   \label{eq:scores}
 \end{equation}
-Il fattore di scala risponde a un problema preciso: se le componenti di $q$ e $k$
-sono indipendenti con media nulla e varianza unitaria, il prodotto scalare di due
-vettori $d$-dimensionali ha varianza $d$, e senza normalizzazione la $\softmax$
-saturerebbe verso una distribuzione quasi degenere annullando il gradiente. Nel
+Se le componenti di $q$ e $k$ sono indipendenti con media nulla e varianza
+unitaria, il prodotto scalare di due vettori $d$-dimensionali ha varianza $d$.
+La divisione per $\sqrt{\dhead}$ evita quindi che l'aumento della dimensione
+spinga la $\softmax$ verso una distribuzione quasi degenere. Nel
 codice la scala è \code{self.scale = head\_size**-0.5}, uguale per entrambe le
 varianti. Il pilot iniziale usava per errore $1/\sqrt{\demb}$; quella run è stata
-esclusa dalla campagna definitiva e la correzione applicata prima di fissare il
-preset \code{thesis}.
+esclusa dalle run definitive e la correzione applicata prima di fissare il preset
+\code{thesis}.
 
 L'obiettivo autoregressivo richiede poi che la predizione alla posizione $t$
 dipenda solo dalle posizioni $t' \le t$. La maschera causale pone $S_{t,t'} =
@@ -80,29 +83,26 @@ registrata con \code{register\_buffer}: viene salvata nel checkpoint e spostata
 col modello fra CPU e GPU, ma non è un parametro e non entra nel conteggio del
 \cref{cap:risultati}.
 
-L'attenzione multi-testa esegue $\nhead$ attenzioni indipendenti in sottospazi di
-dimensione $\dhead$, ne concatena le uscite e applica una proiezione finale
-$W_O \in \R^{\demb \times \demb}$ seguita da dropout. Nell'implementazione le
+L'attenzione multi-testa esegue $\nhead$ attenzioni parametrizzate separatamente
+in sottospazi di dimensione $\dhead$, ne concatena le uscite e applica una
+proiezione finale $W_O \in \R^{\demb \times \demb}$ seguita da dropout.
+Nell'implementazione le
 teste sono moduli separati in un \code{nn.ModuleList} di istanze di \classe{Head},
 e non sono fuse in un'unica moltiplicazione di matrici come nelle implementazioni
-ottimizzate. La scelta costa la parallelizzazione fra teste ed è imposta
-dall'esperimento: la variante quantistica richiede un modulo distinto per ogni
-proiezione di ogni testa, perché ciascuno incapsula un proprio circuito con propri
-pesi. Mantenere la stessa struttura anche nel modello classico garantisce che la
-differenza fra le varianti riguardi il tipo di strato e non il modo in cui
-l'attenzione è calcolata.
+ottimizzate. La variante quantistica richiede infatti un modulo distinto per ogni
+proiezione di ogni testa, con circuito e pesi propri. La stessa struttura è usata
+nel modello classico, così che la differenza architetturale riguardi il tipo di
+proiezione.
 
-Da qui discende il vincolo che governa l'intero esperimento~01. La proprietà
-\code{GPTConfig.n\_qubits} è definita come
+Nell'esperimento~01 la dimensione della testa coincide con il numero di qubit. La
+proprietà \code{GPTConfig.n\_qubits} è definita come
 \begin{equation}
   \nq \;=\; \frac{\demb}{\nhead} \;=\; \dhead ,
   \label{eq:nqubits-gpt}
 \end{equation}
-e \code{Head.\_get\_layer} solleva \code{ValueError} se \code{head\_size} non
-coincide con \code{config.n\_qubits}. La dimensione della testa \emph{è} il numero
-di qubit: con il preset \code{default} ($\demb=32$, $\nhead=8$) e con il preset
-\code{fast} ($\demb=8$, $\nhead=2$) si simulano in entrambi i casi $\nq = 4$
-qubit per proiezione.
+Il metodo \code{Head.\_get\_layer} verifica questa uguaglianza e segnala
+dimensioni incompatibili. Il preset definitivo \code{thesis} usa $\demb=8$ e
+$\nhead=2$, quindi $\nq=4$ qubit per proiezione.
 
 \section{Rete feed-forward}
 \label{sec:ffn}
@@ -110,42 +110,38 @@ qubit per proiezione.
 Ogni blocco contiene una rete densa applicata indipendentemente a ciascuna
 posizione, $\text{FFN}(x) = \text{Dropout}\big(W_2\,\mathrm{ReLU}(W_1 x + b_1) +
 b_2\big)$ con espansione di fattore quattro, $W_1 \in \R^{\demb \times 4\demb}$ e
-$W_2 \in \R^{4\demb \times \demb}$, come in \textcite{vaswani2017attention}. È
-l'unica non-linearità sostanziale del blocco, dato che l'attenzione, a meno della
-$\softmax$ sui pesi, è una media pesata di trasformazioni lineari dei valori.
+$W_2 \in \R^{4\demb \times \demb}$, come in \textcite{vaswani2017attention}.
+ReLU introduce la non-linearità nella FFN; il blocco comprende inoltre la
+$\softmax$ dell'attenzione e le normalizzazioni.
 
-Il suo peso relativo si quantifica con un calcolo. Con $\demb = 32$ la FFN
-contiene $32\cdot 128 + 128 + 128\cdot 32 + 32 = \num{8352}$ parametri per blocco,
-contro i $3\cdot 128 = 384$ complessivi delle proiezioni $Q,K,V$ di tutte e otto
-le teste: oltre il \SI{90}{\percent} dei parametri del blocco sta nella FFN, che
-resta classica in ogni variante di questa tesi.
+Con il preset \code{thesis}, $\demb=8$, la FFN contiene \num{552} parametri per
+blocco. Le proiezioni $Q,K,V$ classiche ne contengono complessivamente \num{192},
+la proiezione di uscita 72 e le due \code{LayerNorm} 32. La FFN rappresenta
+quindi circa il \SI{65,1}{\percent} degli 848 parametri del blocco e resta
+classica in entrambe le varianti.
 
-Il VQC agisce dunque su una frazione minoritaria del modello, il che limita a
-priori l'ampiezza dell'effetto osservabile. L'assenza di differenza misurabile
-resterà compatibile tanto con l'ipotesi che il VQC non aggiunga nulla quanto con
-l'ipotesi che agisca su una porzione troppo piccola del modello perché l'effetto
-emerga; l'argomento è ripreso nella \cref{sec:capacita}.
+Il VQC modifica soltanto le proiezioni $Q,K,V$. In assenza di differenze
+misurabili, i dati non permettono di distinguere tra inefficacia della
+sostituzione ed effetto attenuato dal resto dell'architettura
+(\cref{sec:capacita}).
 
 \section{Connessioni residue e normalizzazione}
 \label{sec:residui}
 
-Ogni sottostrato è applicato in forma additiva, $x \leftarrow x + f(x)$, così che
-il gradiente si propaghi lungo due percorsi e il ramo identità lo faccia arrivare
-agli strati profondi senza attenuazione moltiplicativa. Il blocco adotta la
+Ogni sottostrato è applicato in forma additiva, $x \leftarrow x + f(x)$, e offre
+al gradiente un percorso diretto attraverso il ramo identità. Il blocco adotta la
 variante \emph{pre-norm}, \code{x = x + self.sa(self.ln1(x))} seguito da
 \code{x = x + self.ffwd(self.ln2(x))}, con una \code{LayerNorm} finale prima della
 testa di linguaggio: rispetto al \emph{post-norm} originale, questa forma lascia
-il ramo identità privo di normalizzazioni e rende stabile l'addestramento senza
-\emph{warmup} sul learning rate, condizione utile qui dove lo scheduler è comune a
-tutte le varianti.
+il ramo identità privo di normalizzazioni. L'addestramento usa un learning rate
+costante, senza \emph{warmup} né scheduler.
 
-Una proprietà del residuo è rilevante per la parte quantistica. Il ramo identità
-non è limitato, mentre l'uscita del VQC è confinata in $[-1,1]^{\nq}$ dai valori
-di aspettazione (\cref{sec:misurazione}). Man mano che la norma della
-rappresentazione residua cresce con la profondità, il contributo relativo di un
-ramo limitato diminuisce: è un meccanismo per cui l'effetto del circuito potrebbe
-attenuarsi indipendentemente da quanto il circuito sia espressivo, sviluppato
-nella \cref{sec:saturazione}.
+Il ramo identità non è limitato, mentre l'uscita del VQC è confinata in
+$[-1,1]^{\nq}$ dai valori di aspettazione (\cref{sec:misurazione}). Se la norma
+della rappresentazione residua cresce con la profondità, l'uscita del circuito
+può quindi diventare piccola rispetto al ramo identità. I dati raccolti non
+misurano direttamente questo rapporto; la \cref{sec:saturazione} lo considera
+come possibile limite architetturale.
 
 \section{Obiettivo e metrica}
 
@@ -159,34 +155,29 @@ interpreta come il numero effettivo di alternative equiprobabili fra cui il
 modello esita a ogni token.
 
 La loss di validation è prodotta da \code{estimate\_loss}, che media su
-\code{eval\_iters} batch estratti a caso sotto \code{torch.no\_grad()}. È dunque
-una \emph{stima campionaria} con una propria varianza, non trascurabile quando le
-differenze fra varianti sono piccole: il \cref{cap:risultati} riporta per questo
-la deviazione standard fra seed accanto a ogni valore, e la
-\cref{sec:limiti-statistici} discute quanta parte di una differenza osservata
-possa esserle attribuita. Il metodo \code{QuantumGPT.generate} campiona infine in
-modo iterativo da \code{softmax(logits[:, -1, :])} con \code{torch.multinomial},
-senza \emph{top-$k$} né temperatura.
+\code{eval\_iters} batch estratti a caso sotto \code{torch.no\_grad()}. Le
+varianti appaiate sono valutate sugli stessi batch; la dispersione fra seed
+riportata nel \cref{cap:risultati} comprende invece l'intera variabilità delle
+esecuzioni. Il metodo \code{QuantumGPT.generate} campiona infine in modo
+iterativo da \code{softmax(logits[:, -1, :])} con \code{torch.multinomial}, senza
+\emph{top-$k$} né temperatura.
 
-\section{Il punto esatto della sostituzione}
+\section{Sostituzione delle proiezioni}
 \label{sec:corrispondenza-gpt}
 \label{ssec:punto-sostituzione}
 
-L'intera differenza fra il modello classico e quello quantistico è contenuta in un
-unico punto: la scelta, per ciascuna delle proiezioni \code{key}, \code{query} e
-\code{value} di ogni testa, fra \classe{QuantumLayerAdapter} e un ordinario
-\code{nn.Linear}, operata da \code{Head.\_get\_layer} in
+La differenza architetturale riguarda la scelta, per ciascuna delle proiezioni
+\code{key}, \code{query} e \code{value} di ogni testa, fra
+\classe{QuantumLayerAdapter} e un ordinario \code{nn.Linear}, operata da
+\code{Head.\_get\_layer} in
 \file{01\_quantum\_gpt/src/model.py}. Nel percorso quantistico ciascuna proiezione
 segue la catena \code{Linear} $\to\tanh\cdot\pi\to$ \code{AngleEmbedding} $\to$
 \code{StronglyEntanglingLayers} $\to\expval{Z}$.
 
 Restano classici il prodotto $QK^{\top}$, il fattore di scala, la maschera
-causale, la $\softmax$, la combinazione pesata dei valori, la proiezione di
-uscita, la rete feed-forward, gli embedding e la testa di linguaggio. Il
-meccanismo di attenzione è dunque interamente classico, e quantistica è soltanto
-la costruzione dei suoi operandi. Per evitare ambiguità terminologica, nel seguito
-il modello è descritto come Transformer con proiezioni $Q,K,V$ quantistiche, e non
-come attenzione interamente quantistica.
+causale, la $\softmax$, l'aggregazione dei valori, la proiezione di uscita, la
+rete feed-forward, gli embedding e la testa di linguaggio. Nel seguito il modello
+è quindi descritto come Transformer con proiezioni $Q,K,V$ quantistiche.
 
 \paragraph{Implementazioni correlate.} Quixer combina primitive come Linear
 Combination of Unitaries e Quantum Singular Value Transform in un modello di
@@ -201,9 +192,8 @@ dipendenze del presente codice.
 \centering
 \caption[Parametri per proiezione $Q$, $K$ o $V$]{%
 Parametri addestrabili di una singola proiezione, preset \code{thesis}
-($\demb = 8$, $\nhead = 2$, $\nqlayers = 2$). La variante quantistica ne ha di
-più, non di meno: un'eventuale assenza di vantaggio non è imputabile a un
-deficit di capacità parametrica.}
+($\demb = 8$, $\nhead = 2$, $\nqlayers = 2$). La variante quantistica ha più
+parametri addestrabili della baseline classica.}
 \label{tab:parametri-proiezione}
 \small
 \begin{tabular}{@{}l l r@{}}
@@ -222,4 +212,4 @@ Quantistica & adapter: $\demb \times \nq + \nq$ & 36 \\
 Sul modello completo i totali sono \num{2945} parametri classici e \num{3281}
 quantistici, cioè \num{336} in più, pari all'$11{,}4\,\%$. La corrispondenza fra
 gli elementi teorici del capitolo e le classi che li implementano è
-nell'\cref{app:circuiti}.
+nell'appendice~\ref{app:circuiti}.

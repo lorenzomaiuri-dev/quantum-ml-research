@@ -1,24 +1,15 @@
-% ===========================================================================
-%  Capitolo 4 — Vision Transformer
-%  Compresso: si conserva ciò che riguarda il patch embedding (oggetto degli
-%  esperimenti 02 e 03) e i conteggi verificati su params.json.
-%
-%  NOTA: i conteggi di parametri riportati qui sono stati verificati sui file
-%  params.json delle run reali (campagna del 26/07/2026, PathMNIST, seed 42):
-%    transformer 2 660 · vanilla 4 439 · bounded_mlp 4 839 · quantum_reg 4 499.
-% ===========================================================================
 \chapter{Vision Transformer}
 \label{cap:vit}
 
 Il Vision Transformer \parencite{dosovitskiy2020image} applica l'architettura del
 \cref{cap:transformer} alle immagini, trattandole come sequenze di regioni
 rettangolari. Il capitolo si concentra sul \emph{patch embedding}, che è il
-componente su cui intervengono gli esperimenti 02 e 03, e chiude confrontando le
-due implementazioni usate.
+componente modificato negli esperimenti 02 e 03.
 
 \paragraph{Notazione.} L'immagine ha forma $\shape{\dbatch, \nch, H, W}$; le patch
-sono quadrate di lato $p$ e non sovrapposte, dunque $\npatch = (H/p)^2$ e la patch
-appiattita ha dimensione $\dpatch = p^2\nch$. La dimensione dei token è $\dvit$
+sono quadrate di lato $p$ e non sovrapposte, dunque
+$\npatch = (H/p)(W/p)$ e la patch appiattita ha dimensione
+$\dpatch = p^2\nch$. La dimensione dei token è $\dvit$
 (\code{embed\_dim}). Con i valori del repository: $H = W = 28$, $p = 7$,
 $\nch = 3$, quindi $\npatch = 16$ e $\dpatch = 147$; $\dvit = 10$
 nell'esperimento~03 e $\dvit = 8$ nel~02.
@@ -29,18 +20,15 @@ L'attenzione opera su sequenze, mentre un'immagine è una griglia di pixel. Il
 Vision Transformer partiziona l'immagine in regioni disgiunte e tratta ciascuna
 come un token, così che ogni pixel contribuisca a esattamente un token.
 L'estrazione usa due applicazioni di \code{unfold}, seguite da una \code{permute}
-che sposta l'asse dei canali in ultima posizione prima dell'appiattimento. La
-conseguenza non è di sola forma: dopo la \code{view} finale le tre componenti RGB
-dello stesso pixel risultano contigue nel vettore di $\dpatch$ elementi, e un
-ordinamento diverso produrrebbe un vettore altrettanto valido con una semantica
-delle componenti differente, rendendo incomparabili modelli addestrati con
-convenzioni diverse. Il vincolo $H \bmod p = 0$ è verificato all'istanziazione
-della configurazione.
+che sposta l'asse dei canali in ultima posizione prima dell'appiattimento. Dopo
+la \code{view} finale, le tre componenti RGB dello stesso pixel sono contigue nel
+vettore di $\dpatch$ elementi. Il repository usa immagini quadrate e verifica che
+la dimensione del lato sia divisibile per $p$.
 
 \begin{definizione}[Patch embedding]
 La proiezione delle patch è la mappa $\R^{\dpatch} \to \R^{\dvit}$ che trasforma
 ogni patch appiattita in un token del Transformer. Nella formulazione base è una
-trasformazione affine, $\text{PatchEmbed}(x) = W x + b$ con
+trasformazione affine, $\text{PatchEmbed}(x) = xW + b$ con
 $W \in \R^{\dpatch \times \dvit}$.
 \end{definizione}
 
@@ -49,25 +37,21 @@ Con $\dpatch = 147$ e $\dvit = 10$ la proiezione ha $147 \times 10 + 10 =
 \file{params.json} della variante \code{vanilla}, e il rapporto di compressione è
 $147/10 = 14{,}7$.
 
-Questa proiezione è il collo di bottiglia informativo dell'intero modello: tutto
-ciò che l'encoder elabora è passato attraverso una riduzione di dimensionalità di
-quasi quindici volte. Ed è esattamente il punto in cui gli esperimenti 02 e 03
-inseriscono il circuito quantistico, per cui il VQC non opera sui dati grezzi ma
-su una rappresentazione già severamente compressa da uno strato classico
-addestrabile. Le tre varianti confrontate nell'ablazione sono descritte nella
-\cref{sec:implementazioni-vit} e il loro disegno nel \cref{cap:esperimenti}.
+Prima dell'encoder, il \emph{patch embedding} riduce ogni vettore da 147 a 8
+componenti nell'esperimento 02 e a 10 nel 03. Il VQC riceve quindi una
+rappresentazione prodotta da uno strato classico addestrabile, non i pixel
+grezzi. Le tre varianti dell'ablazione sono descritte nella
+\cref{sec:implementazioni-vit} e il loro design nel \cref{cap:esperimenti}.
 
 \section{Token di classificazione ed embedding posizionale}
 \label{sec:cls}
 
 Un parametro appreso $c \in \R^{\shape{1,1,\dvit}}$, il token \code{[CLS]}, è
-concatenato in testa alla sequenza. Non corrisponde ad alcuna regione
-dell'immagine: la sua rappresentazione dopo l'encoder aggrega, attraverso
-l'attenzione, l'informazione dell'intera sequenza, e serve da descrittore globale
-per la classificazione. L'alternativa naturale sarebbe il \emph{mean pooling}
-sulle rappresentazioni finali delle patch; il token dedicato è preferito perché
-lascia all'attenzione la libertà di pesare le regioni in modo appreso invece di
-imporre una media uniforme.
+concatenato in testa alla sequenza e non è associato a una patch. Attraverso
+l'attenzione, la sua rappresentazione in uscita dall'encoder raccoglie
+informazioni dalla sequenza ed è usata per la classificazione. Un'alternativa,
+non valutata in questi esperimenti, è il \emph{mean pooling} sulle
+rappresentazioni finali delle patch.
 
 L'attenzione è equivariante rispetto alle permutazioni della sequenza, quindi
 senza informazione posizionale la griglia di patch sarebbe per il modello un
@@ -78,67 +62,48 @@ l'embedding è appreso in una sola dimensione pur codificando posizioni
 bidimensionali: la corrispondenza fra indice di sequenza e coordinata nella
 griglia resta implicita nell'ordine prodotto dall'estrazione delle patch.
 
-L'inizializzazione di questi due parametri non è però la stessa nei due
-esperimenti: \classe{AblationViT} (esperimento~03) usa
-\code{torch.randn(...) * 0.02}, mentre \classe{HybridQCNNViT} (esperimento~02) usa
-\code{torch.randn(...)} puro.
+I due esperimenti inizializzano questi parametri su scale diverse: deviazione
+standard $0{,}02$ nel 03 e unitaria nel 02.
 
 \begin{limite}
-La differenza è reale e comporta scale di inizializzazione distanti di un fattore
-cinquanta. Non compromette i confronti \emph{interni} a ciascun esperimento,
-perché in entrambi i casi la variante classica e quella quantistica condividono la
-stessa inizializzazione, ma vieta di confrontare direttamente valori numerici fra
-l'esperimento~02 e l'esperimento~03. Nessuna tabella del \cref{cap:risultati}
-accosta i due.
+La diversa scala di inizializzazione, insieme alle dimensioni dei modelli,
+esclude confronti diretti fra i risultati numerici dei due esperimenti, ma non
+incide sui rispettivi confronti appaiati.
 \end{limite}
 
 \section{Encoder e testa di classificazione}
 
-L'encoder è costruito con l'implementazione standard di PyTorch,
-\code{nn.TransformerEncoderLayer} replicato da \code{nn.TransformerEncoder}, con
-\code{norm\_first=True} (pre-norm, come nella \cref{sec:residui}),
-\code{activation="gelu"}, \code{batch\_first=True}, \code{nhead=2},
-\code{num\_layers=2} e \code{dim\_feedforward=40} nell'esperimento~03 (32 nel~02).
-L'uso dell'implementazione di libreria invece di una riscrittura è una scelta
-metodologica: l'oggetto di studio è il \emph{patch embedding}, quindi il corpo del
-modello non deve essere sospettabile di contenere differenze accidentali fra le
-varianti, e con \code{nn.TransformerEncoder} l'identità è garantita per
-costruzione.
+L'encoder usa l'implementazione standard di PyTorch con due strati e due teste,
+configurazione pre-norm e attivazione GELU. La dimensione della rete feed-forward
+è 40 nell'esperimento 03 e 32 nel 02. L'encoder è identico fra le varianti dello
+stesso esperimento.
 
 L'encoder dell'esperimento~03 contiene \num{2660} parametri addestrabili,
 identici nelle tre varianti e verificabili nel campo \code{transformer} di
 \file{params.json}: per ciascuno dei due strati, \num{440} di auto-attenzione
 ($3\dvit^2 + 3\dvit$ per le proiezioni fuse più $\dvit^2 + \dvit$ per la
 proiezione di uscita), \num{850} della rete feed-forward e $40$ delle due
-\code{LayerNorm}, per un totale di \num{1330} per strato. Questa identità esatta è
-l'argomento più forte a favore della validità interna dell'esperimento~03:
-qualunque differenza osservata nelle metriche non può originare dal corpo del
-modello.
+\code{LayerNorm}, per un totale di \num{1330} per strato.
 
 La rappresentazione del token \code{[CLS]} in uscita dall'encoder attraversa una
 \code{LayerNorm} e una proiezione lineare sul numero di classi, seguita da
-cross-entropy. Con $\dvit = 10$ e nove classi la testa ha $10 \times 9 + 9 = 99$
-parametri, e il modello completo dell'esperimento~03 ne ha \num{4439} nella
-variante \code{vanilla}: \num{1480} di \emph{patch embedding}, \num{2660} di
-encoder, $99$ di testa e $200$ fra token \code{[CLS]}, embedding posizionale e
-\code{LayerNorm} finale. Un modello da poche migliaia di parametri è
-deliberatamente piccolo, e la motivazione è il costo di simulazione del circuito
-(\cref{sec:overhead}) anziché un'ottimizzazione dell'architettura: la scala ridotta
-è un vincolo imposto dal metodo e limita la validità esterna delle conclusioni
-(\cref{sec:minacce}).
+cross-entropy. Per PathMNIST, con nove classi, la testa ha
+$10 \times 9 + 9 = 99$ parametri. La variante \code{vanilla} ne ha \num{4439} in
+totale: \num{1480} nel \emph{patch embedding}, \num{2660} nell'encoder, 99 nella
+testa e 200 fra token \code{[CLS]}, embedding posizionale e \code{LayerNorm}
+finale. La scala ridotta contiene il costo di simulazione del circuito
+(\cref{sec:overhead}) e circoscrive le conclusioni (\cref{sec:minacce}).
 
 \section{Le due implementazioni}
 \label{sec:implementazioni-vit}
 
-Gli esperimenti 02 e 03 usano due modelli distinti, nati in momenti diversi del
-lavoro e non unificati.
+Gli esperimenti 02 e 03 usano implementazioni distinte dello stesso schema
+generale.
 
 \begin{table}[htbp]
 \centering
 \caption[Confronto fra le due implementazioni di Vision Transformer]{%
-Le due implementazioni di Vision Transformer usate nella tesi. Le differenze di
-\code{embed\_dim} e di inizializzazione impediscono il confronto diretto fra
-valori numerici dei due esperimenti; ciascuno resta internamente appaiato.}
+Configurazioni delle due implementazioni di Vision Transformer.}
 \label{tab:confronto-vit}
 \small
 \begin{tabularx}{\textwidth}{@{}l X X@{}}
@@ -150,20 +115,20 @@ Varianti & 2 (lineare / quantistica) & 3 (\code{vanilla}, \code{bounded\_mlp}, \
 \code{ffn\_dim} & 32 & 40 \\
 Init.\ \code{[CLS]} e posizionale & \code{randn} & \code{randn}$\,\times\,0{,}02$ \\
 Conteggio per componente & no (solo totale) & sì (\code{count\_params}) \\
-Metrica primaria & accuracy, macro-AUC & gap di generalizzazione \\
-Parametri totali & \num{3169} / \num{3217} & \num{4439} / \num{4839} / \num{4499} \\
+Metrica primaria & test accuracy & gap di generalizzazione \\
+Parametri totali (PathMNIST) & \num{3169} / \num{3217} & \num{4439} / \num{4839} / \num{4499} \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\subsection{Una precisazione necessaria sull'esperimento 02}
+\subsection{Ambito dell'esperimento 02}
 \label{ssec:precisazione-02}
 
 Le architetture indicate in letteratura come Quantum Vision Transformer non
 adottano un'unica definizione: alcune quantizzano blocchi di attenzione o MLP,
 altre propongono trasformazioni quantistiche più estese
 \parencite{cherrat2024quantumvision,comajoan2024qvt}. L'esperimento 02 considera
-invece un intervento deliberatamente circoscritto al \emph{patch embedding}.
+invece soltanto il \emph{patch embedding}.
 
 Anche «quantum convolutional» può designare costruzioni differenti. La QCNN di
 \textcite{cong2019qcnn} è un circuito gerarchico per dati quantistici, con
@@ -174,11 +139,10 @@ nessuna delle due famiglie: comprime ciascuna patch con uno strato lineare e
 applica poi un VQC globale sugli otto valori ottenuti. La Self-Attention non è
 quantistica, e l'unico componente quantizzato è il \emph{patch embedding}.
 
-Gli esperimenti~02 e~03 implementano infine lo stesso circuito con codice diverso.
-Entrambi comprimono linearmente le patch, scalano con $\tanh\cdot\pi$, applicano
-\code{AngleEmbedding} e \code{StronglyEntanglingLayers} e misurano $\expval{Z_i}$
-su ogni qubit, con la stessa forma dei pesi. La differenza sta in dove avvenga la
-compressione: interna al modulo nell'esperimento~02, esterna e condivisa fra le
-tre varianti nel~03. Non è stata eseguita una prova dedicata di equivalenza
-numerica, quindi i confronti restano validi solo internamente a ciascun
-esperimento.
+Gli esperimenti~02 e~03 usano la stessa struttura circuitale: compressione
+lineare, riscalamento con $\tanh\cdot\pi$, \code{AngleEmbedding},
+\code{StronglyEntanglingLayers} e misura di $\expval{Z_i}$ su ogni qubit. Nel 02
+la compressione è interna a \classe{QuantumPatchEmbedding}; nel 03 è un
+componente esplicito delle tre varianti. In entrambi i casi i suoi pesi sono
+appaiati fra i modelli confrontati. Le due implementazioni non sono state
+sottoposte a una prova di equivalenza numerica.

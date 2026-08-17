@@ -1,12 +1,8 @@
-% ===========================================================================
-%  Appendice C — Tabelle complete
-% ===========================================================================
 \chapter{Tabelle complete}
 \label{app:tabelle}
 
-Il \cref{cap:risultati} riporta medie e deviazioni standard sui seed. Questa
-appendice contiene i valori per singola run, che sono ciò che rende verificabili
-le aggregazioni.
+Il \cref{cap:risultati} riporta gli aggregati; qui sono raccolti i valori per
+singola run e le tabelle di supporto.
 
 \section{Risultati per seed}
 
@@ -14,43 +10,37 @@ le aggregazioni.
 \caption{Esperimento 01: risultati completi per seed. I delta sono definiti
 come quantistico meno classico.}\label{tab:seed-01}\\
 \toprule
-\textbf{Seed} & $\mathcal{L}_c$ & $\mathcal{L}_q$ & $\PPL_c$ & $\PPL_q$ & $\Delta\PPL$ \\
+\textbf{Seed} & $\mathcal{L}_c$ & $\mathcal{L}_q$ & $\Delta\mathcal{L}$ & $\PPL_c$ & $\PPL_q$ \\
 \midrule
 \endfirsthead
 \toprule
-\textbf{Seed} & $\mathcal{L}_c$ & $\mathcal{L}_q$ & $\PPL_c$ & $\PPL_q$ & $\Delta\PPL$ \\
+\textbf{Seed} & $\mathcal{L}_c$ & $\mathcal{L}_q$ & $\Delta\mathcal{L}$ & $\PPL_c$ & $\PPL_q$ \\
 \midrule
 \endhead
-42    & 2,5370 & 2,5385 & 12,6411 & 12,6612 & +0,0201 \\
-137   & 2,5708 & 2,5736 & 13,0764 & 13,1134 & +0,0370 \\
-256   & 2,5570 & 2,5411 & 12,8971 & 12,6942 & -0,2029 \\
-512   & 2,5671 & 2,5908 & 13,0282 & 13,3401 & +0,3119 \\
-1024  & 2,5251 & 2,5637 & 12,4917 & 12,9832 & +0,4915 \\
-2048  & 2,5758 & 2,5665 & 13,1423 & 13,0196 & -0,1227 \\
-4096  & 2,5697 & 2,5894 & 13,0615 & 13,3219 & +0,2604 \\
-8192  & 2,5184 & 2,5401 & 12,4084 & 12,6812 & +0,2728 \\
-16384 & 2,6341 & 2,5971 & 13,9303 & 13,4245 & -0,5058 \\
-32768 & 2,5464 & 2,5549 & 12,7612 & 12,8700 & +0,1088 \\
+42    & 2,5370 & 2,5385 & +0,0015 & 12,6411 & 12,6612 \\
+137   & 2,5708 & 2,5736 & +0,0028 & 13,0764 & 13,1134 \\
+256   & 2,5570 & 2,5411 & -0,0159 & 12,8971 & 12,6942 \\
+512   & 2,5671 & 2,5908 & +0,0237 & 13,0282 & 13,3401 \\
+1024  & 2,5251 & 2,5637 & +0,0386 & 12,4917 & 12,9832 \\
+2048  & 2,5758 & 2,5665 & -0,0093 & 13,1423 & 13,0196 \\
+4096  & 2,5697 & 2,5894 & +0,0197 & 13,0615 & 13,3219 \\
+8192  & 2,5184 & 2,5401 & +0,0217 & 12,4084 & 12,6812 \\
+16384 & 2,6341 & 2,5971 & -0,0370 & 13,9303 & 13,4245 \\
+32768 & 2,5464 & 2,5549 & +0,0085 & 12,7612 & 12,8700 \\
 \bottomrule
 \end{longtable}
 
-Le tabelle complete degli esperimenti 02--04 sono conservate in forma
-machine-readable negli aggregati congelati descritti nell'\cref{app:inventario}.
-Il corpo della tesi riporta tutte le medie, deviazioni standard, differenze e
-intervalli necessari alla verifica delle ipotesi; evitare qui la duplicazione di
-centinaia di valori riduce il rischio di divergenza dalla fonte canonica.
+I valori degli esperimenti 02--04 sono negli aggregati descritti
+nell'appendice~\ref{app:inventario}.
 
 \section{Robustezza al rumore}
 
-Lo sweep di rumore è stato escluso dalla campagna primaria dell'esperimento
-03; non sono quindi riportate tabelle post-hoc su questo endpoint.
+Lo sweep di rumore non fa parte della run primaria dell'esperimento 03.
 
 \section{Tracce diagnostiche per epoca}
 
-Le tracce per epoca sono incluse per tutte le 45 run nell'aggregato congelato
-dell'esperimento 03. La \cref{tab:diagnostica-03} riporta le medie utilizzate
-nell'interpretazione; i valori completi restano disponibili per analisi
-indipendenti senza arrotondamento editoriale.
+L'aggregato dell'esperimento 03 contiene le tracce per epoca delle 45 run; la
+\cref{tab:diagnostica-03} ne riporta le medie.
 
 \section{Parametri e tempi}
 

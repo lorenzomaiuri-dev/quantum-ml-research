@@ -126,7 +126,7 @@
   bookmarksnumbered=true,
   linktoc=all
 }
-\usepackage[italian, nameinlink, capitalise]{cleveref}
+\usepackage[italian, nameinlink]{cleveref}
 \crefname{table}{tabella}{tabelle}
 \Crefname{table}{Tabella}{Tabelle}
 \crefname{figure}{figura}{figure}
@@ -134,21 +134,7 @@
 \crefname{equation}{equazione}{equazioni}
 \Crefname{equation}{Equazione}{Equazioni}
 
-% ===========================================================================
-%  AMBIENTI PER LA REGOLA REDAZIONALE
-%
-%  La regola del README impone che resti distinguibile cosa è definizione
-%  teorica, cosa comportamento implementato, cosa dato osservato e cosa
-%  interpretazione. La distinzione è resa nel testo in forma lessicale; gli
-%  ambienti sotto sono riservati ai casi in cui deve saltare all'occhio.
-%
-%  Uso: `definizione` e `ipotesi` sono numerati e citabili, quindi si usano
-%  liberamente. `limite` marca le limitazioni che circoscrivono le conclusioni
-%  ed è l'unico ambiente non numerato ancora in uso corrente.
-%  `implementazione`, `osservazione` e `interpretazione` restano definiti per
-%  compatibilità, ma il testo li rende in prosa: non introdurne di nuovi senza
-%  motivo, perché la loro accumulazione spezza la leggibilità del capitolo.
-% ===========================================================================
+% Ambienti semantici -------------------------------------------------------
 \theoremstyle{definition}
 \newtheorem{definizione}{Definizione}[chapter]
 \newtheorem{ipotesi}{Ipotesi}[chapter]
@@ -222,6 +208,5 @@
   \emph{quantistico $-$ classico} (\code{direction: "quantum\_minus\_classical"}).}
 
 % Etichette di esito delle ipotesi -----------------------------------------
-\newcommand{\rifiutata}{\textbf{rifiutata}}
-\newcommand{\nonrifiutata}{\textbf{non rifiutata}}
-\newcommand{\rifiutataopposta}{\textbf{rifiutata in direzione opposta}}
+\newcommand{\nonsupportata}{\textbf{non supportata}}
+\newcommand{\evidenzacontraria}{\textbf{evidenza contraria}}

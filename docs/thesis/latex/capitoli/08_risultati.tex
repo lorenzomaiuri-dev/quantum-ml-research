@@ -1,41 +1,11 @@
-% ===========================================================================
-%  Capitolo 8 — Risultati
-%  Lunghezza indicativa: 10–12 pagine. CAPITOLO DI SOLI FATTI.
-%
-%  Regola: se una frase contiene "perché" o "probabilmente", appartiene al
-%  capitolo 9. Qui vanno solo i valori misurati.
-%
-%  Regola per tutte le tabelle: media ± deviazione standard sui seed. Mai un
-%  singolo seed presentato come risultato. Le tabelle per-seed complete vanno
-%  nell'appendice C.
-% ===========================================================================
 \chapter{Risultati}
 \label{cap:risultati}
 
-Questo capitolo riporta i valori misurati. Le spiegazioni sono nel
-\cref{cap:discussione}: la separazione è mantenuta rigidamente perché rende
-verificabile quale parte del lavoro si possa contestare sui dati e quale
-sull'argomentazione.
-
-Tutte le tabelle riportano media $\pm$ deviazione standard sui seed. Nessun
-singolo seed è presentato come risultato; le tabelle complete per seed sono
-nell'\cref{app:tabelle}.
-
-\paragraph{Provenienza dei dati.} \convsegno{}
-Le campagne definitive registrano il commit
-\code{b91c318ce87e697d7da459cd209a4c11a742fb11} e
-\code{dirty=true}: le correzioni di protocollo erano presenti nel working tree.
-Gli aggregati sono congelati e controvalidati; il limite di provenienza è
-dichiarato nell'\cref{app:inventario}. Le campagne 01--02 usano CPU, la 03 CUDA
-per il corpo classico; tutti i circuiti neurali usano PennyLane 0.45.0 con
-\code{default.qubit}.
-
-Per l'esperimento~01 la campagna è stata eseguita fra il 31 luglio e il 1 agosto
-2026 su CPU, con Python 3.12.9, PyTorch 2.12.0, PennyLane 0.45.0 e backend
-\code{default.qubit}. I manifest registrano il commit
-\code{b91c318ce87e697d7da459cd209a4c11a742fb11} e il flag \code{dirty=true};
-l'aggregato completo è congelato con SHA-256
-\code{9ccd5fe09422e0947cfadfc089aeca19cb3b7955d62032c13866a3ded8a6839d}.
+Il capitolo riporta i valori misurati; l'interpretazione è nel
+\cref{cap:discussione}. Le tabelle mostrano media $\pm$ deviazione standard sui
+seed. I valori per seed sono nell'appendice~\ref{app:tabelle}, mentre provenienza
+e ambiente di esecuzione sono documentati nell'appendice~\ref{app:inventario}.
+\convsegno{}
 
 \section{Risultati per esperimento}
 \label{sec:risultati-per-esperimento}
@@ -61,10 +31,10 @@ Differenza  & $+0{,}00543$ & $+0{,}06711$ & $+336$ & $+605{,}159$ \\
 \end{tabular}
 \end{table}
 
-L'IC al 95\% del delta di loss è $[-0{,}01040;+0{,}02126]$; per la perplexity
-è $[-0{,}14100;+0{,}27522]$. Il test $t$ appaiato restituisce rispettivamente
-$p=0{,}458$ e $p=0{,}484$. La loss unigramma held-out è $3{,}347305$ ed è
-superiore alle medie di entrambe le varianti. Il tempo medio per iterazione è
+Per la loss, l'IC al 95\% della differenza è
+$[-0{,}01040;+0{,}02126]$ e il test $t$ appaiato restituisce $p=0{,}458$. Per la
+perplexity, l'IC è $[-0{,}14100;+0{,}27522]$ e $p=0{,}484$. La loss unigramma
+held-out è $3{,}347305$, superiore alle medie delle due varianti. Il tempo medio per iterazione è
 $0{,}00887 \pm 0{,}00062$ s per la variante classica e
 $0{,}41231 \pm 0{,}02030$ s per quella quantistica; il rapporto fra i tempi
 totali medi è $46{,}49\times$. Le curve di validation sono nella
@@ -85,9 +55,10 @@ totali medi è $46{,}49\times$. Le curve di validation sono nella
 \centering
 \caption[Esperimento 02: metriche di classificazione]{%
 Esperimento~02, per dataset, 5 seed. Media $\pm$ deviazione standard.
-\convsegno}
+}
 \label{tab:risultati-02}
 \small
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}l l c c c c r@{}}
 \toprule
 \textbf{Dataset} & \textbf{Variante} & \textbf{Test acc.} & \textbf{macro-AUC} & \textbf{macro-F1} & $\gap$ & \textbf{Tempo (s)} \\
@@ -95,15 +66,16 @@ Esperimento~02, per dataset, 5 seed. Media $\pm$ deviazione standard.
 \multirow{2}{*}{PathMNIST} & Classica    & $0{,}72232\pm0{,}02362$ & $0{,}95536\pm0{,}00436$ & $0{,}64840\pm0{,}03101$ & $0{,}01550\pm0{,}01710$ & $1124{,}5\pm38{,}1$ \\
                            & Quantistica & $0{,}69818\pm0{,}01830$ & $0{,}94520\pm0{,}00681$ & $0{,}63598\pm0{,}01843$ & $0{,}03384\pm0{,}02585$ & $10445{,}7\pm712{,}7$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 L'accuracy quantistica meno classica è $-0{,}02414$ (IC $t$ al 95\%
-$[-0{,}05432;+0{,}00604]$, $p=0{,}091$). L'IC bootstrap è interamente negativo,
-ma la decisione primaria segue l'intervallo $t$. La macro-AUC diminuisce di
+$[-0{,}05432;+0{,}00604]$, $p=0{,}091$); l'IC bootstrap è
+$[-0{,}04208;-0{,}00386]$. La macro-AUC diminuisce di
 $0{,}01016$ (IC $[-0{,}01525;-0{,}00507]$, $p=0{,}005$) ed è inferiore in tutti
-i cinque seed. La selezione dei checkpoint finali anziché best-validation non
-cambia la conclusione. Le curve di apprendimento sono nella \cref{fig:curve-02}.
+i cinque seed. I checkpoint finali producono lo stesso ordinamento delle
+varianti. Le curve di apprendimento sono nella \cref{fig:curve-02}.
 
 \begin{figure}[htbp]
 \centering
@@ -115,17 +87,15 @@ classico per le metriche di classificazione; barre: IC al 95\%.}
 
 \subsection{Esperimento 03 --- Ablazione sulla regolarizzazione}
 
-È la tabella centrale della tesi.
-
 \begin{table}[htbp]
 \centering
 \caption[Esperimento 03: tabella principale dell'ablazione]{%
 Esperimento~03, per dataset e variante, 5 seed. Media $\pm$ deviazione standard.
-Il gap $\gap = \acctr - \accte$ è la metrica primaria; $\acctr$ e $\accte$ sono
-riportate accanto perché il gap è interpretabile solo a parità di accuracy di
-training (\cref{sec:metriche}). \convsegno}
+Il gap $\gap = \acctr - \accte$ è la metrica primaria; $\acctr$ e $\accte$
+completano il confronto (\cref{sec:metriche}).}
 \label{tab:risultati-03}
 \scriptsize
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}l l c c c c c r r@{}}
 \toprule
 \textbf{Dataset} & \textbf{Variante} & $\acctr$ & $\accte$ & $\gap$ & \textbf{AUC} & \textbf{F1} & \textbf{P.emb.} & \textbf{Tempo (s)} \\
@@ -145,7 +115,8 @@ training (\cref{sec:metriche}). \convsegno}
  & \code{bounded\_mlp} & $0{,}770\pm0{,}105$ & $0{,}650\pm0{,}016$ & $0{,}120\pm0{,}117$ & $0{,}599\pm0{,}096$ & $0{,}159\pm0{,}042$ & \num{1880} & $14{,}0\pm0{,}1$ \\
  & \code{quantum\_reg} & $0{,}832\pm0{,}108$ & $0{,}628\pm0{,}041$ & $0{,}204\pm0{,}140$ & $0{,}607\pm0{,}035$ & $0{,}158\pm0{,}021$ & \num{1540} & $891{,}9\pm5{,}7$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \paragraph{Tracce diagnostiche.}
@@ -153,7 +124,7 @@ training (\cref{sec:metriche}). \convsegno}
 \centering
 \caption[Esperimento 03: diagnostica su gradienti e attivazioni]{%
 Norma $L^2$ media del gradiente in uscita da \code{patch\_embed.compression} e
-frazione di attivazioni in saturazione (definita dalla \cref{eq:saturazione}),
+frazione di attivazioni in saturazione (definita dall'\cref{eq:saturazione}),
 mediate su epoche e seed. Il modulo osservato è identico nelle tre varianti.}
 \label{tab:diagnostica-03}
 \small
@@ -170,11 +141,7 @@ mediate su epoche e seed. Il modulo osservato è identico nelle tre varianti.}
 
 Il delta di gap quantistico meno \code{bounded\_mlp} è $+0{,}148$ su
 PathMNIST, $+0{,}100$ su BloodMNIST e $+0{,}085$ su DermaMNIST; il segno è
-contrario a H3 in 12 blocchi dataset/seed su 15. Saturazione e gradienti non
-indicano un collasso banale dell'ottimizzazione.
-
-Il gap medio delle tre varianti, dataset per dataset, è rappresentato nella
-\cref{fig:gap-03}.
+contrario a H3 in 12 blocchi dataset/seed su 15.
 
 \begin{figure}[htbp]
 \centering
@@ -194,9 +161,10 @@ riporta media e IC al 95\%.}
 Esperimento~04, BreastMNIST, 80${+}$20 campioni, PCA a 8 componenti.
 Media $\pm$ deviazione standard su 20 ripetizioni. Il criterio di Fisher è
 la metrica primaria; il rapporto $\rho$ è descrittivo e non confrontabile fra
-scale diverse (\cref{sec:metriche}). \convsegno}
+scale diverse (\cref{sec:metriche}).}
 \label{tab:risultati-04}
 \small
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}l c c c c c@{}}
 \toprule
 \textbf{Kernel} & \code{intra\_0} & \code{intra\_1} & \code{inter} & $\rho$ & $F$ \\
@@ -205,14 +173,18 @@ Coseno & $0{,}8922 \pm 0{,}0142$ & $0{,}8825 \pm 0{,}0158$ & $0{,}8816 \pm 0{,}0
 RBF & $0{,}6084 \pm 0{,}0108$ & $0{,}5473 \pm 0{,}0405$ & $0{,}5547 \pm 0{,}0210$ & $1{,}0424 \pm 0{,}0294$ & $0{,}0446 \pm 0{,}0513$ \\
 Fedeltà (IQP) & $0{,}0172 \pm 0{,}0038$ & $0{,}0171 \pm 0{,}0067$ & $0{,}0145 \pm 0{,}0028$ & $1{,}1799 \pm 0{,}1451$ & $0{,}0029 \pm 0{,}0032$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 Le otto componenti PCA spiegano $0{,}7654 \pm 0{,}0113$ della varianza
-(intervallo osservato $[0{,}7459,0{,}7837]$). Sulla metrica primaria, la
-differenza IQP meno coseno è $-0{,}01515$; IQP meno RBF è $-0{,}04168$. Il
-rapporto $\rho$ ha invece segno opposto, come discusso nella
-\cref{sec:limiti-statistici}: non sostituisce la metrica primaria dichiarata.
+(intervallo osservato $[0{,}7459,0{,}7837]$). La differenza nel criterio di
+Fisher è $-0{,}01515$ per IQP meno coseno e $-0{,}04168$ per IQP meno RBF. Per
+$\rho$ entrambe le differenze sono positive.
+
+I venti sottocampioni si sovrappongono. Intervalli e valori $p$ misurano la
+variabilità dovuta al sottocampionamento, non quella fra dataset indipendenti
+(\cref{sec:minacce}).
 
 \begin{figure}[htbp]
 \centering
@@ -223,13 +195,12 @@ del kernel quantistico; barre: IC al 95\%.}
 \label{fig:fisher-04}
 \end{figure}
 
-La validazione predittiva fuori campione, con SVC a kernel precomputato sul test
-ufficiale BreastMNIST e $C$ selezionato per cross-validation sui soli dati di
-training, va nella stessa direzione della metrica primaria. IQP è inferiore a
-coseno e RBF su balanced accuracy, macro-AUC e macro-F1 in tutti e tre i regimi di
-composizione: nel regime 80/20 la balanced accuracy è $0{,}511$ contro $0{,}594$
+La SVC usa un kernel precomputato sul test ufficiale BreastMNIST e seleziona $C$
+per cross-validation sui dati di training. IQP ottiene valori inferiori a
+coseno e RBF per balanced accuracy, macro-AUC e macro-F1 nei tre regimi di
+composizione. Nel regime 80/20 la balanced accuracy è $0{,}511$ contro $0{,}594$
 del coseno, nel 50/50 $0{,}607$ contro $0{,}673$ e nel 27/73 $0{,}569$ contro
-$0{,}688$. I valori completi sono nell'\cref{tab:validazione-svc-04}.
+$0{,}688$. I valori completi sono nella \cref{tab:validazione-svc-04}.
 
 \begin{figure}[htbp]
 \centering
@@ -240,60 +211,44 @@ riassumono la variabilità sui venti sottocampioni di training.}
 \label{fig:svc-04}
 \end{figure}
 
-\section{Differenze appaiate}
+\section{Confronti appaiati}
 \label{sec:differenze-appaiate}
-
-Le differenze dell'esperimento 01 sono riportate nell'\cref{tab:seed-01}; le
-figure \cref{fig:paired-01,fig:paired-02,fig:paired-gap-03,fig:fisher-04}
-mostrano i punti appaiati, la media e l'intervallo. I valori aggregati sono
-riuniti nella \cref{tab:statistica}.
-
-Dove il segno della differenza non è consistente fra i seed, l'incoerenza è
-riportata insieme al valore medio, perché descrive la stabilità del confronto.
-
-\section{Intervalli di confidenza e dimensioni dell'effetto}
 \label{sec:intervalli}
 
 \begin{table}[htbp]
 \centering
 \caption[Analisi statistica dei confronti appaiati]{%
-Analisi appaiata prodotta da \code{paired\_comparison()} sulle metriche primarie.
-Sono riportati insieme differenza media, entrambi gli intervalli di confidenza, i
-due valori $p$ e la dimensione dell'effetto: il valore $p$ da solo non è un
-risultato (\cref{sec:statistica}). \convsegno}
+Analisi appaiata prodotta da \code{paired\_comparison()} sulle metriche primarie:
+differenza media, intervalli $t$ e bootstrap, valori $p$ del test $t$ e del
+Wilcoxon e dimensione dell'effetto $\dz$ (\cref{sec:statistica}).}
 \label{tab:statistica}
 \scriptsize
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}l l c c c c c c@{}}
 \toprule
 \textbf{Confronto} & \textbf{Metrica} & $\dmean$ & $\IC$ ($t$) & $\IC$ (boot.) & $p_{t}$ & $p_{W}$ & $\dz$ \\
 \midrule
 04 IQP--coseno & Fisher & $-0{,}01515$ & $[-0{,}02379;-0{,}00652]$ & $[-0{,}02345;-0{,}00769]$ & $0{,}00161$ & $0{,}000322$ & $-0{,}821$ \\
 04 IQP--RBF & Fisher & $-0{,}04168$ & $[-0{,}06438;-0{,}01899]$ & $[-0{,}06452;-0{,}02322]$ & $0{,}00109$ & $1{,}91\times10^{-6}$ & $-0{,}860$ \\
-01 QGPT & PPL & $+0{,}06711$ & $[-0{,}14100;+0{,}27522]$ & $[-0{,}11048;+0{,}22839]$ & $0{,}484$ & $0{,}4316$ & $+0{,}231$ \\
+01 QGPT & Loss & $+0{,}00543$ & $[-0{,}01040;+0{,}02126]$ & $[-0{,}00802;+0{,}01780]$ & $0{,}458$ & $0{,}375$ & $+0{,}245$ \\
 02 QViT & Accuracy & $-0{,}02414$ & $[-0{,}05432;+0{,}00604]$ & $[-0{,}04208;-0{,}00386]$ & $0{,}0905$ & $0{,}1875$ & $-0{,}993$ \\
 03 PathMNIST & Gap & $+0{,}14838$ & $[+0{,}030;+0{,}267]$ & $[+0{,}070;+0{,}212]$ & $0{,}026$ & $0{,}125$ & $+1{,}550$ \\
 03 BloodMNIST & Gap & $+0{,}09954$ & $[-0{,}075;+0{,}275]$ & $[-0{,}024;+0{,}195]$ & $0{,}189$ & $0{,}3125$ & $+0{,}706$ \\
 03 DermaMNIST & Gap & $+0{,}08462$ & $[-0{,}076;+0{,}246]$ & $[-0{,}034;+0{,}159]$ & $0{,}218$ & $0{,}3125$ & $+0{,}653$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
-Gli intervalli distinguono neutralità incerta per H1, stima sfavorevole ma IC
-dell'accuracy attraversato da zero per H2, direzione media sfavorevole coerente
-fra dataset per H3 e intervalli interamente opposti all'atteso per H4.
-
-L'unica divergenza rilevante fra $t$-test, bootstrap e Wilcoxon riguarda
-l'accuracy dell'esperimento 02, dove l'intervallo bootstrap è interamente negativo
-mentre quello $t$ attraversa lo zero; la decisione primaria segue l'intervallo
-$t$, come stabilito nella \cref{sec:statistica}. La dimensione dell'effetto è
-interpretata con le soglie convenzionali di \textcite{cohen1988statistical}
-($0{,}2$, $0{,}5$, $0{,}8$), che restano convenzioni, e va letta tenendo presente
-il limite di rilevabilità $\dz \ge 1{,}68$ della \cref{ssec:potenza}.
+Nell'esperimento 02 l'intervallo bootstrap è interamente negativo, mentre
+l'intervallo $t$ comprende lo zero. Il criterio primario definito nella
+\cref{sec:statistica} usa quest'ultimo. Per $\dz$ si adottano le soglie di
+\textcite{cohen1988statistical} ($0{,}2$, $0{,}5$, $0{,}8$); con cinque coppie,
+la soglia di rilevabilità stimata nella \cref{ssec:potenza} è $1{,}68$.
 
 Il conteggio dei parametri per componente e i tempi di esecuzione delle tre
-campagne con addestramento sono nell'\cref{app:tabelle}. I rapporti temporali
-restano separati per esperimento: una singola figura accuracy--tempo
-suggerirebbe una frontiera comune fra workload non omogenei.
+run con addestramento sono nell'appendice~\ref{app:tabelle}. I tempi sono confrontati
+soltanto fra varianti dello stesso esperimento, dato che i workload differiscono.
 
 \section{Verifica delle ipotesi}
 \label{sec:verifica-ipotesi}
@@ -301,28 +256,21 @@ suggerirebbe una frontiera comune fra workload non omogenei.
 \begin{table}[htbp]
 \centering
 \caption[Esito delle quattro ipotesi]{%
-Esito delle quattro ipotesi della \cref{tab:ipotesi}. L'esito
-\rifiutataopposta{} indica che l'intervallo di confidenza è interamente
-collocato nella direzione contraria a quella attesa. \convsegno}
+Esito delle quattro ipotesi della \cref{tab:ipotesi}.}
 \label{tab:verifica-ipotesi}
-\small
+\scriptsize
 \begin{tabularx}{\textwidth}{@{}c X c c c c@{}}
 \toprule
 \textbf{\#} & \textbf{Metrica primaria} & $\dmean$ & $\IC$ & $p$ & \textbf{Esito} \\
 \midrule
-H1 & Perplexity di validation & $+0{,}06711$ & $[-0{,}14100;+0{,}27522]$ & $0{,}484$ & \rifiutata \\
-H2 & Test accuracy & $-0{,}02414$ & $[-0{,}05432;+0{,}00604]$ & $0{,}091$ & \rifiutata \\
-H3 & Gap (tre dataset) & $+0{,}148;+0{,}100;+0{,}085$ & vedi \cref{tab:statistica} & --- & \rifiutata \\
-H4 & Criterio di Fisher & $-0{,}01515$ & $[-0{,}02379;-0{,}00652]$ & $0{,}00161$ & \rifiutataopposta \\
+H1 & Loss di validation & $+0{,}00543$ & $[-0{,}01040;+0{,}02126]$ & $0{,}458$ & \nonsupportata \\
+H2 & Accuracy di test & $-0{,}02414$ & $[-0{,}05432;+0{,}00604]$ & $0{,}091$ & \nonsupportata \\
+H3 & Gap (3 dataset) & $+0{,}148;+0{,}100;+0{,}085$ & vedi \cref{tab:statistica} & --- & \nonsupportata \\
+H4 & Fisher & $-0{,}01515$ & $[-0{,}02379;-0{,}00652]$ & $0{,}00161$ & \evidenzacontraria \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Dove l'ipotesi non è rifiutata, il dato risulta compatibile con l'assenza di
-effetto senza dimostrare un'equivalenza, e l'ampiezza di effetto ancora
-compatibile è quella delimitata dall'intervallo di confidenza riportato in
-tabella. L'espressione «prestazioni equivalenti» non compare in questa tesi,
-perché non sarebbe sostenibile senza una soglia di equivalenza fissata a priori
-(\cref{sec:falsificazione}).
-
-Le spiegazioni sono rimandate al \cref{cap:discussione}.
+Gli intervalli che comprendono lo zero non supportano le corrispondenti ipotesi.
+Non è stato eseguito un test di equivalenza, poiché il protocollo non definiva
+una soglia $\delta$ (\cref{sec:falsificazione}).

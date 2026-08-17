@@ -1,7 +1,3 @@
-% ===========================================================================
-%  Capitolo 10 — Conclusioni
-%  Lunghezza indicativa: 3–4 pagine. NESSUN MATERIALE NUOVO.
-% ===========================================================================
 \chapter{Conclusioni}
 \label{cap:conclusioni}
 
@@ -9,122 +5,66 @@
 \label{sec:risposte}
 
 \paragraph{H1 --- Proiezioni \texorpdfstring{$Q,K,V$}{Q,K,V} quantistiche.}
-H1 è \rifiutata{} secondo il criterio operazionale. La differenza media di
-perplexity, quantistico meno classico, è $+0{,}06711$ (IC al 95\%
-$[-0{,}14100;+0{,}27522]$, $p=0{,}484$): non emerge un miglioramento e la stima
-puntuale è nella direzione opposta, senza significatività statistica.
+H1 è \nonsupportata. La differenza media di validation loss, quantistico meno
+classico, è $+0{,}00543$ (IC al 95\% $[-0{,}01040;+0{,}02126]$, $p=0{,}458$).
 
 \paragraph{H2 --- \emph{Patch embedding} quantistico.}
-H2 è \rifiutata{} secondo il criterio primario. L'accuracy diminuisce in
-media di $0{,}02414$ (IC al 95\% $[-0{,}05432;+0{,}00604]$, $p=0{,}091$):
-l'intervallo non dimostra un danno certo sull'accuracy, ma non mostra il
-miglioramento atteso. La macro-AUC secondaria è inferiore in tutti i seed
+H2 è \nonsupportata. L'accuracy diminuisce in media di $0{,}02414$ (IC al 95\%
+$[-0{,}05432;+0{,}00604]$, $p=0{,}091$). La macro-AUC è inferiore nei cinque seed
 ($-0{,}01016$, IC $[-0{,}01525;-0{,}00507]$).
 
 \paragraph{H3 --- Regolarizzazione implicita.}
-H3 è \rifiutata. Il delta di gap quantistico meno \code{bounded\_mlp} è
+H3 è \nonsupportata. Il delta di gap quantistico meno \code{bounded\_mlp} è
 positivo su PathMNIST ($+0{,}148$), BloodMNIST ($+0{,}100$) e DermaMNIST
-($+0{,}085$), e in 12 delle 15 coppie dataset/seed: la direzione media è sempre
-opposta a quella ipotizzata. Solo PathMNIST ha un IC non corretto interamente
-positivo; l'effetto non supera la correzione di Holm sui tre dataset. Il dato
-sostiene quindi una mancata regolarizzazione utile, non una legge universale di
-anti-regolarizzazione quantistica.
+($+0{,}085$), con segno positivo in 12 delle 15 coppie dataset/seed. Solo
+l'intervallo di PathMNIST è interamente positivo.
 
 \paragraph{H4 --- Kernel di fedeltà.}
-H4 è \rifiutataopposta. Rispetto al coseno, la differenza media del criterio di
-Fisher è $-0{,}01515$ (IC al 95\% $[-0{,}02379;-0{,}00652]$); rispetto all'RBF
+Per H4 emerge \evidenzacontraria. Rispetto al coseno, la differenza media del
+criterio di Fisher è $-0{,}01515$ (IC al 95\% $[-0{,}02379;-0{,}00652]$); rispetto all'RBF
 è $-0{,}04168$ (IC $[-0{,}06438;-0{,}01899]$). La validazione SVC sul test
-ufficiale conferma metriche predittive inferiori per IQP nei tre regimi di
-campionamento analizzati.
+ufficiale produce metriche inferiori per IQP nei tre regimi di campionamento.
 
-\paragraph{Risposta alla domanda generale.} Nessuno dei quattro protocolli
-mostra il vantaggio ipotizzato. H1 è sostanzialmente neutra sul piano
-predittivo; H2 non migliora l'accuracy e riduce la macro-AUC; H3 mostra gap medi
-nella direzione opposta; H4 riduce Fisher e le metriche SVC rispetto ai
-controlli classici. La risposta resta circoscritta a circuiti, dataset,
-architetture e simulatori effettivamente studiati.
-
-La distinzione fra le quattro accezioni di «vantaggio quantistico» introdotta
-nella \cref{ssec:quattro-promesse} va mantenuta anche nella risposta: la tesi
-risponde su (b), (c) e (d); non risponde, e non poteva rispondere, su (a).
+\paragraph{Risposta alla domanda generale.} Nessuno dei quattro esperimenti
+mostra il vantaggio ipotizzato nelle configurazioni provate. La tesi valuta le
+accezioni (b), (c) e (d) della \cref{ssec:quattro-promesse}; non misura uno
+speedup computazionale.
 
 \section{Contributi}
 \label{sec:contributi-finali}
 
-\paragraph{Infrastruttura software.} \code{quantum\_framework} è una libreria
-riutilizzabile per confronti quantistico/classico appaiati: due layer
-variazionali con integrazione PyTorch--PennyLane, caricamento MedMNIST con
-generazione deterministica di corruzioni, ciclo di addestramento con \emph{hook}
-diagnostici su gradienti e saturazione, metriche di classificazione, funzioni di
-confronto statistico appaiato e raccolta dei metadati di provenienza. La sua
-utilità non dipende dall'esito degli esperimenti che l'hanno prodotta.
-
-\paragraph{Protocollo sperimentale.} Comandi esatti, seed dichiarati, schema dei
-risultati versionato, campagne interrompibili e riprendibili, separazione fra
-esecuzione e analisi statistica. L'\cref{app:riproduzione} contiene la procedura
-completa.
-
-\paragraph{Quattro esperimenti documentati.} Configurazioni complete,
-inventario delle run con commit e stato dell'albero di lavoro, tabelle per seed.
-Tutti e quattro dispongono di campagne definitive. L'esperimento 04 include
-due metodi di calcolo del kernel, tre regimi di campionamento e validazione
-predittiva fuori campione; gli esperimenti 02 e 03 includono inoltre la
-controvalidazione numerica dei checkpoint selezionati.
+Il lavoro comprende quattro esperimenti appaiati e il pacchetto
+\code{quantum\_framework}, che raccoglie layer PyTorch--PennyLane, caricamento dei
+dati, addestramento, diagnostiche e analisi statistica. Configurazioni, seed,
+comandi e tabelle complete sono conservati con uno schema dei risultati
+versionato. La procedura di riproduzione è nell'appendice~\ref{app:riproduzione}.
 
 \section{Limiti}
 \label{sec:limiti}
 
-L'elenco ragionato è nella \cref{sec:minacce}; qui bastano i vincoli che
-circoscrivono le risposte appena date. I modelli sono piccoli, circa \num{4500}
-parametri nell'esperimento~03, e il VQC agisce su una frazione minoritaria di
-ciascuno (\cref{sec:ffn}); i circuiti usano da 4 a 10 qubit, 2 strati
-variazionali, un solo ansatz e una sola codifica, per cui il risultato falsifica
-questa famiglia in queste posizioni e non il QML in generale; i dati sono MedMNIST
-a $28\times28$ e un corpus a livello di caratteri. Sul piano statistico gli
-esperimenti 02--03 usano $n=5$ seed, con $\dz$ minimo rilevabile $1{,}68$
-(\cref{ssec:potenza}). Gli iperparametri sono comuni alle varianti e scelti sulla
-baseline classica (\cref{sec:equita-baseline}), negli esperimenti 01 e 02 l'effetto
-misurato è quello della composizione adapter${}+{}$VQC (\cref{sec:adapter}), e
-nessun risultato proviene da hardware reale.
-
-Trasversale a tutti: l'overhead di simulazione ha vincolato il disegno
-sperimentale, e non è possibile escludere che parte dei risultati negativi
-rifletta la scala ridotta imposta da quel vincolo piuttosto che una proprietà
-dei circuiti (\cref{sec:overhead}).
+I circuiti hanno 4--10 qubit, due strati, un solo ansatz e una sola codifica. I
+VQC sostituiscono componenti circoscritti di modelli altrimenti classici, su
+MedMNIST a $28\times28$ e su un corpus a caratteri. Gli esperimenti 02--03 usano
+cinque seed, corrispondenti a un $\dz$ minimo rilevabile di $1{,}68$
+(\cref{ssec:potenza}). Gli iperparametri sono stati scelti sulla baseline
+classica; negli esperimenti 01--02 viene misurata la composizione
+adapter${}+{}$VQC. Tutte le esecuzioni quantistiche sono simulate. Il costo della
+simulazione ha determinato la scala dei modelli e dei campioni
+(\cref{sec:overhead}).
 
 \section{Sviluppi successivi}
 \label{sec:sviluppi}
 
-Le proposte seguenti sono formulate in modo da essere realizzabili con
-l'infrastruttura già disponibile, e ciascuna risponde a un limite specifico
-identificato nel \cref{cap:discussione}.
-
 \begin{enumerate}
-  \item \textbf{Studio della compressione.} Variare il rapporto
-    $\dpatch/\dvit$ su una griglia di valori e osservare se la differenza
-    quantistico/classico dipende dal collo di bottiglia. È il test diretto
-    dell'argomento della \cref{sec:compressione} e richiede solo di variare
-    \code{embed\_dim} nella configurazione esistente.
-  \item \textbf{Codifiche alternative.} Amplitude embedding, \emph{data
-    re-uploading}, kernel addestrabili: risponde al limite di validità di
-    costrutto (\cref{sec:minacce}).
-  \item \textbf{Ansatz alternativi e variazione della profondità.} Variare
-    sistematicamente $\nqlayers$ e sostituire \code{StronglyEntanglingLayers} con
-    almeno un ansatz di struttura diversa.
-  \item \textbf{Aumento della numerosità e test di equivalenza.} Portare i seed a
-    10--20, il che abbassa il $\dz$ minimo rilevabile rispettivamente a
-    $1{,}00$ e $0{,}66$, e definire a priori una soglia di equivalenza $\delta$
-    per un TOST. Consentirebbe di concludere l'\emph{equivalenza} invece della
-    sola assenza di differenza (\cref{sec:limiti-statistici}).
-  \item \textbf{Baseline classica più severa per l'esperimento 04.} Ottimizzare
-    la larghezza di banda RBF per validazione incrociata, oltre all'euristica
-    della mediana già impiegata (\cref{sec:equita-baseline}).
-  \item \textbf{Esecuzione su hardware reale} di un sottoinsieme minimo, per
-    misurare l'impatto del rumore di campionamento e del parameter-shift. È
-    l'unico modo per dire qualcosa sul costo effettivo e sull'affermazione (a)
-    della \cref{ssec:quattro-promesse}.
-  \item \textbf{Tuning degli iperparametri separato per variante}, con budget di
-    ricerca identico per la variante classica e per quella quantistica: risponde
-    al contro-argomento della \cref{sec:equita-baseline} senza introdurre un
-    vantaggio asimmetrico.
+  \item Variare la dimensionalità compressa per misurare la dipendenza dal collo
+    di bottiglia.
+  \item Provare altre codifiche, profondità e ansatz, inclusi \emph{data
+    re-uploading} e kernel addestrabili.
+  \item Aumentare i seed e definire prima dell'esperimento una soglia di
+    equivalenza per un TOST. Con 10 e 20 coppie, il $\dz$ minimo rilevabile
+    stimato scende rispettivamente a $1{,}00$ e $0{,}66$.
+  \item Selezionare separatamente gli iperparametri delle due varianti con lo
+    stesso budget; per l'esperimento~04 questo include la bandwidth dell'RBF.
+  \item Eseguire un sottoinsieme su hardware per misurare rumore di
+    campionamento, costo dei gradienti e tempi.
 \end{enumerate}

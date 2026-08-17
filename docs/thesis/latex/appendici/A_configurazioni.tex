@@ -1,14 +1,8 @@
-% ===========================================================================
-%  Appendice A — Configurazioni complete
-% ===========================================================================
 \chapter{Configurazioni complete}
 \label{app:configurazioni}
 
-Questa appendice riporta in forma tabellare il contenuto dei file
-\file{config.json} salvati dalle run utilizzate nella tesi. Ogni
-\file{config.json} è autodescrittivo: include sia i campi della dataclass sia le
-proprietà calcolate (\cref{sec:base-config}), e può quindi essere interpretato
-senza reistanziare il codice.
+Le tabelle riproducono i campi dei \file{config.json} associati alle run
+analizzate, incluse le proprietà calcolate (\cref{sec:base-config}).
 
 \section{Esperimento 01 --- preset di \texorpdfstring{\classe{GPTConfig}}{GPTConfig}}
 
@@ -17,8 +11,8 @@ senza reistanziare il codice.
 \caption[Preset di configurazione dell'esperimento 01]{%
 Preset disponibili in \file{01\_quantum\_gpt/src/config/}. Il valore di $\nq$ è
 calcolato come $\demb/\nhead$ e non è un campo indipendente. Il preset
-\code{big} non è utilizzabile nella variante quantistica: 64 qubit non sono
-simulabili.}
+\code{big} non è utilizzabile nella variante quantistica perché la simulazione
+di 64 qubit eccede le risorse disponibili.}
 \label{tab:preset-gpt}
 \small
 \begin{tabular}{@{}l r r r r r r r c@{}}
@@ -35,7 +29,7 @@ simulabili.}
 \end{tabular}
 \end{table}
 
-La campagna definitiva usa il preset \code{thesis}, riportato per esteso qui
+La run definitiva usa il preset \code{thesis}, riportato per esteso qui
 sotto; le due varianti differiscono soltanto nel campo \code{use\_quantum}.
 
 \begin{center}

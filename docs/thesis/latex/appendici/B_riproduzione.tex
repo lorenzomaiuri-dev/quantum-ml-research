@@ -1,7 +1,3 @@
-% ===========================================================================
-%  Appendice B — Ambiente e comandi di riproduzione
-%  Fonte: docs/runbook.md. Mantenere allineati i due documenti.
-% ===========================================================================
 \chapter{Ambiente e comandi di riproduzione}
 \label{app:riproduzione}
 
@@ -30,27 +26,6 @@ quantum-ml-research/
 `-- docs/
 \end{lstlisting}
 
-\begin{table}[htbp]
-\centering
-\caption[Deleghe dei file di esperimento verso la libreria condivisa]{%
-Deleghe dei file di esperimento verso \code{quantum\_framework}
-(\cref{sec:repository}).}
-\label{tab:deleghe}
-\small
-\begin{tabularx}{\textwidth}{@{}X X@{}}
-\toprule
-\textbf{File dell'esperimento} & \textbf{Delega a} \\
-\midrule
-\file{0X/src/quantum\_layers.py} & \code{quantum\_framework.layers} \\
-\file{02/src/dataset.py}, \file{03/src/data/loaders.py} & \code{quantum\_framework.data.load\_medmnist} \\
-\file{02/src/config.py}, \file{03/src/config.py} & \code{quantum\_framework.utils.BaseViTConfig} \\
-\file{02/src/trainer.py}, \file{03/src/engine/trainer.py} & \code{quantum\_framework.training.BaseTrainer} \\
-\file{02/src/engine/metrics.py} & \code{quantum\_framework.evaluation.compute\_classification\_metrics} \\
-\file{03/src/models/patch\_embeddings.py} & \code{quantum\_framework.layers.QuantumLinear} \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
 \section{Installazione}
 
 \begin{lstlisting}[style=shell, numbers=none]
@@ -69,9 +44,7 @@ impostare \code{q\_device = "lightning.qubit"} nella configurazione al posto di
 
 \section{Controlli preliminari}
 
-Le campagne vanno eseguite da un commit identificabile e con albero di lavoro
-pulito, perché il flag \emph{dirty} registrato nel manifest
-(\cref{sec:riproducibilita}) altrimenti segnala una run non ricostruibile.
+Prima dell'esecuzione si controllano albero di lavoro e test:
 
 \begin{lstlisting}[style=shell, numbers=none]
 git status --porcelain                                  # deve essere vuoto
@@ -79,22 +52,16 @@ uv run python -m unittest discover -s tests -v
 uv run pre-commit run --all-files                       # ruff: lint e formattazione
 \end{lstlisting}
 
-Prima di avviare una campagna costosa va eseguito uno \emph{smoke test} con un
-numero ridotto di epoche, verificando forma dei tensori, creazione dei checkpoint
-e schema delle metriche. È il controllo che sostituisce i test automatici sul
-ciclo di addestramento e sui layer quantistici, che la suite non copre.
+Prima di una run completa si esegue inoltre uno \emph{smoke test} con poche
+epoche, controllando forme dei tensori, checkpoint e schema delle metriche.
 
 \section{Invarianti di configurazione}
 \label{app:invarianti}
 
 Il metodo \code{\_\_post\_init\_\_} di \classe{BaseViTConfig}
-(\cref{sec:base-config}) verifica tre invarianti all'istanziazione: la
-divisibilità $H \bmod p = 0$, la divisibilità $\dvit \bmod \nhead = 0$ e la
-positività di dimensioni e profondità. Quando una di esse è violata solleva
-\code{ValueError}. Il vantaggio è pratico: una configurazione incoerente fallisce
-in millisecondi anziché dopo mezz'ora di addestramento, e fallisce con un
-messaggio che nomina l'invariante, invece che con un errore di forma tensoriale in
-un punto arbitrario del \emph{forward}.
+(\cref{sec:base-config}) verifica $H \bmod p = 0$,
+$\dvit \bmod \nhead = 0$ e la positività di dimensioni e profondità. In caso di
+violazione solleva \code{ValueError} prima di costruire il modello.
 
 \section{Valutazione di robustezza al rumore}
 \label{ssec:rumore}
@@ -106,11 +73,8 @@ loss, accuracy, AUC e F1 per ogni combinazione. Il seed delle corruzioni è
 derivato in modo deterministico da quello della run, secondo
 \code{seed + 10000 + indice\_tipo·100 + indice\_intensità}.
 
-La derivazione deterministica ha una conseguenza che va oltre la pulizia formale:
-varianti diverse che condividono lo stesso seed di run ricevono corruzioni
-\emph{identiche}, e non semplicemente equidistribuite, quindi il confronto resta
-appaiato anche sotto rumore. La campagna definitiva dell'esperimento~03 non usa
-questa valutazione, per non ampliare a posteriori la famiglia di endpoint.
+Le varianti con lo stesso seed ricevono le stesse corruzioni. La run definitiva
+dell'esperimento~03 non include questa valutazione.
 
 \section{Esperimento 01 --- Quantum GPT}
 
@@ -144,33 +108,58 @@ iperparametri fra le varianti.
 \begin{lstlisting}[style=shell, numbers=none]
 uv run python run.py 03 ablation --epochs 400 --train-subset 100 \
   --seeds 42 137 256 512 1024 \
-  --datasets pathmnist bloodmnist dermamnist
+  --datasets pathmnist bloodmnist dermamnist \
+  --dropout 0 --weight-decay 0 --eval-interval 40 --skip-noise
 \end{lstlisting}
 
-La campagna comprende $3 \times 5 \times 3 = 45$ run e salva
+La run comprende $3 \times 5 \times 3 = 45$ run e salva
 \file{ablation\_progress.json} dopo ciascuna. In caso di interruzione:
 
 \begin{lstlisting}[style=shell, numbers=none]
 uv run python run.py 03 ablation --epochs 400 --train-subset 100 \
-  --resume experiments/ablation_progress.json
+  --dropout 0 --weight-decay 0 --eval-interval 40 --skip-noise \
+  --resume experiments/ablation_thesis_regularization.progress.json
 \end{lstlisting}
 
 \section{Esperimento 04 --- Kernel quantistico}
 
 \begin{lstlisting}[style=shell, numbers=none]
+uv run python run.py 04 --seed 42 --repeats 1 \
+  --n-class0 80 --n-class1 20 --n-qubits 8 \
+  --feature-map iqp --iqp-repeats 2 --kernel-method statevector
 uv run python run.py 04 --seed 42 --repeats 20 \
   --n-class0 80 --n-class1 20 --n-qubits 8 \
   --feature-map iqp --iqp-repeats 2 --kernel-method pairwise
 \end{lstlisting}
 
-Ogni ripetizione usa il seed $\code{seed} + r$, e quindi un sottocampione
-distinto, e salva indici selezionati, varianza spiegata dalla PCA e matrici dei
-kernel.
+Ogni ripetizione usa il seed $\code{seed} + r$ e salva gli indici selezionati e
+la varianza spiegata dalla PCA, oltre alle matrici dei kernel. I controlli di
+separabilità usano il metodo a vettore di stato:
+
+\begin{lstlisting}[style=shell, numbers=none]
+uv run python run.py 04 --seed 42 --repeats 20 \
+  --n-class0 50 --n-class1 50 --n-qubits 8 \
+  --feature-map iqp --iqp-repeats 2 --kernel-method statevector
+uv run python run.py 04 --seed 42 --repeats 20 \
+  --n-class0 27 --n-class1 73 --n-qubits 8 \
+  --feature-map iqp --iqp-repeats 2 --kernel-method statevector
+\end{lstlisting}
+
+La validazione SVC è eseguita dalla directory
+\file{experiments/04\_quantum\_kernel} nei regimi 80/20, 50/50 e 27/73:
+
+\begin{lstlisting}[style=shell, numbers=none]
+uv run python classifier_validation.py --n-class0 80 --n-class1 20 \
+  --repeats 20 --seed 42
+uv run python classifier_validation.py --n-class0 50 --n-class1 50 \
+  --repeats 20 --seed 42
+uv run python classifier_validation.py --n-class0 27 --n-class1 73 \
+  --repeats 20 --seed 42
+\end{lstlisting}
 
 \section{Output di una run}
 
-Ogni esecuzione scrive nella propria directory, creata con suffisso temporale
-\code{\%Y\%m\%d\_\%H\%M\%S}:
+Ogni esecuzione scrive in una directory identificata da un timestamp:
 
 \begin{itemize}
   \item \file{config.json} --- snapshot completo della configurazione, comprensivo
@@ -188,8 +177,5 @@ Ogni esecuzione scrive nella propria directory, creata con suffisso temporale
 
 \section{Controlli prima dell'analisi}
 
-Prima di aggregare i risultati va verificato che: tutte le coppie condividano
-seed e configurazione; non manchi alcuna run prevista dal disegno; nessun
-manifest riporti un commit inatteso o il flag \emph{dirty} attivo; tutti i valori
-in \file{results.json} siano finiti. Le tabelle della tesi sono derivate dai JSON
-aggregati senza modificare i risultati delle singole run.
+Prima dell'analisi si verificano completezza delle coppie, seed, configurazioni e
+valori finiti nei \file{results.json}. Le tabelle derivano dagli aggregati JSON.
