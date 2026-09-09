@@ -33,8 +33,9 @@ Nelle condizioni testate nessuna delle quattro ipotesi è confermata nella
 direzione attesa. La perplexity aumenta di $0{,}067$ (IC 95\%
 $[-0{,}141;0{,}275]$); nel Vision Transformer l'accuracy diminuisce di $0{,}024$
 (IC $[-0{,}054;0{,}006]$) e la macro-AUC di $0{,}010$ con IC interamente
-negativo. Nell'ablazione il gap quantistico meno controllo limitato è positivo
-su tutti i dataset ($+0{,}148$, $+0{,}100$, $+0{,}085$), mentre il kernel IQP ha
+negativo. Nell'ablazione la differenza di gap fra variante quantistica e baseline
+classica a output limitato è positiva su tutti i dataset ($+0{,}148$, $+0{,}100$,
+$+0{,}085$), mentre il kernel IQP ha
 un criterio di Fisher inferiore sia al coseno sia all'RBF.
 Il costo di simulazione misurato è di uno-due ordini di grandezza superiore a
 quello delle baseline classiche.
@@ -45,5 +46,8 @@ quantistico/classico appaiato. Comprende layer variazionali, caricamento dei
 dati, ciclo di addestramento con diagnostica su gradienti e saturazione,
 metriche, test statistici e manifest di provenienza. Il protocollo sperimentale
 documentato consente a terzi di replicare o confutare le affermazioni riportate.
+
+Questo elaborato descrive un lavoro svolto in collaborazione con il collega
+\Coautore{}.
 
 \cleardoublepage

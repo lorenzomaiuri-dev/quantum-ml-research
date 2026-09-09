@@ -125,7 +125,9 @@ Media $\pm$ deviazione standard su 20 sottocampioni di training.}
 \centering
 \includegraphics[width=.72\textwidth]{figure/experiment_03_gap_by_dataset.png}
 \caption[Esperimento 03: gap per dataset]{Gap medio di generalizzazione nelle
-tre varianti; barre: una deviazione standard sui seed.}
+tre varianti \code{vanilla}, \code{bounded\_mlp} e \code{quantum\_reg} (in figura
+«Vanilla», «MLP bounded» e «Quantistica»); barre: una deviazione standard sui
+seed.}
 \label{fig:gap-03}
 \end{figure}
 
@@ -134,15 +136,17 @@ tre varianti; barre: una deviazione standard sui seed.}
   \includegraphics[width=.72\textwidth]{figure/experiment_01_learning_curves.png}
   \caption[Esperimento 01: curve di validation]{Loss di validation media sui
   dieci seed; la banda rappresenta una deviazione standard. La linea orizzontale
-  è la baseline unigramma sullo split di validation.}
+  è la baseline unigramma sullo split di validation. Le curve delle due varianti
+  sono praticamente sovrapposte; il confronto quantitativo è nella
+  \cref{fig:paired-01}.}
   \label{fig:curve-01}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=.72\textwidth]{figure/experiment_02_learning_curves.png}
-\caption[Esperimento 02: curve di apprendimento]{Accuracy di training e
-validation media sui cinque seed per le varianti classica e quantistica; la
-banda rappresenta una deviazione standard.}
+\caption[Esperimento 02: curve di validation]{Accuracy di validation media sui
+cinque seed per le varianti classica e quantistica; la banda rappresenta una
+deviazione standard.}
 \label{fig:curve-02}
 \end{figure}

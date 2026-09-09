@@ -1,6 +1,11 @@
 \chapter{Introduzione}
 \label{cap:introduzione}
 
+Questo capitolo introduce il problema di ricerca e i lavori correlati, enuncia le
+quattro ipotesi operative con i relativi criteri di decisione e riassume i
+contributi e la struttura della tesi. L'elaborato descrive un lavoro svolto in
+collaborazione con il collega \Coautore{}.
+
 \section{Problema di ricerca}
 \label{sec:problema}
 
@@ -56,7 +61,7 @@ disponibili. Nessuna misura di tempo riportata nel
 \cref{cap:risultati} può quindi essere letta come evidenza a favore o contro uno
 speedup.
 
-\subsection{La domanda specifica}
+\subsection{La domanda di ricerca}
 \label{ssec:domanda}
 
 Ristretta alle tre affermazioni verificabili in simulazione, la domanda di ricerca
@@ -71,17 +76,75 @@ predittiva, del gap di generalizzazione o della separabilità rispetto a control
 classici appaiati?
 \end{quote}
 
-Il Transformer \parencite{vaswani2017attention} offre punti di intervento
-circoscritti, e il Vision Transformer trasferisce la stessa struttura alle
-sequenze di patch di immagine \parencite{dosovitskiy2020image}. In entrambe le
-architetture esistono punti di sostituzione ben identificati: le tre proiezioni
-$Q$, $K$, $V$ di ogni testa di attenzione e la proiezione delle patch. Sono state
-proposte architetture quantistiche che intervengono sull'attenzione o su altri
-blocchi del ViT \parencite{cherrat2024quantumvision,comajoan2024qvt}, e questa
-tesi non tenta di riprodurle integralmente: adotta sostituzioni più piccole per
-appaiare inizializzazione, dati e metriche di addestramento e misurare la
-variabilità fra più seed. Il contributo metodologico è il confronto appaiato tra
-le varianti quantistiche e le rispettive baseline classiche.
+L'espressione «inserire un VQC» va intesa in senso stretto. Il Transformer
+\parencite{vaswani2017attention} e il Vision Transformer, che ne trasferisce la
+struttura alle sequenze di patch di immagine \parencite{dosovitskiy2020image},
+offrono punti di sostituzione ben identificati: le tre proiezioni $Q$, $K$, $V$ di
+ogni testa di attenzione e la proiezione lineare delle patch. La domanda riguarda
+la sostituzione di uno di questi strati con un circuito di dimensione compatibile,
+tenendo fermo tutto il resto del modello e del protocollo di addestramento.
+
+\section{Lavori correlati}
+\label{sec:lavori-correlati}
+
+\paragraph{Circuiti variazionali come modelli di apprendimento.}
+Il \emph{quantum machine learning} ibrido rappresenta un circuito parametrizzato
+come modello addestrabile per discesa del gradiente, con i pesi ottimizzati
+insieme a quelli della rete classica
+\parencite{biamonte2017qml,cerezo2021variational,mitarai2018quantum}. Su questa
+base sono stati studiati classificatori a circuito \parencite{schuld2020circuit},
+l'effetto della codifica dei dati sull'espressività del modello
+\parencite{schuld2021encoding} e trasposizioni quantistiche di architetture
+classiche, dalle reti convoluzionali
+\parencite{cong2019qcnn,henderson2020quanvolutional} fino ai Transformer. Un
+ostacolo noto all'addestramento è il fenomeno dei \emph{barren plateaus}, per cui
+la varianza del gradiente si annulla esponenzialmente al crescere del numero di
+qubit \parencite{mcclean2018barren}; i circuiti considerati in questa tesi hanno
+fra 4 e 10 qubit e restano al di fuori di questo regime.
+
+\paragraph{Attenzione e Transformer quantistici.}
+Diverse architetture inseriscono componenti quantistiche in un Transformer o in un
+Vision Transformer. \textcite{cherrat2024quantumvision} sostituiscono le
+operazioni lineari dell'attenzione e del blocco \emph{feed-forward} del ViT con
+circuiti parametrizzati e routine di algebra lineare quantistica;
+\textcite{comajoan2024qvt} applicano un ViT quantistico a un problema di
+classificazione in fisica delle particelle; \textcite{khatri2024quixer}
+costruiscono un modello Transformer interamente quantistico per il linguaggio, e
+implementazioni ibride di attenzione quantistica sono state proposte anche per
+la classificazione di testo \parencite{disipio2022dawn}. Questi lavori
+riportano in prevalenza risultati favorevoli o comparabili alle rispettive
+baseline, ma di rado con controlli classici appaiati sugli stessi seed e sulla
+stessa inizializzazione, o con una stima della variabilità fra ripetizioni.
+
+\paragraph{Kernel quantistici.}
+La codifica di un dato classico nello stato di un registro di qubit definisce una
+mappa di \emph{feature} in uno spazio di Hilbert di dimensione $2^{\nq}$; il
+prodotto interno fra stati codificati è un kernel utilizzabile da un
+classificatore classico \parencite{schuld2019quantum,havlicek2019supervised}, e i
+modelli QML supervisionati basati sulla misura di un'osservabile sono, formalmente,
+metodi kernel \parencite{schuld2021kernel}. Esistono costruzioni con un vantaggio
+dimostrato su problemi appositamente definiti \parencite{liu2021rigorous}, ma
+l'utilità pratica dipende dai dati \parencite{huang2021power} e dalla geometria del
+kernel: al crescere dei qubit i valori di kernel tendono a concentrarsi
+esponenzialmente, avvicinando la matrice all'identità e rendendo inefficace
+l'apprendimento \parencite{thanasilp2024concentration}, e il bias induttivo del
+kernel quantistico non è necessariamente allineato alla struttura dei dati reali
+\parencite{kubler2021inductive}. L'esperimento~04 colloca un kernel di fedeltà su
+questo stesso confronto, contro un kernel coseno e un kernel RBF.
+
+\paragraph{Risultati negativi e benchmarking.}
+Una linea di lavoro più recente sottopone il campo a verifica sistematica:
+confronti su dataset standard mostrano che molti modelli QML di piccola scala non
+superano baseline classiche controllate e che l'esito dipende fortemente dai
+dettagli del protocollo di valutazione \parencite{bowles2024benchmarking}; sul
+fronte algoritmico, tecniche di \emph{dequantization} hanno ricondotto a tempo
+classico polinomiale problemi ritenuti di esclusiva pertinenza quantistica
+\parencite{tang2019quantum}. Rispetto a questa letteratura il presente lavoro non
+introduce una nuova architettura né un nuovo benchmark: contribuisce con un
+confronto appaiato e multi-seed fra quattro sostituzioni quantistiche minime e le
+rispettive baseline classiche, con criterio di decisione dichiarato a priori
+(\cref{sec:ipotesi}), per misurare a parità di ogni altra condizione se la
+sostituzione produce un guadagno.
 
 \section{Ipotesi}
 \label{sec:ipotesi}
@@ -95,7 +158,9 @@ determina l'esito.
 \caption[Le quattro ipotesi e i loro criteri di decisione]{%
 Le quattro ipotesi operative. Ogni riga trova risposta in una riga della tabella
 riassuntiva della \cref{sec:verifica-ipotesi}. I pedici $q$ e $c$ indicano
-rispettivamente la variante quantistica e la baseline classica appaiata.}
+rispettivamente la variante quantistica e la baseline classica appaiata. Ogni
+ipotesi H$k$ è verificata dall'esperimento~0$k$; i quattro esperimenti sono
+riassunti nella \cref{tab:panoramica}.}
 \label{tab:ipotesi}
 \small
 \begin{tabularx}{\textwidth}{@{}c X l l@{}}
@@ -114,6 +179,43 @@ H4 & Il kernel di fedeltà quantistica separa le classi meglio della similarità
 \end{tabularx}
 \end{table}
 
+A ciascuna ipotesi corrisponde un esperimento indipendente, numerato in modo che
+l'esperimento~0$k$ verifichi H$k$. Ogni esperimento confronta una variante
+quantistica con una baseline classica appaiata sugli stessi seed, secondo il
+protocollo del \cref{cap:metodologia}; la \cref{tab:panoramica} ne riassume
+oggetto e controllo, mentre il design completo è nel \cref{cap:esperimenti}.
+
+\begin{table}[htbp]
+\centering
+\caption[Panoramica dei quattro esperimenti]{%
+I quattro esperimenti, uno per ipotesi (l'esperimento~0$k$ verifica H$k$).
+Ciascun confronto è appaiato con la rispettiva baseline classica sugli stessi
+seed.}
+\label{tab:panoramica}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}c
+  >{\raggedright\arraybackslash}X
+  >{\raggedright\arraybackslash}X
+  >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Esp.} & \textbf{Modello e dominio} & \textbf{Intervento quantistico} & \textbf{Baseline appaiata} \\
+\midrule
+01 & Transformer \emph{decoder-only}, generazione di testo a caratteri (corpus Shakespeare)
+   & VQC al posto delle proiezioni $Q,K,V$ di ogni testa di attenzione
+   & proiezioni $Q,K,V$ lineari \\[3pt]
+02 & Vision Transformer, classificazione di immagini mediche (PathMNIST)
+   & VQC nel \emph{patch embedding}, a valle di una compressione lineare
+   & \emph{patch embedding} lineare \\[3pt]
+03 & Vision Transformer, ablazione su tre dataset (Path-, Blood-, DermaMNIST)
+   & \emph{patch embedding} \code{quantum\_reg} (compressione lineare, poi VQC)
+   & \code{bounded\_mlp} (MLP a output limitato); \code{vanilla} come riferimento \\[3pt]
+04 & Kernel precalcolato per SVM, immagini mediche (BreastMNIST); nessun addestramento
+   & kernel di fedeltà da codifica IQP
+   & kernel coseno e kernel RBF \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
 Il criterio di decisione è comune a tutte e quattro ed è formulato sulle differenze
 appaiate $d_s = m_{q,s} - m_{c,s}$ calcolate sullo stesso seed $s$:
 
@@ -127,13 +229,16 @@ sostegno empirico all'ipotesi di ricerca e non va confusa con il rifiuto o il
 mancato rifiuto dell'ipotesi nulla nel test statistico.
 \end{quote}
 
-Per H3 il criterio è applicato ai tre dataset, tenendo conto dei confronti
-multipli come descritto nel \cref{cap:metodologia}. L'ablazione del
+Per H3 il criterio dell'intervallo di confidenza è applicato separatamente ai tre
+dataset, senza aggiustamento dei valori $p$ per la molteplicità
+(\cref{cap:metodologia}); la frequenza del segno atteso nelle 15 coppie
+dataset/seed accompagna il risultato come misura descrittiva della sua stabilità.
+L'ablazione del
 \cref{cap:esperimenti} costruisce tre varianti di \emph{patch embedding}: una
 lineare non vincolata (\code{vanilla}), una classica con output limitato in
-$[-1,1]$ (\code{bounded\_mlp}) e una quantistica (\code{quantum\_reg}). Il
-confronto primario è con \code{bounded\_mlp}, perché entrambe le varianti hanno
-output limitato. MLP e VQC appartengono comunque a famiglie funzionali diverse;
+$[-1,1]$ (\code{bounded\_mlp}) e una quantistica (\code{quantum\_reg}), indicate
+nelle figure come «Vanilla», «MLP bounded» e «Quantistica». Il confronto primario
+è con \code{bounded\_mlp}, perché entrambe le varianti hanno output limitato. MLP e VQC appartengono comunque a famiglie funzionali diverse;
 il confronto non isola una singola proprietà quantistica
 (\cref{sec:esp-ablazione}).
 
@@ -144,33 +249,45 @@ giudizio sulla letteratura richiamata nella \cref{ssec:quattro-promesse}.
 \section{Contributi}
 \label{sec:contributi}
 
-\paragraph{Contributi sperimentali.} Quattro esperimenti distinti, uno per
-ipotesi, ciascuno con baseline classica appaiata e protocollo multi-seed; per
-l'esperimento sulla regolarizzazione, anche multi-dataset. L'analisi impiega
-differenze appaiate, intervalli di confidenza parametrici e bootstrap, test di
-Wilcoxon dei ranghi con segno e dimensione dell'effetto $\dz$, riportati sempre
-insieme e mai ridotti al solo valore $p$.
+Il lavoro offre tre contributi: uno sperimentale, uno software e uno
+metodologico.
 
-\paragraph{Contributi software.} La libreria \code{quantum\_framework}, descritta
-nel \cref{cap:software}, è stata estratta per rifattorizzazione dai quattro
-esperimenti, originariamente sviluppati come repository separati. Contiene i due
-layer variazionali riutilizzabili, il caricamento dei dati MedMNIST con
-generazione deterministica di corruzioni, un ciclo di addestramento con
-\emph{hook} diagnostici su gradienti e saturazione delle attivazioni, le metriche
-di classificazione, le funzioni di confronto statistico e la raccolta dei metadati
-di provenienza. A corredo: un entry point unico (\code{run.py}), uno schema comune
-dei risultati versionato e, per la run più costosa, la possibilità di
-interrompere e riprendere l'esecuzione.
+\paragraph{Contributo sperimentale.} Sono stati progettati e condotti quattro
+esperimenti distinti, uno per ciascuna ipotesi operativa, con la struttura
+riassunta nella \cref{tab:panoramica}. Ogni esperimento confronta una variante
+quantistica con una baseline classica appaiata e ripete il confronto su più seed;
+l'esperimento sulla regolarizzazione implicita lo estende a tre dataset. Per ogni
+confronto si riportano la differenza media appaiata, gli intervalli di confidenza
+parametrici e bootstrap, il test di Wilcoxon dei ranghi con segno e la dimensione
+dell'effetto $\dz$, quantità che compaiono sempre insieme e non vengono mai
+ridotte al solo valore $p$; l'esito complessivo, negativo per tutte e quattro le
+ipotesi, è riportato nel \cref{cap:risultati}.
 
-\paragraph{Contributo metodologico.} Il design adotta baseline appaiate.
-Nell'ablazione, la baseline classica ha più parametri della controparte quantistica nel
-\emph{patch embedding} (\num{1880} contro \num{1540}); negli esperimenti 01 e 02
-è invece la variante quantistica ad averne rispettivamente 336 e 48 in più. I
-conteggi escludono uno svantaggio sistematico della variante quantistica nel
-numero di parametri, ma non dimostrano parità di capacità funzionale.
+\paragraph{Contributo software.} È stata sviluppata la libreria
+\code{quantum\_framework}, descritta nel \cref{cap:software} ed estratta per
+rifattorizzazione dai quattro esperimenti, originariamente scritti come repository
+separati. La libreria raccoglie i due layer variazionali riutilizzabili, il
+caricamento dei dati MedMNIST con generazione deterministica delle corruzioni, un
+ciclo di addestramento strumentato con \emph{hook} diagnostici su gradienti e
+saturazione delle attivazioni, le metriche di classificazione, le funzioni di
+confronto statistico e la raccolta dei metadati di provenienza. Attorno alla
+libreria il progetto mette a disposizione un unico punto di ingresso
+(\code{run.py}), uno schema dei risultati comune e versionato e, per la campagna
+di calcolo più onerosa, la possibilità di interrompere e riprendere l'esecuzione
+senza perdere l'appaiamento.
 
-L'infrastruttura sviluppata rende ripetibile il confronto appaiato; la libreria
-di simulazione quantistica è invece una dipendenza del progetto.
+\paragraph{Contributo metodologico.} Il contributo metodologico è l'adozione
+sistematica di baseline appaiate, in cui la variante quantistica e il controllo
+classico condividono seed, inizializzazione, dati e criterio di selezione del
+checkpoint. Il confronto è inoltre calibrato sul numero di parametri: nell'ablazione
+la baseline classica ne ha più della controparte quantistica nel \emph{patch
+embedding} (\num{1880} contro \num{1540}), mentre negli esperimenti 01 e 02 è la
+variante quantistica ad averne rispettivamente 336 e 48 in più. Questi conteggi
+escludono uno svantaggio sistematico della variante quantistica nel numero di
+parametri, ma non ne dimostrano la parità di capacità funzionale. Nel suo
+complesso, l'infrastruttura sviluppata rende ripetibile il confronto appaiato,
+mentre la libreria di simulazione quantistica resta una dipendenza esterna del
+progetto.
 
 \section{Struttura della tesi}
 \label{sec:struttura}

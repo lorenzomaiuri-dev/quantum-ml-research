@@ -1,6 +1,35 @@
 \chapter{Conclusioni}
 \label{cap:conclusioni}
 
+\section{Sintesi del lavoro}
+\label{sec:sintesi-conclusioni}
+
+In questa tesi è stato verificato sperimentalmente se l'inserimento di un circuito
+quantistico variazionale in un Transformer testuale o in un Vision Transformer,
+oppure l'uso di un kernel di fedeltà quantistica su immagini mediche, produca un
+vantaggio misurabile rispetto a controlli classici, alla scala consentita dalla
+simulazione su vettore di stato.
+
+La nozione di vantaggio è stata scomposta in quattro ipotesi operative --- una per
+la qualità predittiva nel linguaggio, una per l'accuratezza di classificazione,
+una per la riduzione del gap di generalizzazione e una per la separabilità del
+kernel --- ciascuna con una metrica primaria, una direzione attesa e un criterio
+di decisione fissati a priori (\cref{sec:ipotesi}). A ogni ipotesi corrisponde un
+esperimento, condotto con una baseline classica appaiata sugli stessi seed e sulla
+stessa inizializzazione, con protocollo multi-seed --- e multi-dataset per la
+regolarizzazione --- e con un'analisi basata su differenze appaiate, intervalli di
+confidenza parametrici e bootstrap, test di Wilcoxon e dimensione dell'effetto.
+
+Il risultato complessivo è che nessuna delle quattro ipotesi è risultata
+supportata nella direzione attesa: per le prime due l'intervallo di confidenza
+della differenza media contiene lo zero; per la regolarizzazione implicita la
+direzione media è opposta a quella attesa su tutti e tre i dataset; per il kernel
+di fedeltà l'intervallo cade interamente nella direzione sfavorevole alla variante
+quantistica. Nessun esperimento misura uno speedup computazionale, che il
+protocollo esclude esplicitamente perché tutte le esecuzioni avvengono su
+simulatore classico. Le sezioni seguenti riportano la risposta puntuale a ciascuna
+ipotesi, i contributi del lavoro, i suoi limiti e i possibili sviluppi.
+
 \section{Risposte alle domande di ricerca}
 \label{sec:risposte}
 
@@ -42,18 +71,47 @@ versionato. La procedura di riproduzione è nell'appendice~\ref{app:riproduzione
 \section{Limiti}
 \label{sec:limiti}
 
-I circuiti hanno 4--10 qubit, due strati, un solo ansatz e una sola codifica. I
-VQC sostituiscono componenti circoscritti di modelli altrimenti classici, su
-MedMNIST a $28\times28$ e su un corpus a caratteri. Gli esperimenti 02--03 usano
-cinque seed, corrispondenti a un $\dz$ minimo rilevabile di $1{,}68$
-(\cref{ssec:potenza}). Gli iperparametri sono stati scelti sulla baseline
-classica; negli esperimenti 01--02 viene misurata la composizione
-adapter${}+{}$VQC. Tutte le esecuzioni quantistiche sono simulate. Il costo della
-simulazione ha determinato la scala dei modelli e dei campioni
-(\cref{sec:overhead}).
+\paragraph{Scala e configurazione dei circuiti.} Tutti i circuiti hanno fra 4 e
+10 qubit, due strati variazionali, un solo ansatz (\code{StronglyEntanglingLayers})
+e una sola mappa di codifica (\code{AngleEmbedding}). Le conclusioni riguardano
+quindi questo regime: non escludono che circuiti più profondi, ansatz diversi o
+strategie di codifica come il \emph{data re-uploading} si comportino in modo
+differente, ed è per questo che tali varianti compaiono fra gli sviluppi
+successivi.
+
+\paragraph{Portata degli interventi e dei dati.} In ogni esperimento il circuito
+sostituisce un componente circoscritto di un modello per il resto classico --- le
+proiezioni di una testa di attenzione o la proiezione lineare delle patch --- e
+non un blocco architetturale completo. I dati sono di piccola scala: immagini
+MedMNIST a $28\times28$ e un corpus di testo a livello di carattere. La validità
+esterna delle conclusioni è perciò limitata alle architetture e ai dataset
+provati.
+
+\paragraph{Numero di ripetizioni e potenza statistica.} Gli esperimenti~02 e~03
+usano cinque seed per confronto, il che corrisponde a una dimensione dell'effetto
+appaiata minima rilevabile di $\dz \approx 1{,}68$ (\cref{ssec:potenza}). Un
+vantaggio quantistico reale ma di entità inferiore a questa soglia non sarebbe
+distinguibile dalla variabilità fra ripetizioni; il protocollo, inoltre, non
+prevedeva una soglia di equivalenza dichiarata a priori, per cui l'assenza di
+vantaggio non è stata sottoposta a un test di equivalenza formale.
+
+\paragraph{Selezione degli iperparametri.} Gli iperparametri comuni sono stati
+scelti a partire dalla baseline classica e riusati per la variante quantistica.
+Questa scelta può penalizzare la variante quantistica; negli esperimenti~01 e~02,
+inoltre, ciò che viene misurato è la composizione fra l'adattatore lineare e il
+circuito, non il circuito isolato.
+
+\paragraph{Simulazione anziché hardware.} Tutte le esecuzioni quantistiche sono
+simulate su vettore di stato, senza rumore di campionamento e senza i tempi di un
+dispositivo reale. Il costo della simulazione, che cresce esponenzialmente con il
+numero di qubit, ha determinato la scala dei modelli e dei campioni
+(\cref{sec:overhead}); le misure di tempo riportate non vanno lette come
+indicazioni di uno speedup.
 
 \section{Sviluppi successivi}
 \label{sec:sviluppi}
+
+I limiti appena discussi indicano altrettante direzioni di lavoro.
 
 \begin{enumerate}
   \item Variare la dimensionalità compressa per misurare la dipendenza dal collo
